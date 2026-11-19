@@ -144,6 +144,23 @@ async function runD1Execute(args: string[]): Promise<void> {
   });
 }
 
+/** Resolve D1 target: argv flags win, env vars kept for POSIX compat. */
+export function resolveSeedTarget(
+  argv: readonly string[] = process.argv.slice(2),
+): { remote: boolean; env: string | null } {
+  const remote = argv.includes("--remote");
+  const envFlag = argv.indexOf("--env");
+  const envName =
+    envFlag >= 0 && envFlag + 1 < argv.length
+      ? (argv[envFlag + 1] as string)
+      : null;
+  if (remote || envName !== null) return { remote, env: envName };
+  return {
+    remote: process.env.SEED_TARGET === "remote",
+    env: process.env.SEED_ENV ?? null,
+  };
+}
+
 async function main(): Promise<void> {
   const root = resolveManifestRoot();
   const loaded = await loadAndReport(root);
@@ -179,14 +196,13 @@ async function main(): Promise<void> {
   const tmpFile = path.join(tmpDir, "seed.sql");
   await writeFile(tmpFile, sql, "utf8");
   try {
-    const target = process.env.SEED_TARGET;
-    const env = process.env.SEED_ENV;
-    if (target === "remote") {
+    const target = resolveSeedTarget();
+    if (target.env !== null) {
+      console.log(`applying seed to ${target.env} D1...`);
+      await runD1Execute(["DB", "--env", target.env, "--remote", "--file", tmpFile]);
+    } else if (target.remote) {
       console.log("applying seed to remote D1...");
       await runD1Execute(["DB", "--remote", "--file", tmpFile]);
-    } else if (env === "staging") {
-      console.log("applying seed to staging D1...");
-      await runD1Execute(["DB", "--env", "staging", "--remote", "--file", tmpFile]);
     } else {
       await runD1Execute(["DB", "--local", "--file", tmpFile]);
     }

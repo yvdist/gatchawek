@@ -14,7 +14,8 @@
     "fetch-images": "tsx scripts/fetch-images.ts",
     "build:cards": "tsx scripts/build-cards.ts",
     "seed": "tsx scripts/seed.ts",
-    "seed:remote": "SEED_TARGET=remote tsx scripts/seed.ts",
+    "seed:remote": "tsx scripts/seed.ts --remote",
+    "seed:staging": "tsx scripts/seed.ts --env staging",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply DB --local"
   },
