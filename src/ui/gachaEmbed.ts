@@ -106,9 +106,12 @@ export function buildStatusEmbed(
       row.nextAt === null
         ? "penuh"
         : `nambah lagi <t:${row.nextAt}:R>`;
-    const reset = row.resetReady
-      ? "siap dipakai"
-      : `bisa lagi <t:${row.resetReadyAt}:R>`;
+    const reset =
+      row.resetDeniedReason === "full"
+        ? "tidak perlu (masih penuh)"
+        : row.resetReady
+          ? "siap dipakai"
+          : `bisa lagi <t:${row.resetReadyAt}:R>`;
     return [
       `${row.pool.emoji} **${row.pool.name}**`,
       `🎲 Sisa tarik (/gacha pool:${row.pool.id}): ${row.stamina}/${row.max}, ${tick}`,

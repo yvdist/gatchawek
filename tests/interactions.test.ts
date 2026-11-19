@@ -103,4 +103,54 @@ describe("POST /interactions signature verification", () => {
     expect(res.status).toBe(400);
     expect(await res.text()).toBe("Bad request");
   });
+
+  it("returns 400 Unknown command for an unregistered slash name", async () => {
+    const body = JSON.stringify({
+      type: InteractionType.ApplicationCommand,
+      id: "1",
+      application_id: "2",
+      token: "token",
+      version: 1,
+      data: { id: "3", name: "kartu", type: 1 },
+    });
+    const res = await app.request("/interactions", {
+      method: "POST",
+      headers: discordHeaders(signBody(body), TIMESTAMP),
+      body,
+    }, { DISCORD_PUBLIC_KEY: publicKeyHex });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Unknown command" });
+  });
+
+  it("returns 400 for an unhandled interaction type", async () => {
+    const body = JSON.stringify({ type: 99 });
+    const res = await app.request("/interactions", {
+      method: "POST",
+      headers: discordHeaders(signBody(body), TIMESTAMP),
+      body,
+    }, { DISCORD_PUBLIC_KEY: publicKeyHex });
+    expect(res.status).toBe(400);
+    expect(await res.json()).toEqual({ error: "Unhandled interaction type" });
+  });
+
+  it("answers unknown component namespace with an expired-button message", async () => {
+    const body = JSON.stringify({
+      type: InteractionType.MessageComponent,
+      id: "1",
+      application_id: "2",
+      token: "token",
+      version: 1,
+      data: { component_type: 2, custom_id: "nope:zzz" },
+      message: { id: "m", type: 20, flags: 0 },
+      member: { user: { id: "u1", username: "u", discriminator: "0" } },
+    });
+    const res = await app.request("/interactions", {
+      method: "POST",
+      headers: discordHeaders(signBody(body), TIMESTAMP),
+      body,
+    }, { DISCORD_PUBLIC_KEY: publicKeyHex });
+    expect(res.status).toBe(200);
+    const payload = (await res.json()) as { data?: { content?: string } };
+    expect(payload.data?.content).toContain("kedaluwarsa");
+  });
 });

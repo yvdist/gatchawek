@@ -90,6 +90,7 @@ describe("gachaEmbed", () => {
           nextAt: 12345,
           resetReadyAt: 99999,
           resetReady: false,
+          resetDeniedReason: "cooldown",
           owned: 3,
           total: 5,
         },

@@ -292,6 +292,47 @@ describe("handleKoleksi missing pool", () => {
   });
 });
 
+describe("handleKoleksi scope edge cases", () => {
+  async function runKoleksi(
+    userId: string,
+    opts: { pool?: string; grup?: string },
+  ): Promise<{ content: string; flags?: number }> {
+    const calls: { body: unknown }[] = [];
+    const fetchMock = vi.fn(async (_url: string, init: { body: string }) => {
+      calls.push({ body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      handleKoleksi(koleksiSlash(userId, opts), env, waitUntil);
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      const body = calls[0]?.body as { content?: string; flags?: number };
+      return { content: body.content ?? "", flags: body.flags };
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  }
+
+  it("replies unknown-pool for a missing pool", async () => {
+    const out = await runKoleksi("u1", { pool: "no-such-pool" });
+    expect(out.flags).toBe(64);
+    expect(out.content).toContain("Pool tak dikenal");
+  });
+
+  it("replies unknown-group for a missing grup", async () => {
+    const out = await runKoleksi("u1", { pool: "pejabat", grup: "no-such-group" });
+    expect(out.flags).toBe(64);
+    expect(out.content).toContain("Grup tak dikenal");
+  });
+
+  it("replies empty when the user owns nothing in scope", async () => {
+    const out = await runKoleksi("stranger", { pool: "pejabat" });
+    expect(out.flags).toBe(64);
+    expect(out.content).toContain("belum punya kartu");
+  });
+});
+
 describe("handleKoleksiGrupAutocomplete", () => {
   it("suggests groups in the selected pool", async () => {
     const res = await handleKoleksiGrupAutocomplete(

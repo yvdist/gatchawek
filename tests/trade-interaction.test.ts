@@ -92,6 +92,7 @@ function slash(
   offer: string | null,
   request: string | null,
   appId = "app",
+  resolvedBot = false,
 ): APIChatInputApplicationCommandInteraction {
   const options: { name: string; type: number; value: string }[] = [];
   if (targetId !== null) {
@@ -113,7 +114,25 @@ function slash(
     application_id: appId,
     token: "tok",
     version: 1,
-    data: { id: "2", name: "trade", type: 1, options },
+    data: {
+      id: "2",
+      name: "trade",
+      type: 1,
+      options,
+      resolved:
+        targetId === null
+          ? undefined
+          : {
+              users: {
+                [targetId]: {
+                  id: targetId,
+                  username: "t",
+                  discriminator: "0",
+                  bot: resolvedBot,
+                },
+              },
+            },
+    },
     member: {
       user: { id: proposerId, username: "u", discriminator: "0" },
       roles: [],
@@ -248,6 +267,19 @@ describe("handleTradeClick gates", () => {
     expect(res).toMatchObject({ data: { content: "Tombol kedaluwarsa." } });
   });
 
+  it("rejects a foreign bot target ephemerally", () => {
+    const { tasks, waitUntil } = captureTasks();
+    const res = handleTrade(
+      slash("u1", "bot-9", "anna-01", "budi-01", "app", true),
+      env,
+      waitUntil,
+    );
+    expect(tasks).toHaveLength(0);
+    expect(res).toMatchObject({ data: { flags: 64 } });
+    if (res.type !== InteractionResponseType.ChannelMessageWithSource) return;
+    expect(res.data?.content).toMatch(/bot/i);
+  });
+
   it("rejects third-party accept and target cancel without DB writes", async () => {
     const db = createDb(env);
     const { tasks, waitUntil } = captureTasks();
@@ -360,6 +392,31 @@ describe("handleTradeClick gates", () => {
       type: InteractionResponseType.DeferredMessageUpdate,
     });
     expect((await getTradeById(db, tradeId))?.status).toBe("declined");
+  });
+
+  it("accept on an unknown trade patches tidak tersedia", async () => {
+    const { tasks, waitUntil } = captureTasks();
+    const patch = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ id: "m" }), { status: 200 }),
+    );
+    let res;
+    try {
+      res = await handleTradeClick(
+        component("trade:accept:does-not-exist", "u2"),
+        env,
+        waitUntil,
+      );
+      await Promise.all(tasks);
+      expect(patch).toHaveBeenCalled();
+      const [, init] = patch.mock.calls[0] as [string, RequestInit];
+      const body = JSON.parse(init.body as string) as { content?: string };
+      expect(body.content).toContain("tidak tersedia");
+    } finally {
+      patch.mockRestore();
+    }
+    expect(res).toMatchObject({
+      type: InteractionResponseType.DeferredMessageUpdate,
+    });
   });
 });
 

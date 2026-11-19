@@ -107,6 +107,27 @@ export function renderSeedSql(
       }
     }
   }
+  // Groups/members gone from the manifest (takedown): disable, never delete.
+  // Cards are disabled separately below; orphaned groups stay hidden from
+  // the catalog and koleksi scopes.
+  const liveGroupIds = new Set<string>();
+  const liveMemberIds = new Set<string>();
+  for (const { manifest } of loaded.groups) {
+    liveGroupIds.add(manifest.group.id);
+    for (const member of manifest.members) liveMemberIds.add(member.id);
+  }
+  if (liveGroupIds.size > 0) {
+    const list = [...liveGroupIds].map(sqlText).join(",");
+    lines.push(`UPDATE groups SET enabled=0 WHERE id NOT IN (${list});`);
+  } else {
+    lines.push(`UPDATE groups SET enabled=0;`);
+  }
+  if (liveMemberIds.size > 0) {
+    const list = [...liveMemberIds].map(sqlText).join(",");
+    lines.push(`UPDATE members SET enabled=0 WHERE id NOT IN (${list});`);
+  } else {
+    lines.push(`UPDATE members SET enabled=0;`);
+  }
   // Cards gone from the manifest (takedown): disable, never delete.
   if (liveCardIds.size > 0) {
     const list = [...liveCardIds].map(sqlText).join(",");

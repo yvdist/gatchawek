@@ -107,7 +107,9 @@ export function handleTrade(
   if (proposerId === targetId) {
     return ephemeralResponse(friendlyReject("self-trade"));
   }
-  if (targetId === interaction.application_id) {
+  const targetIsBot =
+    interaction.data.resolved?.users?.[targetId]?.bot === true;
+  if (targetIsBot || targetId === interaction.application_id) {
     return ephemeralResponse(friendlyReject("bot-target"));
   }
   waitUntil(
@@ -117,7 +119,7 @@ export function handleTrade(
         const outcome = await createTrade(db, {
           proposerId,
           targetId,
-          targetIsBot: false,
+          targetIsBot,
           offerCardId: offer,
           requestCardId: request,
           now: Math.floor(Date.now() / 1000),

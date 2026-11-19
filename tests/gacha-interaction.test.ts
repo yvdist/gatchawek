@@ -15,6 +15,8 @@ import {
   groups,
   members,
   pools,
+  userPoolStates,
+  users,
 } from "../src/db/schema.js";
 import { parseGachaAgainCustomId } from "../src/domain/gacha.js";
 import {
@@ -269,6 +271,103 @@ describe("handleGacha followup", () => {
       expect(
         body.components?.[0]?.components?.[0]?.custom_id,
       ).toBe("gacha:again:pejabat:111");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("handleGacha followup edge cases", () => {
+  async function runFollowup(
+    poolId: string,
+    userId: string,
+  ): Promise<{ calls: { url: string; body: unknown }[] }> {
+    const calls: { url: string; body: unknown }[] = [];
+    const fetchMock = vi.fn(async (url: string, init: { body: string }) => {
+      calls.push({ url, body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      handleGacha(slash(poolId, userId), env, waitUntil);
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      return { calls };
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  }
+
+  it("replies Stamina habis with a relative timestamp when empty", async () => {
+    const db = createDb(env);
+    const now = Math.floor(Date.now() / 1000);
+    await db.insert(users).values({ id: "g-empty", createdAt: now });
+    await db.insert(userPoolStates).values({
+      userId: "g-empty",
+      poolId: "pejabat",
+      stamina: 0,
+      staminaAnchorAt: now,
+      version: 0,
+    });
+    const { calls } = await runFollowup("pejabat", "g-empty");
+    expect(calls).toHaveLength(1);
+    const body = calls[0]?.body as { content?: string; flags?: number };
+    expect(body.flags).toBe(64);
+    expect(body.content).toMatch(/Stamina habis\. Nambah lagi <t:\d+:R>\./);
+  });
+
+  it("replies pool-empty when the pool has no enabled cards", async () => {
+    const { calls } = await runFollowup("no-such-pool", "111");
+    expect(calls).toHaveLength(1);
+    const body = calls[0]?.body as { content?: string; flags?: number };
+    expect(body.flags).toBe(64);
+    expect(body.content).toContain("belum tersedia");
+  });
+
+  it("parallel Tarik Lagi taps settle exactly once", async () => {
+    const calls: { url: string; body: unknown }[] = [];
+    const fetchMock = vi.fn(async (url: string, init: { body: string }) => {
+      calls.push({ url, body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const userId = "g-doubletap";
+      const now = Math.floor(Date.now() / 1000);
+      const db = createDb(env);
+      await db.insert(users).values({ id: userId, createdAt: now });
+      await db.insert(userPoolStates).values({
+        userId,
+        poolId: "pejabat",
+        stamina: 1,
+        staminaAnchorAt: now,
+        version: 0,
+      });
+      const { tasks, waitUntil } = captureTasks();
+      const r1 = handleGachaAgain(
+        component("gacha:again:pejabat:" + userId, userId),
+        env,
+        waitUntil,
+      );
+      const r2 = handleGachaAgain(
+        component("gacha:again:pejabat:" + userId, userId),
+        env,
+        waitUntil,
+      );
+      expect(r1.type).toBe(
+        InteractionResponseType.DeferredChannelMessageWithSource,
+      );
+      expect(r2.type).toBe(
+        InteractionResponseType.DeferredChannelMessageWithSource,
+      );
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      const contents = calls.map(
+        (c) => (c.body as { content?: string }).content ?? "",
+      );
+      const oks = contents.filter((c) => !c.includes("bentrok"));
+      const conflicts = contents.filter((c) => c.includes("bentrok"));
+      expect(oks).toHaveLength(1);
+      expect(conflicts).toHaveLength(1);
     } finally {
       vi.unstubAllGlobals();
     }

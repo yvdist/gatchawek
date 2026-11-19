@@ -19,7 +19,9 @@ import {
   executeReset,
   getStatusOverview,
   type PoolConfig,
+  type PoolStatusRow,
 } from "../src/db/queries/gacha.js";
+import { buildStatusEmbed } from "../src/ui/gachaEmbed.js";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -324,6 +326,136 @@ describe("executeReset", () => {
       reason: "cooldown",
       readyAt: last + POOL.resetCooldownSec,
     });
+  });
+});
+
+describe("epoch-leak regression", () => {
+  it("full stamina without prior reset reports no epoch timestamp", async () => {
+    const userId = "reset-never";
+    const now = 9_000_000;
+    await db.insert(users).values({ id: userId, createdAt: now });
+    await db.insert(userPoolStates).values({
+      userId,
+      poolId: POOL.id,
+      stamina: POOL.staminaMax,
+      staminaAnchorAt: now,
+      lastResetAt: null,
+      version: 0,
+    });
+    const rows = await getStatusOverview(db, userId, now);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]?.resetReady).toBe(false);
+    expect(rows[0]?.resetDeniedReason).toBe("full");
+    // The embed routes "full" away from the timestamp: no <t:0:R>.
+    const embed = buildStatusEmbed(rows as PoolStatusRow[], userId);
+    expect(embed.description ?? "").not.toContain("<t:0:R>");
+    expect(embed.description ?? "").toContain("tidak perlu (masih penuh)");
+  });
+
+  it("parallel resets: exactly one wins, loser denial never epoch", async () => {
+    const userId = "reset-race";
+    const now = 10_000_000;
+    await db.insert(users).values({ id: userId, createdAt: now });
+    await db.insert(userPoolStates).values({
+      userId,
+      poolId: POOL.id,
+      stamina: 1,
+      staminaAnchorAt: now,
+      lastResetAt: now - POOL.resetCooldownSec - 5,
+      version: 0,
+    });
+    const outs = await Promise.all([
+      executeReset(db, { userId, pool: POOL, now }),
+      executeReset(db, { userId, pool: POOL, now }),
+    ]);
+    expect(outs.filter((o) => o.status === "ok")).toHaveLength(1);
+    const denied = outs.filter((o) => o.status === "denied");
+    expect(denied).toHaveLength(1);
+    if (denied[0]?.status !== "denied") return;
+    // Never the epoch: readyAt is now (full) or now + cooldown.
+    expect(denied[0].readyAt).toBeGreaterThan(0);
+    const states = await db
+      .select()
+      .from(userPoolStates)
+      .where(eq(userPoolStates.userId, userId));
+    expect(states[0]?.version).toBe(1);
+    expect(states[0]?.stamina).toBe(POOL.staminaMax);
+  });
+
+  it("concurrent race loser keeps stamina and can retry", async () => {
+    const userId = "pull-race-retry";
+    const now = 11_000_000;
+    await db.insert(users).values({ id: userId, createdAt: now });
+    await db.insert(userPoolStates).values({
+      userId,
+      poolId: POOL.id,
+      stamina: 1,
+      staminaAnchorAt: now,
+      version: 0,
+    });
+    const results = await Promise.all(
+      Array.from({ length: 5 }, () =>
+        executePull(db, {
+          userId,
+          pool: POOL,
+          now,
+          rand: scripted([0.0, 0.0]),
+        }),
+      ),
+    );
+    const oks = results.filter((r) => r.status === "ok");
+    const conflicts = results.filter((r) => r.status === "conflict");
+    expect(oks).toHaveLength(1);
+    expect(conflicts).toHaveLength(4);
+    // Losers kept their stamina (single spend) and exactly one pull logged.
+    const states = await db
+      .select()
+      .from(userPoolStates)
+      .where(eq(userPoolStates.userId, userId));
+    expect(states[0]?.stamina).toBe(0);
+    expect(states[0]?.version).toBe(1);
+    const pulls = await db
+      .select()
+      .from(userCards)
+      .where(eq(userCards.userId, userId));
+    expect(pulls.reduce((s, r) => s + r.quantity, 0)).toBe(1);
+  });
+
+  it("pull vs reset race leaves state consistent", async () => {
+    const userId = "pull-reset-race";
+    const now = 12_000_000;
+    await db.insert(users).values({ id: userId, createdAt: now });
+    await db.insert(userPoolStates).values({
+      userId,
+      poolId: POOL.id,
+      stamina: 1,
+      staminaAnchorAt: now,
+      lastResetAt: now - POOL.resetCooldownSec - 5,
+      version: 0,
+    });
+    const [pullOut, resetOut] = await Promise.all([
+      executePull(db, {
+        userId,
+        pool: POOL,
+        now,
+        rand: scripted([0.0, 0.0]),
+      }),
+      executeReset(db, { userId, pool: POOL, now }),
+    ]);
+    // Exactly one CAS winner: pull ok XOR reset ok.
+    const pullWon = pullOut.status === "ok";
+    const resetWon = resetOut.status === "ok";
+    expect(pullWon !== resetWon).toBe(true);
+    const states = await db
+      .select()
+      .from(userPoolStates)
+      .where(eq(userPoolStates.userId, userId));
+    expect(states[0]?.version).toBe(1);
+    if (pullWon) {
+      expect(states[0]?.stamina).toBe(0);
+    } else {
+      expect(states[0]?.stamina).toBe(POOL.staminaMax);
+    }
   });
 });
 
