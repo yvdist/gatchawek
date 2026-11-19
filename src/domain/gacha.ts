@@ -6,14 +6,19 @@ export function pullKind(hasCard: boolean, memberOwned: boolean): PullKind {
   return "duplicate";
 }
 
-export function pullLabel(kind: PullKind, quantity: number): string {
+export function pullLabel(
+  kind: PullKind,
+  quantity: number,
+  isHolo = false,
+): string {
+  const prefix = isHolo ? "✦ HOLO " : "";
   switch (kind) {
     case "new-member":
-      return "✨ Kartu baru!";
+      return `${prefix}✨ Kartu baru!`;
     case "new-photo":
-      return "🆕 Foto baru!";
+      return `${prefix}🆕 Foto baru!`;
     case "duplicate":
-      return `🔁 Duplikat ×${quantity}`;
+      return `${prefix}🔁 Duplikat ×${quantity}`;
   }
 }
 

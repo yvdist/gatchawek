@@ -19,6 +19,8 @@ describe("gachaEmbed", () => {
       photoTotal: 13,
       rarity: "rare",
       kind: "new-member",
+      isHolo: false,
+      isFirstClaim: false,
       quantity: 1,
       userId: "111",
       groupOwned: 3,
@@ -48,6 +50,8 @@ describe("gachaEmbed", () => {
       photoTotal: 1,
       rarity: "common",
       kind: "duplicate",
+      isHolo: false,
+      isFirstClaim: false,
       quantity: 4,
       userId: "1",
       groupOwned: 1,
@@ -59,12 +63,39 @@ describe("gachaEmbed", () => {
     expect(embed.description).toContain("🔁 Duplikat ×4");
   });
 
+  it("styles holo pulls gold with ✦ and Holographic line", () => {
+    const embed = buildPullEmbed({
+      poolName: "Pejabat",
+      poolEmoji: "🏛️",
+      memberName: "Aa",
+      groupName: "Kabinet",
+      fullName: "Aa Full",
+      photoNo: 1,
+      photoTotal: 13,
+      rarity: "ultra_rare",
+      kind: "new-member",
+      isHolo: true,
+      isFirstClaim: true,
+      quantity: 0,
+      userId: "111",
+      groupOwned: 1,
+      groupTotal: 5,
+      staminaLeft: 9,
+      staminaMax: 10,
+      imageUrl: "https://example.test/cards/aa-01.x.webp",
+    });
+    expect(embed.title).toBe("✦ 🎴 Aa (Kabinet)");
+    expect(embed.color).toBe(0xffd700);
+    expect(embed.description).toContain("✦ HOLO ✨ Kartu baru!");
+    expect(embed.description).toContain("🌍 Orang pertama yang punya Aa!");
+    expect(embed.description).toContain("✨ Holographic!");
+  });
+
   it("builds an under-100-char again button custom id", () => {
     const row = againButton("pejabat", "123456789012345678");
     const customId =
       row.components[0]?.custom_id ?? "";
     expect(customId).toBe("gacha:again:pejabat:123456789012345678");
-    expect(customId.length).toBeLessThan(100);
   });
 
   it("prefixes the worker host for card images", () => {

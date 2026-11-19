@@ -3,13 +3,14 @@ import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Miniflare } from "miniflare";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { createDb, type Db } from "../src/db/client.js";
 import {
   cards,
   groups,
   members,
   pools,
+  pulls,
   userCards,
   userPoolStates,
   users,
@@ -129,6 +130,18 @@ async function seedMinimal(): Promise<void> {
       photoNo: 1,
       rarity: "rare",
       imageFile: "bb-01.x.webp",
+      enabled: true,
+    },
+    {
+      id: "bb-02",
+      poolId: POOL.id,
+      groupId: "g1",
+      memberId: "bb",
+      serial: 4,
+      photoNo: 2,
+      rarity: "super_rare",
+      holoEnabled: true,
+      imageFile: "bb-02.x.webp",
       enabled: true,
     },
   ]);
@@ -262,6 +275,55 @@ describe("executePull labels and progress", () => {
       .from(userCards)
       .where(eq(userCards.userId, userId));
     expect(owned.reduce((s, r) => s + r.quantity, 0)).toBe(1);
+  });
+});
+
+describe("executePull holo", () => {
+  it("banks holo_qty without touching quantity under the threshold", async () => {
+    const userId = "pull-holo";
+    const now = 7_000_000;
+    // rarity roll 0.95 → super_rare (60+28+9=97 window over total 100);
+    // index 0 of 1; holo roll 0.01 < 0.08.
+    const out = await executePull(db, {
+      userId,
+      pool: POOL,
+      now,
+      rand: scripted([0.95, 0.0, 0.01]),
+    });
+    expect(out.status).toBe("ok");
+    if (out.status !== "ok") return;
+    expect(out.card.id).toBe("bb-02");
+    expect(out.isHolo).toBe(true);
+    expect(out.isFirstClaim).toBe(true);
+    expect(out.quantity).toBe(0);
+    const rows = await db
+      .select()
+      .from(userCards)
+      .where(and(eq(userCards.userId, userId), eq(userCards.cardId, "bb-02")));
+    expect(rows[0]?.quantity).toBe(0);
+    expect(rows[0]?.holoQty).toBe(1);
+    const history = await db
+      .select()
+      .from(pulls)
+      .where(and(eq(pulls.userId, userId), eq(pulls.cardId, "bb-02")));
+    expect(history[0]?.isHolo).toBe(true);
+  });
+
+  it("falls back to normal quantity above the threshold", async () => {
+    const userId = "pull-noholo";
+    const now = 8_000_000;
+    const out = await executePull(db, {
+      userId,
+      pool: POOL,
+      now,
+      rand: scripted([0.95, 0.0, 0.5]),
+    });
+    expect(out.status).toBe("ok");
+    if (out.status !== "ok") return;
+    expect(out.card.id).toBe("bb-02");
+    expect(out.isHolo).toBe(false);
+    expect(out.isFirstClaim).toBe(false);
+    expect(out.quantity).toBe(1);
   });
 });
 

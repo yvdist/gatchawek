@@ -35,6 +35,34 @@ export const RARITY_STARS: Record<RarityKey, string> = {
   ultra_rare: "★★★★",
 };
 
+export const HOLO_CHANCE: Record<
+  Extract<RarityKey, "super_rare" | "ultra_rare">,
+  number
+> = {
+  super_rare: 0.08,
+  ultra_rare: 0.25,
+};
+
+/**
+ * Holo roll: true only for top tiers on holo-enabled cards with
+ * `roll < HOLO_CHANCE[rarity]`. Pure; no db/discord imports.
+ */
+export function rollHolo(
+  rarity: RarityKey,
+  roll: number,
+  holoEnabled: boolean,
+): boolean {
+  if (!holoEnabled) return false;
+  const chance =
+    rarity === "super_rare"
+      ? HOLO_CHANCE.super_rare
+      : rarity === "ultra_rare"
+        ? HOLO_CHANCE.ultra_rare
+        : null;
+  if (chance === null) return false;
+  return roll < chance;
+}
+
 /**
  * Weighted rarity roll. `roll` in [0, 1). Weights are renormalized over the
  * enabled `available` rarities. Returns null when nothing is available.

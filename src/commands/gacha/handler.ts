@@ -77,6 +77,8 @@ async function followupPull(
             photoTotal: outcome.card.photoTotal,
             rarity: outcome.card.rarity,
             kind: outcome.kind,
+            isHolo: outcome.isHolo,
+            isFirstClaim: outcome.isFirstClaim,
             quantity: outcome.quantity,
             userId,
             groupOwned: outcome.groupOwned,

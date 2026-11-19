@@ -18,6 +18,35 @@ import {
   resolveManifestRoot,
   summarize,
 } from "./lib/manifests.js";
+import type { PhotoManifest } from "../shared/manifest.schema.js";
+
+const HOLO_RARITIES: ReadonlySet<PhotoManifest["rarity"]> = new Set([
+  "super_rare",
+  "ultra_rare",
+]);
+
+/**
+ * Holo-eligible card ids: first enabled super_rare + first enabled ultra_rare
+ * per group (manifest order across members). Computed in JS, so a re-seed
+ * backfills old cards through the same upsert without a separate UPDATE.
+ */
+export function holoCardIds(
+  loaded: Pick<Awaited<ReturnType<typeof loadManifests>>, "groups">,
+): Set<string> {
+  const ids = new Set<string>();
+  for (const { manifest } of loaded.groups) {
+    const seen = new Set<PhotoManifest["rarity"]>();
+    for (const member of manifest.members) {
+      for (const photo of member.photos) {
+        if (!photo.enabled || !HOLO_RARITIES.has(photo.rarity)) continue;
+        if (seen.has(photo.rarity)) continue;
+        seen.add(photo.rarity);
+        ids.add(cardIdFor(member.id, photo.photoNo));
+      }
+    }
+  }
+  return ids;
+}
 
 function sqlText(value: string): string {
   return `'${value.replace(/'/g, "''")}'`;
@@ -95,6 +124,7 @@ export function renderSeedSql(
     }
   }
   const liveCardIds = new Set<string>();
+  const holoIds = holoCardIds(loaded);
   for (const { file, manifest } of loaded.groups) {
     for (const member of manifest.members) {
       for (const photo of member.photos) {
@@ -107,9 +137,10 @@ export function renderSeedSql(
         }
         const imageFile = builtFiles.get(cardId);
         if (imageFile === undefined) continue; // raw missing: keep old row, skip update
+        const holoEnabled = holoIds.has(cardId) ? 1 : 0;
         lines.push(
-          `INSERT INTO cards (id, pool_id, group_id, member_id, serial, photo_no, rarity, image_file, source_page_url, enabled) VALUES (${sqlText(cardId)}, ${sqlText(manifest.pool)}, ${sqlText(manifest.group.id)}, ${sqlText(member.id)}, ${serial}, ${photo.photoNo}, ${sqlText(photo.rarity)}, ${sqlText(imageFile)}, ${sqlNullableText(photo.sourcePageUrl)}, 1) ` +
-            `ON CONFLICT(id) DO UPDATE SET pool_id=excluded.pool_id, group_id=excluded.group_id, member_id=excluded.member_id, serial=excluded.serial, photo_no=excluded.photo_no, rarity=excluded.rarity, image_file=excluded.image_file, source_page_url=excluded.source_page_url, enabled=1;`,
+          `INSERT INTO cards (id, pool_id, group_id, member_id, serial, photo_no, rarity, image_file, source_page_url, enabled, holo_enabled) VALUES (${sqlText(cardId)}, ${sqlText(manifest.pool)}, ${sqlText(manifest.group.id)}, ${sqlText(member.id)}, ${serial}, ${photo.photoNo}, ${sqlText(photo.rarity)}, ${sqlText(imageFile)}, ${sqlNullableText(photo.sourcePageUrl)}, 1, ${holoEnabled}) ` +
+            `ON CONFLICT(id) DO UPDATE SET pool_id=excluded.pool_id, group_id=excluded.group_id, member_id=excluded.member_id, serial=excluded.serial, photo_no=excluded.photo_no, rarity=excluded.rarity, image_file=excluded.image_file, source_page_url=excluded.source_page_url, enabled=1, holo_enabled=excluded.holo_enabled;`,
         );
       }
     }

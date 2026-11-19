@@ -17,6 +17,7 @@ import {
   handleTradeAutocomplete,
   handleTradeClick,
 } from "./commands/trade/handler.js";
+import { handleCariAutocomplete } from "./commands/cari/handler.js";
 import { ephemeralResponse } from "./discord/rest.js";
 import type { Env } from "./env.js";
 
@@ -96,6 +97,14 @@ app.post("/interactions", async (c) => {
       return c.json(
         await handleTradeAutocomplete(
           autocomplete as unknown as Parameters<typeof handleTradeAutocomplete>[0],
+          c.env,
+        ),
+      );
+    }
+    if (autocomplete.data.name === "cari") {
+      return c.json(
+        await handleCariAutocomplete(
+          autocomplete as unknown as Parameters<typeof handleCariAutocomplete>[0],
           c.env,
         ),
       );

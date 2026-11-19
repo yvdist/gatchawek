@@ -85,6 +85,9 @@ export const cards = sqliteTable(
     imageFile: text("image_file").notNull(),
     sourcePageUrl: text("source_page_url"),
     enabled: flag("enabled"),
+    holoEnabled: integer("holo_enabled", { mode: "boolean" })
+      .notNull()
+      .default(false),
   },
   (t) => [
     uniqueIndex("cards_pool_serial_uq").on(t.poolId, t.serial),
@@ -126,12 +129,14 @@ export const userCards = sqliteTable(
       .notNull()
       .references(() => cards.id),
     quantity: integer("quantity").notNull(),
+    holoQty: integer("holo_qty").notNull().default(0),
     firstObtainedAt: integer("first_obtained_at").notNull(),
     lastObtainedAt: integer("last_obtained_at").notNull(),
   },
   (t) => [
     primaryKey({ columns: [t.userId, t.cardId] }),
     check("user_cards_qty_nonneg", sql`${t.quantity} >= 0`),
+    check("user_cards_holo_qty_nonneg", sql`${t.holoQty} >= 0`),
   ],
 );
 
@@ -176,6 +181,7 @@ export const pulls = sqliteTable(
     cardId: text("card_id").notNull(),
     newMember: integer("new_member", { mode: "boolean" }).notNull(),
     newCard: integer("new_card", { mode: "boolean" }).notNull(),
+    isHolo: integer("is_holo", { mode: "boolean" }).notNull().default(false),
     pulledAt: integer("pulled_at").notNull(),
   },
   (t) => [index("pulls_user_idx").on(t.userId, t.pulledAt)],

@@ -1,17 +1,15 @@
 import { describe, expect, it } from "vitest";
 import {
+  HOLO_CHANCE,
   RARITY_KEYS,
   RARITY_WEIGHTS,
   pickIndex,
   pickRarity,
+  rollHolo,
   type RarityKey,
 } from "../src/domain/rarity.js";
-import {
-  pullKind,
-  pullLabel,
-} from "../src/domain/gacha.js";
+import { pullKind, pullLabel } from "../src/domain/gacha.js";
 
-/** Deterministic LCG in [0, 1). */
 function lcg(seed: number): () => number {
   let s = seed >>> 0;
   return () => {
@@ -90,5 +88,44 @@ describe("pullKind / pullLabel", () => {
   it("labels duplicates with the post-increment quantity", () => {
     expect(pullKind(true, true)).toBe("duplicate");
     expect(pullLabel("duplicate", 3)).toBe("🔁 Duplikat ×3");
+  });
+});
+
+describe("rollHolo", () => {
+  it("never holo for common/rare", () => {
+    for (const rarity of ["common", "rare"] as const) {
+      expect(rollHolo(rarity, 0, true)).toBe(false);
+    }
+  });
+
+  it("never holo when the card is not holo-enabled", () => {
+    expect(rollHolo("super_rare", 0, false)).toBe(false);
+    expect(rollHolo("ultra_rare", 0, false)).toBe(false);
+  });
+
+  it("respects the super_rare threshold", () => {
+    expect(rollHolo("super_rare", HOLO_CHANCE.super_rare - 0.001, true)).toBe(
+      true,
+    );
+    expect(rollHolo("super_rare", HOLO_CHANCE.super_rare + 0.001, true)).toBe(
+      false,
+    );
+  });
+
+  it("respects the ultra_rare threshold", () => {
+    expect(rollHolo("ultra_rare", HOLO_CHANCE.ultra_rare - 0.001, true)).toBe(
+      true,
+    );
+    expect(rollHolo("ultra_rare", HOLO_CHANCE.ultra_rare + 0.001, true)).toBe(
+      false,
+    );
+  });
+});
+
+describe("pullLabel holo", () => {
+  it("prefixes holo pulls with ✦ HOLO", () => {
+    expect(pullLabel("new-member", 1, true)).toBe("✦ HOLO ✨ Kartu baru!");
+    expect(pullLabel("duplicate", 2, true)).toBe("✦ HOLO 🔁 Duplikat ×2");
+    expect(pullLabel("new-photo", 1)).toBe("🆕 Foto baru!");
   });
 });

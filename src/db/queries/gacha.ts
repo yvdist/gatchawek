@@ -8,10 +8,11 @@ import {
   userPoolStates,
 } from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
- import {
+import {
   RARITY_KEYS,
   pickIndex,
   pickRarity,
+  rollHolo,
   type RarityKey,
 } from "../../domain/rarity.js";
 import {
@@ -115,6 +116,7 @@ export interface CandidateCard {
   serial: number;
   photoNo: number;
   rarity: RarityKey;
+  holoEnabled: boolean;
   imageFile: string;
   sourcePageUrl: string | null;
   memberName: string;
@@ -137,6 +139,7 @@ export async function getCandidatesByRarity(
       serial: cards.serial,
       photoNo: cards.photoNo,
       rarity: cards.rarity,
+      holoEnabled: cards.holoEnabled,
       imageFile: cards.imageFile,
       sourcePageUrl: cards.sourcePageUrl,
       memberName: members.name,
@@ -163,8 +166,8 @@ export async function readOwnership(
   userId: string,
   cardId: string,
   memberId: string,
-): Promise<{ quantity: number; memberOwned: boolean }> {
-  const [ownRows, memberRows] = await db.batch([
+): Promise<{ quantity: number; memberOwned: boolean; memberVirgin: boolean }> {
+  const [ownRows, memberRows, globalRows] = await db.batch([
     db
       .select({ quantity: userCards.quantity })
       .from(userCards)
@@ -180,11 +183,19 @@ export async function readOwnership(
         and(eq(userCards.userId, userId), eq(cards.memberId, memberId)),
       )
       .limit(1),
+    // First-claim feed: is this member unowned by ANYONE yet?
+    db
+      .select({ one: sql<number>`1` })
+      .from(userCards)
+      .innerJoin(cards, eq(userCards.cardId, cards.id))
+      .where(eq(cards.memberId, memberId))
+      .limit(1),
   ]);
   const own = ownRows[0];
   return {
     quantity: own?.quantity ?? 0,
     memberOwned: memberRows.length > 0,
+    memberVirgin: globalRows.length === 0,
   };
 }
 
@@ -193,6 +204,8 @@ export type PullOutcome =
       status: "ok";
       card: CandidateCard;
       kind: PullKind;
+      isHolo: boolean;
+      isFirstClaim: boolean;
       quantity: number;
       staminaLeft: number;
       groupOwned: number;
@@ -226,6 +239,7 @@ export async function executePull(
   if (candidates.length === 0) return { status: "pool-empty" };
   const card = candidates[pickIndex(rand(), candidates.length)];
   if (card === undefined) return { status: "pool-empty" };
+  const isHolo = rollHolo(card.rarity, rand(), card.holoEnabled);
 
   const ownership = await readOwnership(db, userId, card.id, card.memberId);
   const kind = pullKind(ownership.quantity > 0, ownership.memberOwned);
@@ -236,12 +250,12 @@ export async function executePull(
   // would also match the rival's increment and double-spend.
   const versionGuard = sql`(SELECT 1 FROM user_pool_states WHERE user_id = ${userId} AND pool_id = ${pool.id} AND version = ${state.version})`;
   const batchResults = await nativeBatch(db, [
-    sql`INSERT INTO user_cards (user_id, card_id, quantity, first_obtained_at, last_obtained_at)
-SELECT ${userId}, ${card.id}, 1, ${now}, ${now}
+    sql`INSERT INTO user_cards (user_id, card_id, quantity, holo_qty, first_obtained_at, last_obtained_at)
+SELECT ${userId}, ${card.id}, ${isHolo ? 0 : 1}, ${isHolo ? 1 : 0}, ${now}, ${now}
 WHERE EXISTS ${versionGuard}
-ON CONFLICT (user_id, card_id) DO UPDATE SET quantity = quantity + 1, last_obtained_at = excluded.last_obtained_at`,
-    sql`INSERT INTO pulls (user_id, pool_id, card_id, new_member, new_card, pulled_at)
-SELECT ${userId}, ${pool.id}, ${card.id}, ${kind === "new-member" ? 1 : 0}, ${kind !== "duplicate" ? 1 : 0}, ${now}
+ON CONFLICT (user_id, card_id) DO UPDATE SET quantity = quantity + ${isHolo ? 0 : 1}, holo_qty = holo_qty + ${isHolo ? 1 : 0}, last_obtained_at = excluded.last_obtained_at`,
+    sql`INSERT INTO pulls (user_id, pool_id, card_id, new_member, new_card, is_holo, pulled_at)
+SELECT ${userId}, ${pool.id}, ${card.id}, ${kind === "new-member" ? 1 : 0}, ${kind !== "duplicate" ? 1 : 0}, ${isHolo ? 1 : 0}, ${now}
 WHERE EXISTS ${versionGuard}`,
     db
       .update(userPoolStates)
@@ -291,7 +305,9 @@ WHERE EXISTS ${versionGuard}`,
     status: "ok",
     card,
     kind,
-    quantity: qtyRows[0]?.quantity ?? ownership.quantity + 1,
+    isHolo,
+    isFirstClaim: kind === "new-member" && ownership.memberVirgin,
+    quantity: qtyRows[0]?.quantity ?? (isHolo ? 0 : ownership.quantity + 1),
     staminaLeft: consumed.stamina,
     groupOwned: ownedRows[0]?.n ?? 0,
     groupTotal: groupRows[0]?.memberCount ?? 0,

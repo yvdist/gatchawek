@@ -28,6 +28,8 @@ export interface PullEmbedArgs {
   photoTotal: number;
   rarity: RarityKey;
   kind: PullKind;
+  isHolo: boolean;
+  isFirstClaim: boolean;
   quantity: number;
   userId: string;
   groupOwned: number;
@@ -37,14 +39,15 @@ export interface PullEmbedArgs {
   imageUrl: string;
 }
 
-function describePull(kind: PullKind, quantity: number): string {
+function describePull(kind: PullKind, quantity: number, isHolo = false): string {
+  const prefix = isHolo ? "✦ HOLO " : "";
   switch (kind) {
     case "new-member":
-      return "✨ Kartu baru!";
+      return `${prefix}✨ Kartu baru!`;
     case "new-photo":
-      return "🆕 Foto baru!";
+      return `${prefix}🆕 Foto baru!`;
     case "duplicate":
-      return `🔁 Duplikat ×${quantity}`;
+      return `${prefix}🔁 Duplikat ×${quantity}`;
   }
 }
 
@@ -52,15 +55,19 @@ export function buildPullEmbed(args: PullEmbedArgs): APIEmbed {
   const stars = RARITY_STARS[args.rarity];
   const label = RARITY_LABEL[args.rarity];
   const fullName = args.fullName ?? args.memberName;
+  const description = [
+    `<@${args.userId}> dapet photocard ${args.poolName} ${args.poolEmoji} ${stars} **${label}**!`,
+    `${args.groupName} · ${fullName} · 📸 Foto ${args.photoNo}/${args.photoTotal}`,
+    describePull(args.kind, args.quantity, args.isHolo),
+    `📚 Koleksi ${args.groupName}: **${args.groupOwned}/${args.groupTotal}**`,
+  ];
+  if (args.isHolo) description.push("✨ Holographic!");
+  if (args.isFirstClaim)
+    description.push(`🌍 Orang pertama yang punya ${args.memberName}!`);
   return {
-    title: `🎴 ${args.memberName} (${args.groupName})`,
-    description: [
-      `<@${args.userId}> dapet photocard ${args.poolName} ${args.poolEmoji} ${stars} **${label}**!`,
-      `${args.groupName} · ${fullName} · 📸 Foto ${args.photoNo}/${args.photoTotal}`,
-      describePull(args.kind, args.quantity),
-      `📚 Koleksi ${args.groupName}: **${args.groupOwned}/${args.groupTotal}**`,
-    ].join("\n"),
-    color: RARITY_COLOR[args.rarity],
+    title: `${args.isHolo ? "✦ " : ""}🎴 ${args.memberName} (${args.groupName})`,
+    description: description.join("\n"),
+    color: args.isHolo ? 0xffd700 : RARITY_COLOR[args.rarity],
     image: { url: args.imageUrl },
     footer: { text: `Sisa tarik: ${args.staminaLeft}/${args.staminaMax}` },
   };
