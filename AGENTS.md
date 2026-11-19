@@ -26,4 +26,9 @@ Sebelum melakukan commit dan menyatakan satu fase selesai, wajib jalankan dan pa
 ## 5. Git Workflow & Version Control
 - **Mulai Tugas (Branching):** Sebelum menulis atau mengubah kode apa pun, wajib pastikan berada di `main`, jalankan `git pull origin main`, lalu buat dan pindah ke branch baru dengan format `<tipe>/phase-<nomor>-<deskripsi-singkat>` (contoh: `feat/phase-0-foundation`). Dilarang bekerja atau commit langsung ke branch `main`.
 - **Selesai Tugas (Commit & Push):** Setelah seluruh Acceptance Criteria dan langkah verifikasi di Bagian 4 lulus, wajib lakukan `git add`, `git commit` menggunakan standar **Conventional Commits** (`feat:`, `fix:`, `chore:`, `test:`, `refactor:`), dan `git push -u origin <nama-branch>` ke remote repository.
+- **Selesai Tugas (PR & Merge via `gh`):** Setelah push, JANGAN berhenti di branch — selalu selesaikan sampai merge agar tidak ada PR menggantung yang harus dibuat manual:
+  1. `gh pr create --title "<commit-subject>" --body "<ringkasan AC + hasil verifikasi>"` (atau `gh pr create --fill` bila commit message sudah lengkap).
+  2. Tunggu CI/checks bila ada (`gh pr checks --watch`), pastikan hijau sebelum merge.
+  3. `gh pr merge --squash --delete-branch` (squash = satu commit per fase, konsisten dengan aturan satu-commit-per-fase).
+  4. Kembali ke `main` dan sinkron: `git checkout main && git pull origin main`, lalu verifikasi `git status` bersih.
 - **Keamanan Secret:** Pastikan file `.dev.vars`, `.env`, dan kredensial rahasia lainnya masuk ke dalam `.gitignore` dan tidak pernah ikut ter-commit.
