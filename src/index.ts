@@ -13,6 +13,10 @@ import {
   handleKoleksiGrupAutocomplete,
   handleKoleksiPage,
 } from "./commands/koleksi/handler.js";
+import {
+  handleTradeAutocomplete,
+  handleTradeClick,
+} from "./commands/trade/handler.js";
 import { ephemeralResponse } from "./discord/rest.js";
 import type { Env } from "./env.js";
 
@@ -68,6 +72,13 @@ app.post("/interactions", async (c) => {
         ),
       );
     }
+    if (ns === "trade") {
+      return c.json(
+        await handleTradeClick(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
     return c.json(ephemeralResponse("Tombol kedaluwarsa."));
   }
   if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
@@ -75,6 +86,14 @@ app.post("/interactions", async (c) => {
       interaction as unknown as Parameters<typeof handleKoleksiGrupAutocomplete>[0];
     if (autocomplete.data.name === "koleksi") {
       return c.json(await handleKoleksiGrupAutocomplete(autocomplete, c.env));
+    }
+    if (autocomplete.data.name === "trade") {
+      return c.json(
+        await handleTradeAutocomplete(
+          autocomplete as unknown as Parameters<typeof handleTradeAutocomplete>[0],
+          c.env,
+        ),
+      );
     }
     return c.json(ephemeralResponse("Autocomplete tidak tersedia."));
   }

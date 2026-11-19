@@ -15,6 +15,8 @@ import { koleksiDefinition } from "./koleksi/definition.js";
 import { handleKoleksi } from "./koleksi/handler.js";
 import { helpDefinition } from "./help/definition.js";
 import { handleHelp } from "./help/handler.js";
+import { tradeDefinition } from "./trade/definition.js";
+import { handleTrade } from "./trade/handler.js";
 
 export type WaitUntil = (promise: Promise<unknown>) => void;
 
@@ -31,6 +33,7 @@ export const commandDefinitions = [
   resetDefinition,
   koleksiDefinition,
   helpDefinition,
+  tradeDefinition,
 ];
 
 const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
@@ -40,6 +43,7 @@ const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
   ["reset", handleReset],
   ["koleksi", handleKoleksi],
   ["help", handleHelp],
+  ["trade", handleTrade],
 ];
 
 export const commandHandlers: Map<string, CommandHandler | CommandHandlerWithWait> =
