@@ -1,0 +1,64 @@
+export const RARITY_KEYS = [
+  "common",
+  "rare",
+  "super_rare",
+  "ultra_rare",
+] as const;
+
+export type RarityKey = (typeof RARITY_KEYS)[number];
+
+export const RARITY_WEIGHTS: Record<RarityKey, number> = {
+  common: 60,
+  rare: 28,
+  super_rare: 9,
+  ultra_rare: 3,
+};
+
+export const RARITY_LABEL: Record<RarityKey, string> = {
+  common: "Common",
+  rare: "Rare",
+  super_rare: "Super Rare",
+  ultra_rare: "Ultra Rare",
+};
+
+export const RARITY_COLOR: Record<RarityKey, number> = {
+  common: 0x9ca3af,
+  rare: 0xa855f7,
+  super_rare: 0xf59e0b,
+  ultra_rare: 0xec4899,
+};
+
+export const RARITY_STARS: Record<RarityKey, string> = {
+  common: "★",
+  rare: "★★",
+  super_rare: "★★★",
+  ultra_rare: "★★★★",
+};
+
+/**
+ * Weighted rarity roll. `roll` in [0, 1). Weights are renormalized over the
+ * enabled `available` rarities. Returns null when nothing is available.
+ */
+export function pickRarity(
+  roll: number,
+  available: readonly RarityKey[],
+): RarityKey | null {
+  if (available.length === 0) return null;
+  let total = 0;
+  for (const key of available) total += RARITY_WEIGHTS[key];
+  if (total <= 0) return null;
+  const threshold = roll * total;
+  let cumulative = 0;
+  for (const key of RARITY_KEYS) {
+    if (!available.includes(key)) continue;
+    cumulative += RARITY_WEIGHTS[key];
+    if (threshold < cumulative) return key;
+  }
+  return available[available.length - 1] as RarityKey;
+}
+
+/** Uniform index into [0, length). Throws when length <= 0. */
+export function pickIndex(roll: number, length: number): number {
+  if (length <= 0) throw new RangeError("pickIndex requires length > 0");
+  return Math.floor(roll * length);
+}

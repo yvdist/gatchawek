@@ -4,6 +4,12 @@
   "description": "Discord photocard gacha bot (Cloudflare Workers + Hono)",
   "type": "module",
   "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "register": "tsx scripts/register-commands.ts",
+    "typecheck": "tsc -p tsconfig.worker.json --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "test": "vitest run",
+    "lint": "eslint .",
     "validate": "tsx scripts/validate-manifest.ts",
     "fetch-images": "tsx scripts/fetch-images.ts",
     "build:cards": "tsx scripts/build-cards.ts",

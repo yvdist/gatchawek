@@ -4,9 +4,12 @@ import {
   InteractionType,
   type APIChatInputApplicationCommandInteraction,
   type APIInteraction,
+  type APIMessageComponentInteraction,
 } from "discord-api-types/v10";
 import { verifyDiscordRequest } from "./discord/verify.js";
 import { commandHandlers } from "./commands/registry.js";
+import { handleGachaAgain } from "./commands/gacha/handler.js";
+import { ephemeralResponse } from "./discord/rest.js";
 import type { Env } from "./env.js";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -38,7 +41,23 @@ app.post("/interactions", async (c) => {
     if (handler === undefined) {
       return c.json({ error: "Unknown command" }, 400);
     }
-    return c.json(await handler(command, c.env));
+    return c.json(
+      await handler(command, c.env, (p) => c.executionCtx.waitUntil(p)),
+    );
+  }
+  if (interaction.type === InteractionType.MessageComponent) {
+    const component = interaction as APIMessageComponentInteraction;
+    const customId =
+      "custom_id" in component.data ? component.data.custom_id : "";
+    const [ns, action] = customId.split(":");
+    if (ns === "gacha" && action === "again") {
+      return c.json(
+        await handleGachaAgain(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
+    return c.json(ephemeralResponse("Tombol kedaluwarsa."));
   }
   return c.json({ error: "Unhandled interaction type" }, 400);
 });

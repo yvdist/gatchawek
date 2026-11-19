@@ -10,8 +10,14 @@
       "migrations_dir": "migrations"
     }
   ],
+  "vars": {
+    "PUBLIC_BASE_URL": "gatchawek.yudistiraeka-pratama012.workers.dev"
+  },
   "env": {
     "staging": {
+      "vars": {
+        "PUBLIC_BASE_URL": "gatchawek-staging.yudistiraeka-pratama012.workers.dev"
+      },
       "d1_databases": [
         {
           "binding": "DB",
