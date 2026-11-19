@@ -37,12 +37,6 @@ export interface PullEmbedArgs {
   imageUrl: string;
 }
 
-const KIND_EMOJI: Record<PullKind, string> = {
-  "new-member": "✨",
-  "new-photo": "🆕",
-  duplicate: "🔁",
-};
-
 function describePull(kind: PullKind, quantity: number): string {
   switch (kind) {
     case "new-member":
@@ -91,10 +85,6 @@ export function againButton(
       },
     ],
   };
-}
-
-export function pullKindEmoji(kind: PullKind): string {
-  return KIND_EMOJI[kind];
 }
 
 export function buildStatusEmbed(

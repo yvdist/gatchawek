@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { cards, groups, members, trades, userCards, users } from "../schema.js";
+import { cards, groups, members, trades, userCards } from "../schema.js";
 import {
   tradeExpiry,
   validateNewTrade,
@@ -95,24 +95,71 @@ export async function createTrade(
   if (error !== null) return { status: "rejected", reason: error };
 
   const tradeId = crypto.randomUUID();
-  await db.batch([
-    db.insert(users).values({ id: proposerId, createdAt: now }).onConflictDoNothing(),
-    db.insert(users).values({ id: targetId, createdAt: now }).onConflictDoNothing(),
-    db.insert(trades).values({
-      id: tradeId,
+  const expiresAt = tradeExpiry(now);
+  // Atomic guard: the INSERT only fires when the quota and preconditions
+  // still hold INSIDE the write batch. A parallel double-submit reads a
+  // stale count in the read batch above, but only one INSERT can win.
+  const writeResults = await nativeBatch(db, [
+    sql`INSERT INTO users (id, created_at) VALUES (${proposerId}, ${now}) ON CONFLICT (id) DO NOTHING`,
+    sql`INSERT INTO users (id, created_at) VALUES (${targetId}, ${now}) ON CONFLICT (id) DO NOTHING`,
+    sql`INSERT INTO trades (id, proposer_id, target_id, offer_card_id, request_card_id, status, settle_token, channel_id, message_id, created_at, expires_at, resolved_at)
+SELECT ${tradeId}, ${proposerId}, ${targetId}, ${offerCardId}, ${requestCardId}, 'pending', NULL, NULL, NULL, ${now}, ${expiresAt}, NULL
+WHERE (SELECT COUNT(*) FROM trades WHERE proposer_id = ${proposerId} AND status = 'pending' AND expires_at > ${now}) < 3
+AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${proposerId} AND card_id = ${offerCardId} AND quantity >= 1)
+AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${targetId} AND card_id = ${requestCardId} AND quantity >= 1)
+AND EXISTS (SELECT 1 FROM cards WHERE id = ${offerCardId} AND enabled = 1)
+AND EXISTS (SELECT 1 FROM cards WHERE id = ${requestCardId} AND enabled = 1)`,
+  ]);
+  const guarded = writeResults[2];
+  if ((guarded?.meta.changes ?? 0) !== 1) {
+    // Lost a race (or state changed between the read batch and this
+    // atomic write). Re-read to report the true reason, not a guess.
+    const [pendingRows, offerRows, requestRows, cardRows] = await db.batch([
+      db
+        .select({ n: sql<number>`count(*)` })
+        .from(trades)
+        .where(
+          and(
+            eq(trades.proposerId, proposerId),
+            eq(trades.status, "pending"),
+            sql`${trades.expiresAt} > ${now}`,
+          ),
+        ),
+      db
+        .select({ quantity: userCards.quantity })
+        .from(userCards)
+        .where(
+          and(eq(userCards.userId, proposerId), eq(userCards.cardId, offerCardId)),
+        )
+        .limit(1),
+      db
+        .select({ quantity: userCards.quantity })
+        .from(userCards)
+        .where(
+          and(eq(userCards.userId, targetId), eq(userCards.cardId, requestCardId)),
+        )
+        .limit(1),
+      db
+        .select({ id: cards.id, enabled: cards.enabled })
+        .from(cards)
+        .where(inArray(cards.id, [offerCardId, requestCardId])),
+    ]);
+    const retryError = validateNewTrade({
       proposerId,
       targetId,
+      targetIsBot,
       offerCardId,
       requestCardId,
-      status: "pending",
-      settleToken: null,
-      channelId: null,
-      messageId: null,
-      createdAt: now,
-      expiresAt: tradeExpiry(now),
-      resolvedAt: null,
-    }),
-  ]);
+      proposerPending: pendingRows[0]?.n ?? 0,
+      proposerOwnsOffer: (offerRows[0]?.quantity ?? 0) >= 1,
+      targetOwnsRequest: (requestRows[0]?.quantity ?? 0) >= 1,
+      offerEnabled:
+        cardRows.find((r) => r.id === offerCardId)?.enabled === true,
+      requestEnabled:
+        cardRows.find((r) => r.id === requestCardId)?.enabled === true,
+    });
+    return { status: "rejected", reason: retryError ?? "pending-limit" };
+  }
   return { status: "ok", tradeId };
 }
 
@@ -214,7 +261,7 @@ export async function searchTradableCards(
   ownerId: string,
   prefix: string,
 ): Promise<TradableCardChoice[]> {
-  const sanitized = prefix.replace(/[%_\\]/g, "");
+  const sanitized = prefix.replace(/[%_\\]/g, "").toLowerCase();
   const likeCondition =
     sanitized === ""
       ? sql`1 = 1`

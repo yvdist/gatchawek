@@ -162,6 +162,44 @@ describe("createTrade", () => {
     });
     expect(fourth).toEqual({ status: "rejected", reason: "pending-limit" });
   });
+
+  it("parallel double-submit past the limit lets exactly one win", async () => {
+    await env.DB.prepare("DELETE FROM trades").run();
+    // Seed 2 pending so both racers read pending=2 and pass the read batch.
+    for (let i = 0; i < 2; i++) {
+      const o = await createTrade(db, {
+        proposerId: "u1",
+        targetId: "u2",
+        targetIsBot: false,
+        offerCardId: "anna-01",
+        requestCardId: "budi-01",
+        now: 4_000_000 + i,
+      });
+      expect(o.status).toBe("ok");
+    }
+    const outs = await Promise.all([
+      createTrade(db, {
+        proposerId: "u1",
+        targetId: "u2",
+        targetIsBot: false,
+        offerCardId: "anna-01",
+        requestCardId: "budi-01",
+        now: 4_000_010,
+      }),
+      createTrade(db, {
+        proposerId: "u1",
+        targetId: "u2",
+        targetIsBot: false,
+        offerCardId: "anna-01",
+        requestCardId: "budi-01",
+        now: 4_000_010,
+      }),
+    ]);
+    const oks = outs.filter((o) => o.status === "ok");
+    const denied = outs.filter((o) => o.status === "rejected");
+    expect(oks).toHaveLength(1);
+    expect(denied).toEqual([{ status: "rejected", reason: "pending-limit" }]);
+  });
 });
 
 describe("acceptTrade", () => {

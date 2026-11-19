@@ -29,7 +29,7 @@ export interface KoleksiPageTarget {
   page: number;
 }
 
-const PAGE_SEGMENT = /^\d{1,3}$/;
+const PAGE_SEGMENT = /^\d{1,6}$/;
 
 /**
  * Parses `koleksi:p:<ownerId>:<poolId>:<groupId>:<page>`.

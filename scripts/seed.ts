@@ -67,6 +67,13 @@ export function renderSeedSql(
         `ON CONFLICT(id) DO UPDATE SET name=excluded.name, emoji=excluded.emoji, sort_order=excluded.sort_order, stamina_max=excluded.stamina_max, regen_interval_sec=excluded.regen_interval_sec, reset_cooldown_sec=excluded.reset_cooldown_sec, enabled=1;`,
     );
   }
+  // Pools removed from data/pools.json (takedown): disable, never delete.
+  if (loaded.pools.length > 0) {
+    const live = loaded.pools.map((p) => sqlText(p.id)).join(",");
+    lines.push(`UPDATE pools SET enabled=0 WHERE id NOT IN (${live});`);
+  } else {
+    lines.push(`UPDATE pools SET enabled=0;`);
+  }
   const poolMemberCount = new Map<string, number>();
   for (const { manifest } of loaded.groups) {
     poolMemberCount.set(

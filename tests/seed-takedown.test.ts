@@ -57,6 +57,7 @@ describe("seed takedown", () => {
         pools: { pejabat: 1 },
       },
     );
+    expect(sql).toContain("UPDATE pools SET enabled=0");
     expect(sql).toContain("UPDATE cards SET enabled=0");
     expect(sql).toContain("UPDATE groups SET enabled=0");
     expect(sql).toContain("UPDATE members SET enabled=0");

@@ -47,7 +47,16 @@ describe("parseKoleksiPageCustomId", () => {
     expect(parseKoleksiPageCustomId("koleksi:p:123:pejabat:*:0:extra")).toBeNull();
     expect(parseKoleksiPageCustomId("koleksi:p::pejabat:*:0")).toBeNull();
     expect(parseKoleksiPageCustomId("koleksi:p:123:pejabat:*:abc")).toBeNull();
-    expect(parseKoleksiPageCustomId("koleksi:p:123:pejabat:*:1000")).toBeNull();
+    expect(parseKoleksiPageCustomId("koleksi:p:123:pejabat:*:1000000")).toBeNull();
+  });
+
+  it("accepts four-to-six digit pages", () => {
+    expect(parseKoleksiPageCustomId("koleksi:p:123:pejabat:*:1000")).toEqual({
+      ownerId: "123",
+      poolId: "pejabat",
+      groupId: "*",
+      page: 1000,
+    });
   });
 });
 

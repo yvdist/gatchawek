@@ -24,17 +24,29 @@ function rateTable(): string {
 
 function catalogLines(catalog: HelpCatalog): string {
   if (catalog.pools.length === 0) return "Katalog belum tersedia.";
-  return catalog.pools
-    .map((pool) => {
-      const groups =
-        pool.groups.length === 0
-          ? "belum ada seri"
-          : pool.groups
-              .map((g) => `${g.badge} ${g.name} (${g.memberCount} member)`)
-              .join(" · ");
-      return `${pool.emoji} **${pool.name}** — ${groups}`;
-    })
-    .join("\n");
+  // Discord caps embed descriptions at 4096 chars; keep the catalog well
+  // under it so pool/group growth never breaks /help.
+  const MAX_CATALOG = 3000;
+  const lines: string[] = [];
+  let used = 0;
+  let hidden = 0;
+  for (const pool of catalog.pools) {
+    const groups =
+      pool.groups.length === 0
+        ? "belum ada seri"
+        : pool.groups
+            .map((g) => `${g.badge} ${g.name} (${g.memberCount} member)`)
+            .join(" · ");
+    const line = `${pool.emoji} **${pool.name}** — ${groups}`;
+    if (used + line.length + 1 > MAX_CATALOG) {
+      hidden += catalog.pools.length - lines.length;
+      break;
+    }
+    lines.push(line);
+    used += line.length + 1;
+  }
+  if (hidden > 0) lines.push(`… (+${hidden} pool lagi)`);
+  return lines.join("\n");
 }
 
 export function buildHelpEmbed(args: HelpEmbedArgs): APIEmbed {

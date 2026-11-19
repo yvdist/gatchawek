@@ -17,6 +17,7 @@ import {
 import {
   executePull,
   executeReset,
+  getPoolConfig,
   getStatusOverview,
   type PoolConfig,
   type PoolStatusRow,
@@ -455,6 +456,26 @@ describe("epoch-leak regression", () => {
       expect(states[0]?.stamina).toBe(0);
     } else {
       expect(states[0]?.stamina).toBe(POOL.staminaMax);
+    }
+  });
+});
+
+describe("pool takedown", () => {
+  it("hides disabled pools from status and config", async () => {
+    const now = 13_000_000;
+    await db
+      .update(pools)
+      .set({ enabled: false })
+      .where(eq(pools.id, POOL.id));
+    try {
+      expect(await getPoolConfig(db, POOL.id)).toBeNull();
+      const rows = await getStatusOverview(db, "pull-labels", now);
+      expect(rows).toHaveLength(0);
+    } finally {
+      await db
+        .update(pools)
+        .set({ enabled: true })
+        .where(eq(pools.id, POOL.id));
     }
   });
 });
