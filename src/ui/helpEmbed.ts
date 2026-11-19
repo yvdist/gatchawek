@@ -11,6 +11,7 @@ export interface HelpEmbedArgs {
   userId: string;
   catalog: HelpCatalog;
   baseUrl: string;
+  commands: readonly { name: string; description: string }[];
 }
 
 function rateTable(): string {
@@ -37,15 +38,16 @@ function catalogLines(catalog: HelpCatalog): string {
 }
 
 export function buildHelpEmbed(args: HelpEmbedArgs): APIEmbed {
+  const commandLines =
+    "**Daftar command**\n" +
+    args.commands.map((c) => `\`/${c.name}\` — ${c.description}`).join("\n");
   const description = [
     `<@${args.userId}>`,
     "",
     "**Cara main**",
-    "`/gacha pool:X` — tarik satu photocard dari pool X.",
-    "`/koleksi` — lihat koleksimu (filter pool/grup, 8 member per halaman).",
-    "`/status` — sisa tarik, cooldown reset, dan progres tiap pool.",
-    "`/reset` — isi ulang stamina pool (ada cooldown).",
-    "`/ping` — cek bot hidup.",
+    commandLines,
+    "`/trade user:@teman offer:X request:Y` — tukar kartu; target klik ✅ Terima / ❌ Tolak, proposer klik 🚫 Batal.",
+    "`/help` — tampilkan panduan ini.",
     "Tombol Tarik Lagi hanya bisa diklik pemiliknya.",
     "",
     "**Rate rarity**",

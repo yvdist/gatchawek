@@ -324,64 +324,113 @@ export async function handleTradeClick(
     return { type: InteractionResponseType.DeferredMessageUpdate };
   }
 
-  // decline / cancel: single guarded UPDATE, answered inline (type 7).
+  // decline / cancel: inline read-only auth gate (no writes), then
+  // deferred-update (type 6) for the resolve + card-view round trips.
   if (clickerId === null) return ephemeralResponse("Tombol ini bukan untukmu.");
+  let gateRow: Awaited<ReturnType<typeof getTradeById>>;
   try {
-    const db = createDb(env);
-    const row = await getTradeById(db, parsed.tradeId);
-    if (row === null) return ephemeralResponse("Tombol kedaluwarsa.");
-    if (!canClickTrade(parsed.action, clickerId, row.proposerId, row.targetId)) {
-      return ephemeralResponse("Tombol ini bukan untukmu.");
-    }
-    const now = Math.floor(Date.now() / 1000);
-    const finalStatus =
-      row.expiresAt <= now
-        ? ("expired" as const)
-        : parsed.action === "decline"
-          ? ("declined" as const)
-          : ("cancelled" as const);
-    if (row.expiresAt > now) {
-      const ok = await resolveTrade(
-        db,
-        parsed.tradeId,
-        parsed.action === "decline" ? "declined" : "cancelled",
-        now,
-      );
-      if (!ok) return ephemeralResponse("Tawaran sudah diproses.");
-    } else {
-      await resolveTrade(db, parsed.tradeId, "cancelled", now);
-    }
-    const views = await getTradeCardViews(db, [
-      row.offerCardId,
-      row.requestCardId,
-    ]);
-    const offer = views.get(row.offerCardId);
-    const request = views.get(row.requestCardId);
-    if (offer === undefined || request === undefined) {
-      return {
-        type: InteractionResponseType.UpdateMessage,
-        data: { content: "Tawaran diproses.", components: [] },
-      };
-    }
-    return {
-      type: InteractionResponseType.UpdateMessage,
-      data: {
-        embeds: [
-          buildTradeEmbed({
-            proposerId: row.proposerId,
-            targetId: row.targetId,
-            offer,
-            request,
-            status: finalStatus,
-            expiresAt: row.expiresAt,
-          }),
-        ],
-        components: [],
-      },
-    };
+    gateRow = await getTradeById(createDb(env), parsed.tradeId);
   } catch {
     return ephemeralResponse("D1 sibuk/kuota habis, coba lagi.");
   }
+  if (gateRow === null) return ephemeralResponse("Tombol kedaluwarsa.");
+  if (
+    !canClickTrade(parsed.action, clickerId, gateRow.proposerId, gateRow.targetId)
+  ) {
+    return ephemeralResponse("Tombol ini bukan untukmu.");
+  }
+  waitUntil(
+    (async () => {
+      try {
+        const db = createDb(env);
+        const row = await getTradeById(db, parsed.tradeId);
+        if (row === null) {
+          await patchOriginal(
+            interaction.application_id,
+            interaction.token,
+            env.DISCORD_BOT_TOKEN,
+            { content: "Tombol kedaluwarsa." },
+          );
+          return;
+        }
+        if (
+          !canClickTrade(parsed.action, clickerId, row.proposerId, row.targetId)
+        ) {
+          await patchOriginal(
+            interaction.application_id,
+            interaction.token,
+            env.DISCORD_BOT_TOKEN,
+            { content: "Tombol ini bukan untukmu." },
+          );
+          return;
+        }
+        const now = Math.floor(Date.now() / 1000);
+        const finalStatus =
+          row.expiresAt <= now
+            ? ("expired" as const)
+            : parsed.action === "decline"
+              ? ("declined" as const)
+              : ("cancelled" as const);
+        if (row.expiresAt > now) {
+          const ok = await resolveTrade(
+            db,
+            parsed.tradeId,
+            parsed.action === "decline" ? "declined" : "cancelled",
+            now,
+          );
+          if (!ok) {
+            await patchOriginal(
+              interaction.application_id,
+              interaction.token,
+              env.DISCORD_BOT_TOKEN,
+              { content: "Tawaran sudah diproses." },
+            );
+            return;
+          }
+        } else {
+          await resolveTrade(db, parsed.tradeId, "cancelled", now);
+        }
+        const views = await cardViewsOrNull(env, [
+          row.offerCardId,
+          row.requestCardId,
+        ]);
+        const offer = views?.get(row.offerCardId);
+        const request = views?.get(row.requestCardId);
+        await patchOriginal(
+          interaction.application_id,
+          interaction.token,
+          env.DISCORD_BOT_TOKEN,
+          offer !== undefined && request !== undefined
+            ? {
+                embeds: [
+                  buildTradeEmbed({
+                    proposerId: row.proposerId,
+                    targetId: row.targetId,
+                    offer,
+                    request,
+                    status: finalStatus,
+                    expiresAt: row.expiresAt,
+                  }),
+                ],
+                components: [],
+              }
+            : { content: "Tawaran diproses." },
+        );
+      } catch {
+        try {
+          await patchOriginal(
+            interaction.application_id,
+            interaction.token,
+            env.DISCORD_BOT_TOKEN,
+            { content: "D1 sibuk/kuota habis, coba lagi." },
+          );
+        } catch {
+          // Never throw out of waitUntil.
+        }
+      }
+    })(),
+  );
+  return { type: InteractionResponseType.DeferredMessageUpdate };
 }
 
 export async function handleTradeAutocomplete(

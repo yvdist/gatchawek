@@ -41,3 +41,24 @@ tidak pernah di-commit.
 URL quick tunnel **berubah tiap run** dan harus dipasang ulang di portal setiap kali tunnel dibuat ulang.
 Alternatif: deploy Worker staging gratis (`pnpm deploy`) — Fase 0 tanpa D1 sehingga staging tidak butuh D1
 terpisah. Di Fase 1+, staging memakai D1 terpisah.
+
+## Menambah grup baru
+
+### Grup baru
+
+1. Isi manifest grup baru di `data/groups/<pool>/<grup>.json` (minta Gemini mengisinya sesuai `shared/manifest.schema.ts`).
+2. `pnpm validate` — pastikan manifest valid.
+3. `pnpm fetch-images` — unduh foto kartu; bila ada yang gagal, kirim `data/reports/fetch-report.json` balik ke Gemini untuk diperbaiki.
+4. `pnpm build:cards` — bangun aset kartu statis.
+5. `pnpm seed` — sinkronkan katalog ke D1.
+6. `pnpm register` — daftarkan ulang guild commands (definisi dari `src/commands/*/definition.ts`).
+7. `pnpm deploy` — deploy Worker.
+
+### Takedown grup
+
+1. Set `"enabled": false` (atau hapus entri grup) di manifest.
+2. `pnpm seed` — sinkronkan katalog ke D1.
+3. `pnpm build:cards` — bangun ulang aset kartu.
+4. `pnpm deploy` — deploy Worker.
+
+Kartu milik user tetap tersimpan di DB tetapi tersembunyi dan tidak bisa ditukar.

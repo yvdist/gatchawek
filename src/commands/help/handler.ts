@@ -7,6 +7,7 @@ import { createDb } from "../../db/client.js";
 import type { Env } from "../../env.js";
 import { ephemeralResponse, invokerId } from "../../discord/rest.js";
 import { getHelpCatalog } from "../../db/queries/koleksi.js";
+import { commandDefinitions } from "../registry.js";
 import { buildHelpEmbed } from "../../ui/helpEmbed.js";
 
 export async function handleHelp(
@@ -28,6 +29,7 @@ export async function handleHelp(
             userId,
             catalog,
             baseUrl: env.PUBLIC_BASE_URL,
+            commands: commandDefinitions,
           }),
         ],
         allowed_mentions: { parse: [] },

@@ -299,15 +299,67 @@ describe("handleTradeClick gates", () => {
     });
     expect((await getTradeById(db, tradeId))?.status).toBe("pending");
 
-    // Proposer cancels: type 7, no buttons in payload
-    const cancelled = await handleTradeClick(
-      component(`trade:cancel:${tradeId}`, "u1"),
-      env,
-      captureTasks().waitUntil,
+    // Proposer cancels: type 6, result delivered via patchOriginal
+    const { tasks: cancelTasks, waitUntil: w3 } = captureTasks();
+    const cancelPatch = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ id: "m" }), { status: 200 }),
     );
+    let cancelled;
+    try {
+      cancelled = await handleTradeClick(
+        component(`trade:cancel:${tradeId}`, "u1"),
+        env,
+        w3,
+      );
+      await Promise.all(cancelTasks);
+    } finally {
+      cancelPatch.mockRestore();
+    }
     expect(cancelled).toMatchObject({
-      type: InteractionResponseType.UpdateMessage,
+      type: InteractionResponseType.DeferredMessageUpdate,
     });
+    expect((await getTradeById(db, tradeId))?.status).toBe("cancelled");
+  });
+
+  it("delivers valid target decline via patchOriginal", async () => {
+    const db = createDb(env);
+    const { tasks, waitUntil } = captureTasks();
+    handleTrade(slash("u1", "u2", "anna-01", "budi-01"), env, waitUntil);
+    const post = vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ id: "m" }), { status: 200 }),
+    );
+    try {
+      await Promise.all(tasks);
+    } finally {
+      post.mockRestore();
+    }
+    const created = await env.DB.prepare(
+      "SELECT id FROM trades WHERE proposer_id = 'u1' AND target_id = 'u2' AND status = 'pending' ORDER BY created_at DESC LIMIT 1",
+    ).all<{ id: string }>();
+    const tradeId = created.results[0]?.id;
+    expect(tradeId).toBeTruthy();
+    if (tradeId === undefined) return;
+
+    const { tasks: declineTasks, waitUntil: w4 } = captureTasks();
+    const declinePatch = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(JSON.stringify({ id: "m" }), { status: 200 }));
+    let declined;
+    try {
+      declined = await handleTradeClick(
+        component(`trade:decline:${tradeId}`, "u2"),
+        env,
+        w4,
+      );
+      await Promise.all(declineTasks);
+      expect(declinePatch).toHaveBeenCalled();
+    } finally {
+      declinePatch.mockRestore();
+    }
+    expect(declined).toMatchObject({
+      type: InteractionResponseType.DeferredMessageUpdate,
+    });
+    expect((await getTradeById(db, tradeId))?.status).toBe("declined");
   });
 });
 

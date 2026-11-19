@@ -92,4 +92,15 @@ describe("POST /interactions signature verification", () => {
     const payload: unknown = await res.json();
     expect(payload).toMatchObject({ data: { content: expect.stringContaining("Pong") } });
   });
+
+  it("returns 400 Bad request for a signed malformed JSON body", async () => {
+    const body = "{not-json";
+    const res = await app.request("/interactions", {
+      method: "POST",
+      headers: discordHeaders(signBody(body), TIMESTAMP),
+      body,
+    }, { DISCORD_PUBLIC_KEY: publicKeyHex });
+    expect(res.status).toBe(400);
+    expect(await res.text()).toBe("Bad request");
+  });
 });

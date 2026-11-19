@@ -39,7 +39,12 @@ app.post("/interactions", async (c) => {
   );
   if (!ok) return c.text("Bad request signature", 401);
 
-  const interaction = JSON.parse(body) as APIInteraction;
+  let interaction: APIInteraction;
+  try {
+    interaction = JSON.parse(body) as APIInteraction;
+  } catch {
+    return c.text("Bad request", 400);
+  }
   if (interaction.type === InteractionType.Ping) {
     return c.json({ type: InteractionResponseType.Pong });
   }
