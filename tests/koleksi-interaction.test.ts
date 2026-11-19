@@ -10,6 +10,7 @@ import {
   type APIChatInputApplicationCommandInteraction,
   type APIMessageComponentInteraction,
 } from "discord-api-types/v10";
+import { eq } from "drizzle-orm";
 import { createDb } from "../src/db/client.js";
 import {
   cards,
@@ -292,6 +293,168 @@ describe("handleKoleksi missing pool", () => {
   });
 });
 
+describe("handleKoleksi followup prod replica", () => {
+  it("renders prod-like multi-member multi-photo data", async () => {
+    const db = createDb(env);
+    // Mirror prod: menteri-angin (2 fotos) + wakil-dewan (1 foto).
+    await db.insert(userCards).values({
+      userId: "u1",
+      cardId: "budi-01",
+      quantity: 2,
+      firstObtainedAt: 1,
+      lastObtainedAt: 2,
+    });
+    const calls: { body: unknown }[] = [];
+    const fetchMock = vi.fn(async (_url: string, init: { body: string }) => {
+      calls.push({ body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      handleKoleksi(
+        koleksiSlash("u1", { pool: "pejabat", publik: true }),
+        env,
+        waitUntil,
+      );
+      const settled = await Promise.allSettled(tasks);
+      expect(
+        settled.filter((r) => r.status === "rejected"),
+      ).toHaveLength(0);
+      expect(calls).toHaveLength(1);
+      const body = calls[0]?.body as { embeds?: { description?: string }[] };
+      expect(body.embeds?.[0]?.description).toContain("Anna");
+      expect(body.embeds?.[0]?.description).toContain("Budi");
+    } finally {
+      vi.unstubAllGlobals();
+      await db
+        .delete(userCards)
+        .where(eq(userCards.cardId, "budi-01"));
+    }
+  });
+});
+
+describe("handleKoleksi followup ok", () => {
+  it("posts a public embed with nav row for an owned pool", async () => {
+    const calls: { body: unknown }[] = [];
+    const fetchMock = vi.fn(async (_url: string, init: { body: string }) => {
+      calls.push({ body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      const res = handleKoleksi(
+        koleksiSlash("u1", { pool: "pejabat", publik: true }),
+        env,
+        waitUntil,
+      );
+      expect(res).toMatchObject({
+        type: InteractionResponseType.DeferredChannelMessageWithSource,
+      });
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      expect(calls).toHaveLength(1);
+      const body = calls[0]?.body as {
+        embeds?: { title?: string; description?: string; footer?: { text?: string } }[];
+        components?: { components?: { custom_id?: string; disabled?: boolean }[] }[];
+        flags?: number;
+      };
+      expect(body.flags).toBeUndefined();
+      expect(body.embeds?.[0]?.description).toContain("Anna");
+      // Single page in fixture: no nav row (duplicate custom_ids).
+      expect(body.components ?? []).toHaveLength(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("handleKoleksi nav buttons", () => {
+  it("omits nav on a single page (no duplicate custom_ids)", async () => {
+    const calls: { body: unknown }[] = [];
+    const fetchMock = vi.fn(async (_url: string, init: { body: string }) => {
+      calls.push({ body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      handleKoleksi(koleksiSlash("u1", { pool: "pejabat" }), env, waitUntil);
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      expect(calls).toHaveLength(1);
+      const body = calls[0]?.body as {
+        components?: { components?: { custom_id?: string }[] }[];
+      };
+      expect(body.components ?? []).toHaveLength(0);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("handleKoleksi nav multi-page", () => {
+  it("shows prev/next with distinct custom_ids on two pages", async () => {
+    const db = createDb(env);
+    // 9 owned members in pejabat -> 2 pages (PAGE_SIZE 8).
+    for (let i = 0; i < 9; i++) {
+      const mid = `nav-m${i}`;
+      await db.insert(members).values({
+        id: mid,
+        poolId: "pejabat",
+        groupId: "g1",
+        name: `Nav${i}`,
+        nameLower: `nav${i}`,
+        photoTotal: 1,
+        sortOrder: 10 + i,
+        enabled: true,
+      });
+      await db.insert(cards).values({
+        id: `${mid}-01`,
+        poolId: "pejabat",
+        groupId: "g1",
+        memberId: mid,
+        serial: 100 + i,
+        photoNo: 1,
+        rarity: "common",
+        imageFile: "n.webp",
+        enabled: true,
+      });
+      await db.insert(userCards).values({
+        userId: "u1",
+        cardId: `${mid}-01`,
+        quantity: 1,
+        firstObtainedAt: 1,
+        lastObtainedAt: 1,
+      });
+    }
+    const calls: { body: unknown }[] = [];
+    const fetchMock = vi.fn(async (_url: string, init: { body: string }) => {
+      calls.push({ body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      handleKoleksi(koleksiSlash("u1", { pool: "pejabat" }), env, waitUntil);
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      expect(calls).toHaveLength(1);
+      const body = calls[0]?.body as {
+        components?: { components?: { custom_id?: string }[] }[];
+      };
+      const buttons = body.components?.[0]?.components ?? [];
+      expect(buttons).toHaveLength(2);
+      expect(buttons[0]?.custom_id).not.toBe(buttons[1]?.custom_id);
+    } finally {
+      vi.unstubAllGlobals();
+      for (let i = 0; i < 9; i++) {
+        await db.delete(userCards).where(eq(userCards.cardId, `nav-m${i}-01`));
+        await db.delete(cards).where(eq(cards.id, `nav-m${i}-01`));
+        await db.delete(members).where(eq(members.id, `nav-m${i}`));
+      }
+    }
+  });
+});
+
 describe("handleKoleksi scope edge cases", () => {
   async function runKoleksi(
     userId: string,
@@ -412,10 +575,8 @@ describe("handleKoleksi followup", () => {
       expect(body.flags).toBe(64);
       expect(body.embeds?.[0]?.title).toContain("Koleksi");
       expect(body.embeds?.[0]?.footer?.text).toContain("1/1");
-      const buttons = body.components?.[0]?.components ?? [];
-      expect(buttons).toHaveLength(2);
-      expect(buttons[0]?.disabled).toBe(true);
-      expect(buttons[1]?.disabled).toBe(true);
+      // Single page: nav omitted instead of two disabled same-page buttons.
+      expect(body.components ?? []).toHaveLength(0);
     } finally {
       vi.unstubAllGlobals();
     }

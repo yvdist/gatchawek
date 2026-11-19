@@ -62,7 +62,12 @@ async function followupKoleksiPage(
   isPublic: boolean,
 ): Promise<void> {
   const db = createDb(env);
-  const outcome = await getKoleksiPage(db, userId, filters, page);
+  console.error("[koleksi-debug] start", JSON.stringify({ userId, filters, page }));
+  const outcome = await getKoleksiPage(db, userId, filters, page).catch((e) => {
+    console.error("[koleksi-debug] query threw:", String(e));
+    throw e;
+  });
+  console.error("[koleksi-debug] outcome:", outcome.status);
   switch (outcome.status) {
     case "unknown-pool":
       await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
@@ -83,6 +88,21 @@ async function followupKoleksiPage(
       });
       return;
     case "ok": {
+      // Single page: no nav buttons. Prev and Next would carry the same
+      // page number, producing duplicate custom_ids that Discord rejects
+      // with COMPONENT_CUSTOM_ID_DUPLICATED.
+      const nav =
+        outcome.totalPages <= 1
+          ? []
+          : [
+              koleksiNavRow(
+                userId,
+                filters.poolId,
+                groupIdForNav,
+                outcome.page,
+                outcome.totalPages,
+              ),
+            ];
       const body = {
         embeds: [
           buildKoleksiEmbed({
@@ -98,15 +118,7 @@ async function followupKoleksiPage(
             filters,
           }),
         ],
-        components: [
-          koleksiNavRow(
-            userId,
-            filters.poolId,
-            groupIdForNav,
-            outcome.page,
-            outcome.totalPages,
-          ),
-        ],
+        components: nav,
       };
       await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
         ...body,
@@ -145,7 +157,9 @@ export function handleKoleksi(
           0,
           isPublic,
         );
-      } catch {
+      } catch (err) {
+        // TEMP-DEBUG: dilacak via wrangler tail, dihapus setelah root cause ketemu.
+        console.error("[koleksi-debug] followup failed:", String(err));
         try {
           await patchOriginal(
             interaction.application_id,
@@ -196,6 +210,19 @@ export function handleKoleksiPage(
           );
           return;
         }
+        // Single page: omit nav buttons (duplicate custom_ids).
+        const nav =
+          outcome.totalPages <= 1
+            ? []
+            : [
+                koleksiNavRow(
+                  ownerId,
+                  poolId,
+                  groupRaw,
+                  outcome.page,
+                  outcome.totalPages,
+                ),
+              ];
         await patchOriginal(
           interaction.application_id,
           interaction.token,
@@ -215,15 +242,7 @@ export function handleKoleksiPage(
                 filters: { poolId, groupId },
               }),
             ],
-            components: [
-              koleksiNavRow(
-                ownerId,
-                poolId,
-                groupRaw,
-                outcome.page,
-                outcome.totalPages,
-              ),
-            ],
+            components: nav,
           },
         );
       } catch {
