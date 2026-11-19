@@ -9,6 +9,10 @@ import {
 import { verifyDiscordRequest } from "./discord/verify.js";
 import { commandHandlers } from "./commands/registry.js";
 import { handleGachaAgain } from "./commands/gacha/handler.js";
+import {
+  handleKoleksiGrupAutocomplete,
+  handleKoleksiPage,
+} from "./commands/koleksi/handler.js";
 import { ephemeralResponse } from "./discord/rest.js";
 import type { Env } from "./env.js";
 
@@ -57,7 +61,22 @@ app.post("/interactions", async (c) => {
         ),
       );
     }
+    if (ns === "koleksi" && action === "p") {
+      return c.json(
+        await handleKoleksiPage(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
     return c.json(ephemeralResponse("Tombol kedaluwarsa."));
+  }
+  if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
+    const autocomplete =
+      interaction as unknown as Parameters<typeof handleKoleksiGrupAutocomplete>[0];
+    if (autocomplete.data.name === "koleksi") {
+      return c.json(await handleKoleksiGrupAutocomplete(autocomplete, c.env));
+    }
+    return c.json(ephemeralResponse("Autocomplete tidak tersedia."));
   }
   return c.json({ error: "Unhandled interaction type" }, 400);
 });

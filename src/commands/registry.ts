@@ -11,6 +11,10 @@ import { statusDefinition } from "./status/definition.js";
 import { handleStatus } from "./status/handler.js";
 import { resetDefinition } from "./reset/definition.js";
 import { handleReset } from "./reset/handler.js";
+import { koleksiDefinition } from "./koleksi/definition.js";
+import { handleKoleksi } from "./koleksi/handler.js";
+import { helpDefinition } from "./help/definition.js";
+import { handleHelp } from "./help/handler.js";
 
 export type WaitUntil = (promise: Promise<unknown>) => void;
 
@@ -25,12 +29,18 @@ export const commandDefinitions = [
   gachaDefinition,
   statusDefinition,
   resetDefinition,
+  koleksiDefinition,
+  helpDefinition,
+];
+
+const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
+  ["ping", handlePing],
+  ["gacha", handleGacha],
+  ["status", handleStatus],
+  ["reset", handleReset],
+  ["koleksi", handleKoleksi],
+  ["help", handleHelp],
 ];
 
 export const commandHandlers: Map<string, CommandHandler | CommandHandlerWithWait> =
-  new Map([
-    ["ping", handlePing],
-    ["gacha", handleGacha],
-    ["status", handleStatus],
-    ["reset", handleReset],
-  ]);
+  new Map(handlerEntries);
