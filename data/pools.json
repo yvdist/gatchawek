@@ -1,1 +1,1 @@
-[]
+[{"id":"pejabat","name":"Pejabat","emoji":"🏛️","staminaMax":10,"regenIntervalSec":1500,"resetCooldownSec":10800,"sortOrder":0},{"id":"meme","name":"Meme","emoji":"🐸","staminaMax":10,"regenIntervalSec":1500,"resetCooldownSec":10800,"sortOrder":1}]

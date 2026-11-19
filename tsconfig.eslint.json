@@ -3,5 +3,5 @@
   "compilerOptions": {
     "types": ["node", "@cloudflare/workers-types"]
   },
-  "include": ["src", "scripts", "shared", "tests"]
+  "include": ["src", "scripts", "shared", "tests", "drizzle.config.ts"]
 }

@@ -1,5 +1,29 @@
 {
   "name": "gatchawek",
   "main": "src/index.ts",
-  "compatibility_date": "2026-11-19"
+  "compatibility_date": "2026-11-19",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gatchawek",
+      "database_id": "f9acc0cf-45ff-44b3-8736-dc790370bb0a",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "env": {
+    "staging": {
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "gatchawek-staging",
+          "database_id": "f2c7a563-6b23-47dc-9758-c63f844d5d6c",
+          "migrations_dir": "migrations"
+        }
+      ]
+    }
+  },
+  "assets": {
+    "directory": "./public",
+    "not_found_handling": "none"
+  }
 }

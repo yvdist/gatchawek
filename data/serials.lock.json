@@ -1,0 +1,29 @@
+{
+  "cards": {
+    "katak-bijak-01": 1,
+    "katak-bijak-02": 2,
+    "katak-bijak-03": 3,
+    "ketua-dewan-01": 1,
+    "ketua-dewan-02": 2,
+    "ketua-dewan-03": 3,
+    "kucing-dingin-01": 4,
+    "kucing-dingin-02": 5,
+    "kucing-dingin-03": 6,
+    "menteri-angin-01": 4,
+    "menteri-angin-02": 5,
+    "menteri-angin-03": 6,
+    "menteri-awan-01": 7,
+    "menteri-awan-02": 8,
+    "menteri-awan-03": 9,
+    "menteri-hujan-01": 10,
+    "menteri-hujan-02": 11,
+    "menteri-hujan-03": 12,
+    "wakil-dewan-01": 13,
+    "wakil-dewan-02": 14,
+    "wakil-dewan-03": 15
+  },
+  "pools": {
+    "pejabat": 15,
+    "meme": 6
+  }
+}
