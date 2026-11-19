@@ -1,0 +1,1577 @@
+{
+  "schemaVersion": 1,
+  "pool": "meme",
+  "group": {
+    "id": "jomok",
+    "name": "Jomok",
+    "badge": "JOMOK"
+  },
+  "members": [
+    {
+      "id": "jomok-mix-01",
+      "name": "Jomok Mix 01",
+      "fullName": "Ambatron · Aldo JMK48 · Ambabelle · Adit · Ade · Amba Female",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-01-01",
+          "sourcePageUrl": "https://example.com/jomok/734555635_2071002630212416_9149517741468001269_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-01-02",
+          "sourcePageUrl": "https://example.com/jomok/735636680_2070996480213031_350967269870824809_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-01-03",
+          "sourcePageUrl": "https://example.com/jomok/735659245_2071002580212421_9043056296791274566_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-01-04",
+          "sourcePageUrl": "https://example.com/jomok/736155814_2070996070213072_8094250475401685550_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-01-05",
+          "sourcePageUrl": "https://example.com/jomok/736592771_2071001920212487_3242708912161002730_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-01-06",
+          "sourcePageUrl": "https://example.com/jomok/737619901_2070998120212867_5367701656672290021_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-02",
+      "name": "Jomok Mix 02",
+      "fullName": "Andre (Andriana) · Amnekitwit · Ambatukam · Anton · Amkaming · Anas Mewing",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-02-01",
+          "sourcePageUrl": "https://example.com/jomok/735394499_2070998666879479_5913313746661920453_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-02-02",
+          "sourcePageUrl": "https://example.com/jomok/735456826_2070997883546224_7504688728897229903_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-02-03",
+          "sourcePageUrl": "https://example.com/jomok/735810539_2070995330213146_6356494029730848807_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-02-04",
+          "sourcePageUrl": "https://example.com/jomok/736053898_2071000386879307_1376584195772247676_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-02-05",
+          "sourcePageUrl": "https://example.com/jomok/737413245_2070998160212863_6018962419721960189_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-02-06",
+          "sourcePageUrl": "https://example.com/jomok/738593933_2070999896879356_4132555643872390190_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-03",
+      "name": "Jomok Mix 03",
+      "fullName": "Aynid Morbulet · Bayu Silver · Bimox · Arif Guntur · Bayu · Badut Roti O",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-03-01",
+          "sourcePageUrl": "https://example.com/jomok/735317500_2070995876879758_900428373760486496_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-03-02",
+          "sourcePageUrl": "https://example.com/jomok/735705033_2071000083546004_285617339065619478_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-03-03",
+          "sourcePageUrl": "https://example.com/jomok/735786480_2070998453546167_5047984502672841377_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-03-04",
+          "sourcePageUrl": "https://example.com/jomok/735859246_2071001276879218_7036785356858459914_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-03-05",
+          "sourcePageUrl": "https://example.com/jomok/735994028_2070999100212769_222245562115376682_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-03-06",
+          "sourcePageUrl": "https://example.com/jomok/737401831_2070998523546160_5167771075999629559_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-04",
+      "name": "Jomok Mix 04",
+      "fullName": "Bunda Rahma · CC Amil · Co · Candra Wiguna · Carl · Chandra",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-04-01",
+          "sourcePageUrl": "https://example.com/jomok/735636487_2070996223546390_4005532485123377249_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-04-02",
+          "sourcePageUrl": "https://example.com/jomok/735810450_2071001973545815_4394051658841520767_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-04-03",
+          "sourcePageUrl": "https://example.com/jomok/736155812_2071002673545745_2082769130389479448_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-04-04",
+          "sourcePageUrl": "https://example.com/jomok/736868660_2071001183545894_4224205905883380439_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-04-05",
+          "sourcePageUrl": "https://example.com/jomok/737550859_2071001733545839_3224674571085216089_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-04-06",
+          "sourcePageUrl": "https://example.com/jomok/737645983_2070999026879443_4354910995386708318_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-05",
+      "name": "Jomok Mix 05",
+      "fullName": "Doni Monyet ljo · Danang Ini Buktinya · Dolo · Damar Siluman Ular · Earl Jombang · Dimas Solar",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-05-01",
+          "sourcePageUrl": "https://example.com/jomok/735416400_2070996433546369_4864657278120740526_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-05-02",
+          "sourcePageUrl": "https://example.com/jomok/735456933_2070996980212981_168114666081653539_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-05-03",
+          "sourcePageUrl": "https://example.com/jomok/735563392_2070996936879652_2817348596061551972_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-05-04",
+          "sourcePageUrl": "https://example.com/jomok/735898416_2070998806879465_7036261607422223710_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-05-05",
+          "sourcePageUrl": "https://example.com/jomok/736155812_2070997333546279_417489945425236015_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-05-06",
+          "sourcePageUrl": "https://example.com/jomok/736989792_2070998306879515_1506175357544632178_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-06",
+      "name": "Jomok Mix 06",
+      "fullName": "Farhan Kebab · Fizi · Fuad Kruger · Eci · Fuad · Faiz",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-06-01",
+          "sourcePageUrl": "https://example.com/jomok/735994328_2070995956879750_3009819962072609346_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-06-02",
+          "sourcePageUrl": "https://example.com/jomok/736198676_2070997606879585_5403670076736423735_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-06-03",
+          "sourcePageUrl": "https://example.com/jomok/736367927_2071002476879098_2274403801174237433_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-06-04",
+          "sourcePageUrl": "https://example.com/jomok/736896745_2070996683546344_842788741488951381_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-06-05",
+          "sourcePageUrl": "https://example.com/jomok/737939101_2070995436879802_4330021763009849482_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-06-06",
+          "sourcePageUrl": "https://example.com/jomok/738188593_2070995550213124_4282542288800764888_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-07",
+      "name": "Jomok Mix 07",
+      "fullName": "Galang · Galih Waluyo · GTAThug · Gilang Ojol · Granger Ngawi · Gatot",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-07-01",
+          "sourcePageUrl": "https://example.com/jomok/734656449_2070999950212684_5060177941295272719_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-07-02",
+          "sourcePageUrl": "https://example.com/jomok/735994324_2070997170212962_3844249078668227661_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-07-03",
+          "sourcePageUrl": "https://example.com/jomok/736575010_2070997713546241_4146452717417985286_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-07-04",
+          "sourcePageUrl": "https://example.com/jomok/737401832_2070999856879360_5350380140694665012_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-07-05",
+          "sourcePageUrl": "https://example.com/jomok/737494827_2071002110212468_4556701003210440372_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-07-06",
+          "sourcePageUrl": "https://example.com/jomok/737543517_2070998566879489_4932078249327289701_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-08",
+      "name": "Jomok Mix 08",
+      "fullName": "Hendra · Hedra Alas Daun · Hore Simanjuntak · Joko · Ice Cream Guy · J-Money",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-08-01",
+          "sourcePageUrl": "https://example.com/jomok/734784793_2070996880212991_4461351384740692557_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-08-02",
+          "sourcePageUrl": "https://example.com/jomok/735075611_2071001373545875_5022290455526538397_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-08-03",
+          "sourcePageUrl": "https://example.com/jomok/735844576_2070996546879691_383897705863258318_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-08-04",
+          "sourcePageUrl": "https://example.com/jomok/736065714_2070998903546122_1170656228388142172_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-08-05",
+          "sourcePageUrl": "https://example.com/jomok/736745191_2071002296879116_557287729444038648_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-08-06",
+          "sourcePageUrl": "https://example.com/jomok/736778840_2070997660212913_3512077382953105585_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-09",
+      "name": "Jomok Mix 09",
+      "fullName": "Kakangkuh · Kumalala (MR Waduh · Kevin Lontong · King Turbulence · King Nasir · Kakek Ucay",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-09-01",
+          "sourcePageUrl": "https://example.com/jomok/735476190_2070996313546381_7659998664544586990_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-09-02",
+          "sourcePageUrl": "https://example.com/jomok/736539950_2070998030212876_8394770491194242886_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-09-03",
+          "sourcePageUrl": "https://example.com/jomok/737297814_2070997266879619_7721927246840179338_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-09-04",
+          "sourcePageUrl": "https://example.com/jomok/737519335_2070998260212853_4000937817099024108_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-09-05",
+          "sourcePageUrl": "https://example.com/jomok/737730634_2070998853546127_8345644598722221703_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-09-06",
+          "sourcePageUrl": "https://example.com/jomok/738504163_2071001493545863_869551549060989741_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-10",
+      "name": "Jomok Mix 10",
+      "fullName": "M ardi · Ladesh Gimank · MR Ironi · Marcel Venom · MR Abdul · Miko",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-10-01",
+          "sourcePageUrl": "https://example.com/jomok/736273516_2071002333545779_7810430311179360670_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-10-02",
+          "sourcePageUrl": "https://example.com/jomok/736455966_2071002796879066_5747140277391234794_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-10-03",
+          "sourcePageUrl": "https://example.com/jomok/736683016_2070995493546463_2892252358368761506_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-10-04",
+          "sourcePageUrl": "https://example.com/jomok/736921984_2071000283545984_1884148043779122347_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-10-05",
+          "sourcePageUrl": "https://example.com/jomok/737046775_2070996003546412_5073936653398922621_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-10-06",
+          "sourcePageUrl": "https://example.com/jomok/737502855_2071000023546010_4766516579625220120_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-11",
+      "name": "Jomok Mix 11",
+      "fullName": "Negan · Mimik Tutu · Ngulu Trisno · Narji · Nissan · Mursyid Mursalin",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-11-01",
+          "sourcePageUrl": "https://example.com/jomok/735150106_2071001673545845_3306043753690530933_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-11-02",
+          "sourcePageUrl": "https://example.com/jomok/736045329_2070996136879732_553174162762617057_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-11-03",
+          "sourcePageUrl": "https://example.com/jomok/736182194_2071000223545990_79008791674393166_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-11-04",
+          "sourcePageUrl": "https://example.com/jomok/736700535_2070997120212967_2883086929421383714_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-11-05",
+          "sourcePageUrl": "https://example.com/jomok/737502850_2070998356879510_1333007519380580621_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-11-06",
+          "sourcePageUrl": "https://example.com/jomok/737619974_2070995743546438_6089145332021951209_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-12",
+      "name": "Jomok Mix 12",
+      "fullName": "Pak Cik · Parjo · Peanut · Norman · Nus Nus · Pace Twerkie",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-12-01",
+          "sourcePageUrl": "https://example.com/jomok/733810227_2071000170212662_2795162680615383575_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-12-02",
+          "sourcePageUrl": "https://example.com/jomok/734171953_2071001863545826_848549072042819250_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-12-03",
+          "sourcePageUrl": "https://example.com/jomok/736020604_2070997790212900_3674039748348480634_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-12-04",
+          "sourcePageUrl": "https://example.com/jomok/736235574_2070995593546453_5743061008162199512_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-12-05",
+          "sourcePageUrl": "https://example.com/jomok/736683017_2070997080212971_8133670013454087248_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-12-06",
+          "sourcePageUrl": "https://example.com/jomok/737819533_2070995913546421_3871393354171341798_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-13",
+      "name": "Jomok Mix 13",
+      "fullName": "Penjual Nanas · Rama Kagura · Radak · Quan (Orange Thug) · Pria Cikini · Pria Lompat Tali",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-13-01",
+          "sourcePageUrl": "https://example.com/jomok/733911659_2071001570212522_5979997148519140019_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-13-02",
+          "sourcePageUrl": "https://example.com/jomok/735346748_2071000343545978_1524771510200721572_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-13-03",
+          "sourcePageUrl": "https://example.com/jomok/735910931_2071002160212463_4762798278120993583_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-13-04",
+          "sourcePageUrl": "https://example.com/jomok/736367923_2070997523546260_3304365843865834294_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-13-05",
+          "sourcePageUrl": "https://example.com/jomok/736420940_2071001796879166_2591333467045529874_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-13-06",
+          "sourcePageUrl": "https://example.com/jomok/737738792_2070997966879549_6910531525079486929_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-14",
+      "name": "Jomok Mix 14",
+      "fullName": "Rehan Wangsaf · Rian Jatim · Reza Bersiaplah · RedThug · Reza Auditore · Reza Sulawesi",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-14-01",
+          "sourcePageUrl": "https://example.com/jomok/735034519_2070995680213111_1679026420222277608_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-14-02",
+          "sourcePageUrl": "https://example.com/jomok/735714872_2070999163546096_6487145722234562418_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-14-03",
+          "sourcePageUrl": "https://example.com/jomok/735958900_2070998206879525_5532675923530547343_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-14-04",
+          "sourcePageUrl": "https://example.com/jomok/736163466_2070997833546229_2336211951670930048_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-14-05",
+          "sourcePageUrl": "https://example.com/jomok/736746248_2071002850212394_1373937688416211987_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-14-06",
+          "sourcePageUrl": "https://example.com/jomok/736896736_2070996833546329_7269617425489535614_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-15",
+      "name": "Jomok Mix 15",
+      "fullName": "Rohim / Aimar · Ricardo Milos · Roh Terkutuk (Skrim) · Ridik · Risky Toji · Riska Mutiara",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-15-01",
+          "sourcePageUrl": "https://example.com/jomok/734555641_2071000136879332_4462618810917989491_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-15-02",
+          "sourcePageUrl": "https://example.com/jomok/735446677_2071002736879072_1142963885789860200_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-15-03",
+          "sourcePageUrl": "https://example.com/jomok/735595053_2071002536879092_1630204928007079469_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-15-04",
+          "sourcePageUrl": "https://example.com/jomok/736621870_2071002233545789_7793297840989944141_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-15-05",
+          "sourcePageUrl": "https://example.com/jomok/736832911_2070998406879505_4930239314299929061_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-15-06",
+          "sourcePageUrl": "https://example.com/jomok/737551228_2070995826879763_940856244035111865_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-16",
+      "name": "Jomok Mix 16",
+      "fullName": "Thug Shaker · Si Manis · Shela · Savesta · Rusdi Ngawi · Silence Man",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-16-01",
+          "sourcePageUrl": "https://example.com/jomok/735799902_2070997460212933_2823981415347859580_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-16-02",
+          "sourcePageUrl": "https://example.com/jomok/736020604_2070998610212818_9154966202809814789_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-16-03",
+          "sourcePageUrl": "https://example.com/jomok/736142688_2071000456879300_4592997633075081757_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-16-04",
+          "sourcePageUrl": "https://example.com/jomok/736235574_2070998080212871_8476215060677322317_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-16-05",
+          "sourcePageUrl": "https://example.com/jomok/736931782_2070995273546485_7905673029009417150_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-16-06",
+          "sourcePageUrl": "https://example.com/jomok/737738796_2071002433545769_6003729795262278188_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-17",
+      "name": "Jomok Mix 17",
+      "fullName": "Vionyet ljo Banyu mas · Tony99 · Valdi · Tie · Tommy · Topan (Ambalingham)",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-17-01",
+          "sourcePageUrl": "https://example.com/jomok/735394499_2071002376879108_1305210656646157030_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-17-02",
+          "sourcePageUrl": "https://example.com/jomok/735897871_2070997220212957_4676414047417228609_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-17-03",
+          "sourcePageUrl": "https://example.com/jomok/736020597_2070997040212975_6362013674351117168_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-17-04",
+          "sourcePageUrl": "https://example.com/jomok/736540322_2070996763546336_3583244312297081571_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-17-05",
+          "sourcePageUrl": "https://example.com/jomok/737438108_2070998960212783_6202426018120247657_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-17-06",
+          "sourcePageUrl": "https://example.com/jomok/737543903_2070998750212804_4002441718629825854_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "jomok-mix-18",
+      "name": "Jomok Mix 18",
+      "fullName": "yan Unjuk Kebolehar · Yes King · Yoga · min Gunung Kidul (Si Imut · White Bear · Xin Fu Tang",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-18-01",
+          "sourcePageUrl": "https://example.com/jomok/733955373_2071001100212569_617667068181098525_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "common",
+          "imageUrl": "https://example.com/jomok/jomok-mix-18-02",
+          "sourcePageUrl": "https://example.com/jomok/735210668_2070996373546375_5291868403442898639_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-18-03",
+          "sourcePageUrl": "https://example.com/jomok/735553024_2071002043545808_527831572551549737_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-18-04",
+          "sourcePageUrl": "https://example.com/jomok/736715320_2070995370213142_1364988556089107514_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "super_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-18-05",
+          "sourcePageUrl": "https://example.com/jomok/736896747_2070997400212939_2416976895465427603_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://example.com/jomok/jomok-mix-18-06",
+          "sourcePageUrl": "https://example.com/jomok/737076271_2070995643546448_1223188760594670629_n.jpg",
+          "license": null,
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    }
+  ]
+}

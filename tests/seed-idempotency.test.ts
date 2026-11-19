@@ -73,7 +73,7 @@ afterAll(async () => {
     cwd: REPO_ROOT,
     maxBuffer: 64 * 1024 * 1024,
   });
-});
+}, 300_000);
 
 describe("seed idempotency", () => {
   it("two seeds produce identical rows, serials, and files", async () => {
@@ -94,11 +94,11 @@ describe("seed idempotency", () => {
     );
     const files2 = (await readdir(path.join(fixture, "public", "cards"))).sort();
 
-    expect(counts1).toEqual({ pools: 2, groups: 3, members: 7, cards: 21 });
+    expect(counts1).toEqual({ pools: 2, groups: 4, members: 25, cards: 129 });
     expect(counts2).toEqual(counts1);
     expect(lock2).toBe(lock1);
     expect(files2).toEqual(files1);
-    expect(files1).toHaveLength(21);
+    expect(files1).toHaveLength(129);
   }, 300_000);
 
   it("removing a photo disables the card and prunes its file", async () => {
