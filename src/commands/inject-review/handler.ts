@@ -27,7 +27,9 @@ import {
 import type { WaitUntil } from "../registry.js";
 
 function isApprover(env: Env, userId: string): boolean {
-  const allow = env.INJECT_APPROVER_IDS.split(",")
+  const raw = env.INJECT_APPROVER_IDS ?? "";
+  const allow = raw
+    .split(",")
     .map((s) => s.trim())
     .filter((s) => s !== "");
   return allow.includes(userId);
@@ -43,10 +45,13 @@ export async function handleInjectReview(
     return ephemeralResponse("Khusus kurator inject.");
   }
   const db = createDb(env);
+  console.log(`inject-review: from=${userId} approver=${String(isApprover(env, userId))}`);
   let row: QueueRow | null;
   try {
     row = await oldestPending(db);
-  } catch {
+    console.log(`inject-review: oldest=${row?.messageId ?? "none"}`);
+  } catch (err: unknown) {
+    console.warn(`inject-review: oldestPending failed: ${(err as Error).message}`);
     return ephemeralResponse("D1 sibuk/kuota habis, coba lagi.");
   }
   if (row === null) return ephemeralResponse("Antrean kosong. 🎉");
