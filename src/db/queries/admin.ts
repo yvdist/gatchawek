@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, like, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like, ne, sql, type SQL } from "drizzle-orm";
 import {
   cards,
   groups,
@@ -33,6 +33,7 @@ export interface AdminCardRow {
   memberName: string;
   groupBadge: string;
   poolName: string;
+  poolId: string;
   photoNo: number;
   rarity: Rarity;
   imageFile: string;
@@ -100,6 +101,7 @@ interface AdminCardRaw {
   member_name: string;
   group_badge: string;
   pool_name: string;
+  pool_id: string;
   photo_no: number;
   rarity: Rarity;
   image_file: string;
@@ -113,6 +115,7 @@ function toRow(r: AdminCardRaw): AdminCardRow {
     memberName: r.member_name,
     groupBadge: r.group_badge,
     poolName: r.pool_name,
+    poolId: r.pool_id,
     photoNo: r.photo_no,
     rarity: r.rarity,
     imageFile: r.image_file,
@@ -136,7 +139,7 @@ export async function listAdminCards(
   const where = cardWhere(opts.kind, opts.q);
   const joinMembers = sql`JOIN ${members} ON ${members.id} = ${cards.memberId}`;
   const [rowsRes, countRes] = await nativeBatch(db, [
-    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${pools.name} AS pool_name, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned FROM ${cards} ${joinMembers} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${where} GROUP BY ${cards.id} ORDER BY ${cards.id} LIMIT ${limit} OFFSET ${offset}`,
+    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${pools.name} AS pool_name, ${cards.poolId} AS pool_id, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned FROM ${cards} ${joinMembers} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${where} GROUP BY ${cards.id} ORDER BY ${cards.id} LIMIT ${limit} OFFSET ${offset}`,
     sql`SELECT COUNT(*) AS n FROM ${cards} ${joinMembers} WHERE ${where}`,
   ]);
   const raws = (rowsRes?.results ?? []) as unknown as AdminCardRaw[];
@@ -160,7 +163,7 @@ export async function getAdminCard(
   cardId: string,
 ): Promise<AdminCardDetail | null> {
   const [res] = await nativeBatch(db, [
-    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${pools.name} AS pool_name, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned, ${cards.photoLabel} AS photo_label, ${members.fullName} AS full_name, ${members.photoTotal} AS photo_total, ${cards.serial} AS serial, ${cards.sourcePageUrl} AS source_page_url, ${cards.holoEnabled} AS holo_enabled FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${cards.id} = ${cardId} GROUP BY ${cards.id}`,
+    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${pools.name} AS pool_name, ${cards.poolId} AS pool_id, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned, ${cards.photoLabel} AS photo_label, ${members.fullName} AS full_name, ${members.photoTotal} AS photo_total, ${cards.serial} AS serial, ${cards.sourcePageUrl} AS source_page_url, ${cards.holoEnabled} AS holo_enabled FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${cards.id} = ${cardId} GROUP BY ${cards.id}`,
   ]);
   const raw = (res?.results ?? []) as unknown as AdminCardDetailRaw[];
   const r = raw[0];
@@ -521,6 +524,7 @@ export async function listRenderableCards(
         inArray(cards.id, clean),
         like(cards.imageFile, "http%"),
         eq(cards.enabled, true),
+        ne(cards.poolId, "pejabat"),
       ),
     );
   return rows;

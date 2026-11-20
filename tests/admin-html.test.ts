@@ -62,6 +62,7 @@ describe("cardsPage", () => {
           memberName: "<script>alert(1)</script>",
           groupBadge: "G",
           poolName: "P",
+          poolId: "ahli-ngebul",
           photoNo: 1,
           rarity: "common",
           imageFile: "a.webp",
@@ -89,6 +90,7 @@ describe("cardsPage", () => {
             memberName: "M",
             groupBadge: "G",
             poolName: "P",
+            poolId: "ahli-ngebul",
             photoNo: 1,
             rarity: "common",
             imageFile,
@@ -243,6 +245,7 @@ describe("importPage", () => {
           memberName: "M",
           groupBadge: "G",
           poolName: "P",
+          poolId: "ahli-ngebul",
           photoNo: 1,
           rarity: "secret",
           imageFile: "a.webp",
@@ -287,6 +290,7 @@ describe("importPage", () => {
       memberName: "M",
       groupBadge: "G",
       poolName: "P",
+      poolId: "ahli-ngebul",
       photoNo: 1,
       rarity: "rare" as const,
       imageFile: "https://cdn.example/x.jpg",
@@ -328,5 +332,31 @@ describe("importPage", () => {
     });
     expect(html).toContain("Render 2 kartu diminta.");
     expect(html).toContain("is-ok");
+  });
+
+  it("hides the render checkbox for pejabat cards", () => {
+    const html = cardsPage({
+      rows: [
+        {
+          id: "p-01",
+          memberName: "M",
+          groupBadge: "G",
+          poolName: "Pejabat",
+          poolId: "pejabat",
+          photoNo: 1,
+          rarity: "rare",
+          imageFile: "https://cdn.example/x.jpg",
+          imageKind: "remote",
+          enabled: true,
+          quantityOwned: 0,
+        },
+      ],
+      total: 1,
+      kind: "remote",
+      q: "",
+      base: "example.test",
+    });
+    expect(html).toContain('action="/admin/cards/render-remote"');
+    expect(html).not.toContain('value="p-01"');
   });
 });

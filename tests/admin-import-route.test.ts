@@ -516,6 +516,17 @@ describe("admin /admin/import routes", () => {
       sortOrder: 0,
       enabled: true,
     });
+    await db.insert(members).values({
+      id: "pejabat-kid",
+      poolId: "pejabat",
+      groupId: "kabinet",
+      name: "Pejabat Kid",
+      nameLower: "pejabat kid",
+      fullName: null,
+      photoTotal: 1,
+      sortOrder: 0,
+      enabled: true,
+    });
     await db.insert(cards).values([
       {
         id: "render-kid-01",
@@ -545,6 +556,20 @@ describe("admin /admin/import routes", () => {
         enabled: true,
         holoEnabled: false,
       },
+      {
+        id: "pejabat-kid-01",
+        poolId: "pejabat",
+        groupId: "kabinet",
+        memberId: "pejabat-kid",
+        serial: 902,
+        photoNo: 1,
+        rarity: "rare",
+        photoLabel: null,
+        imageFile: "https://cdn.example/pejabat.jpg",
+        sourcePageUrl: null,
+        enabled: true,
+        holoEnabled: false,
+      },
     ]);
     const calls: Array<{ url: string; body: string }> = [];
     const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
@@ -556,6 +581,7 @@ describe("admin /admin/import routes", () => {
       const fd = new FormData();
       fd.append("ids", "render-kid-01");
       fd.append("ids", "static-kid-01");
+      fd.append("ids", "pejabat-kid-01");
       fd.append("ids", "nope-01");
       const res = await app.request(
         "/admin/cards/render-remote",
@@ -580,7 +606,7 @@ describe("admin /admin/import routes", () => {
       const loc = res.headers.get("location") ?? "";
       expect(loc).toContain("kind=remote");
       expect(loc).toContain("ok=1");
-      expect(decodeURIComponent(loc)).toContain("2 dilewati");
+      expect(decodeURIComponent(loc)).toContain("3 dilewati");
     } finally {
       vi.unstubAllGlobals();
     }

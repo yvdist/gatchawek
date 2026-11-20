@@ -105,7 +105,7 @@ export function cardsPage(args: {
           ? `<span class="badge b-empty">tanpa image</span>`
           : `<img src="${escapeHtml(localImageSrc(args.base, r.imageFile))}" alt="" loading="lazy" onerror="this.classList.add('thumb-broken');var b=this.nextElementSibling;if(b)b.hidden=false;"><span class="badge b-off" hidden>gagal dimuat</span>`;
       const pick =
-        r.imageKind === "remote" && r.enabled
+        r.imageKind === "remote" && r.enabled && r.poolId !== "pejabat"
           ? `<input type="checkbox" name="ids" value="${escapeHtml(r.id)}" aria-label="pilih ${escapeHtml(r.id)}">`
           : "";
       return `<tr><td>${pick}</td><td>${thumb}</td><td><a href="/admin/cards/${escapeHtml(r.id)}">${escapeHtml(r.id)}</a></td><td>${escapeHtml(r.memberName)}</td><td>${escapeHtml(r.poolName)} · ${escapeHtml(r.groupBadge)}</td><td>${rarityBadge(r.rarity)}</td><td>${kindBadge(r.imageKind)}</td><td class="col-owned">×${r.quantityOwned}</td><td>${r.enabled ? "aktif" : `<span class="badge b-off">mati</span>`}</td></tr>`;
@@ -122,7 +122,7 @@ export function cardsPage(args: {
     ? `<form id="renderForm" method="post" action="/admin/cards/render-remote">`
     : "";
   const bulkClose = inRemoteTab
-    ? `<div class="actionbar"><label class="hint"><input type="checkbox" id="pickAll"> semua</label><button type="submit" id="renderBtn" class="btn" disabled>Minta render (0)</button><span class="hint">Render bingkai di cloud (cron 15 mnt / tombol). Butuh GitHub PAT untuk tombol.</span></div></form><script>(function(){var btn=document.getElementById("renderBtn");var all=document.getElementById("pickAll");if(!btn)return;function boxes(){return Array.prototype.slice.call(document.querySelectorAll('input[name="ids"]'));}function sync(){var bs=boxes();var n=bs.filter(function(b){return b.checked;}).length;btn.disabled=n===0;btn.textContent="Minta render ("+n+")";if(all)all.checked=n>0&&bs.every(function(b){return b.checked;});}if(all)all.addEventListener("change",function(){boxes().forEach(function(b){b.checked=all.checked;});sync();});document.addEventListener("change",function(e){if(e.target&&e.target.name==="ids")sync();});sync();})();</script>`
+    ? `<div class="actionbar"><label class="hint"><input type="checkbox" id="pickAll"> semua</label><button type="submit" id="renderBtn" class="btn" disabled>Minta render (0)</button><span class="hint">Render bingkai di cloud (cron 15 mnt / tombol). Pool pejabat dikecualikan permanen. Butuh GitHub PAT untuk tombol.</span></div></form><script>(function(){var btn=document.getElementById("renderBtn");var all=document.getElementById("pickAll");if(!btn)return;function boxes(){return Array.prototype.slice.call(document.querySelectorAll('input[name="ids"]'));}function sync(){var bs=boxes();var n=bs.filter(function(b){return b.checked;}).length;btn.disabled=n===0;btn.textContent="Minta render ("+n+")";if(all)all.checked=n>0&&bs.every(function(b){return b.checked;});}if(all)all.addEventListener("change",function(){boxes().forEach(function(b){b.checked=all.checked;});sync();});document.addEventListener("change",function(e){if(e.target&&e.target.name==="ids")sync();});sync();})();</script>`
     : "";
   return shell(
     "kartu",
