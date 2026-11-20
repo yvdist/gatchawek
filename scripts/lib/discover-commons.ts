@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
+import { loadImage } from "@napi-rs/canvas";
 import { z } from "zod";
 import type { RarityKey } from "../../shared/manifest.schema.js";
 
@@ -25,6 +26,10 @@ export const PORTRAIT_BONUS = 1_000_000_000;
 export const MAX_FILES_PER_MEMBER = 500;
 export const MAX_PHOTOS_PER_MEMBER = 6;
 export const MIN_PHOTOS_PER_MEMBER = 3;
+export const SETNEG_LICENSE = "© Sekretariat Kabinet RI";
+export const SETNEG_AUTHOR = "Sekretariat Kabinet RI";
+export const SETNEG_SOURCE_PAGE = "https://setkab.go.id/profil-kabinet/";
+export const SETNEG_MIN_SHORT_SIDE = 100;
 
 const ALLOWED_MIMES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -99,6 +104,45 @@ export async function fetchJsonCached(
     await writeFile(file, JSON.stringify(data), "utf8");
     return data;
   }
+}
+/**
+ * Fetch a Setneg portrait and decode its dimensions. No cache file is written
+ * (small single-file response, used directly). Throws
+ * `setneg-fetch-failed:<status|reason>` on network errors or
+ * `setneg-too-small:<WxH>` below SETNEG_MIN_SHORT_SIDE.
+ */
+export async function fetchSetnegPhoto(
+  photoUrl: string,
+): Promise<{ width: number; height: number; bytes: number }> {
+  let res: Response;
+  try {
+    res = await fetch(photoUrl, {
+      headers: { "User-Agent": USER_AGENT },
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    });
+  } catch (err: unknown) {
+    throw new Error(
+      `setneg-fetch-failed:${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
+    );
+  }
+  if (!res.ok) {
+    throw new Error(`setneg-fetch-failed:${res.status}`);
+  }
+  const bytes = new Uint8Array(await res.arrayBuffer());
+  let decoded;
+  try {
+    decoded = await loadImage(bytes);
+  } catch (err: unknown) {
+    throw new Error(
+      `setneg-fetch-failed:decode ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
+    );
+  }
+  if (Math.min(decoded.width, decoded.height) < SETNEG_MIN_SHORT_SIDE) {
+    throw new Error(`setneg-too-small:${decoded.width}x${decoded.height}`);
+  }
+  return { width: decoded.width, height: decoded.height, bytes: bytes.length };
 }
 
 export function wikipediaPagePropsUrl(lang: string, title: string): string {
@@ -423,6 +467,8 @@ export interface EligiblePhoto {
   author: string | null;
   width: number;
   height: number;
+  /** Explicit rank score; when set, overrides scorePhoto in rankPhotos. */
+  scoreOverride?: number;
 }
 
 export interface SkippedFile {
@@ -477,10 +523,12 @@ export function selectEligible(files: CommonsFileCandidate[]): {
   return { eligible, skipped };
 }
 
-/** Score desc, descriptionurl asc tiebreak. Returns a new array. */
+/** Score desc (scoreOverride wins when set), descriptionurl asc tiebreak. */
 export function rankPhotos(photos: EligiblePhoto[]): EligiblePhoto[] {
+  const score = (p: EligiblePhoto): number =>
+    p.scoreOverride ?? scorePhoto(p.width, p.height);
   return [...photos].sort((a, b) => {
-    const byScore = scorePhoto(b.width, b.height) - scorePhoto(a.width, a.height);
+    const byScore = score(b) - score(a);
     if (byScore !== 0) return byScore;
     if (a.sourcePageUrl < b.sourcePageUrl) return -1;
     if (a.sourcePageUrl > b.sourcePageUrl) return 1;

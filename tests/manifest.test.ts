@@ -169,7 +169,7 @@ describe("manifest validation", () => {
     expect(loaded.pools.map((p) => p.id).sort()).toEqual(["meme", "pejabat"]);
     expect(loaded.groups).toHaveLength(2);
     const summary = summarize(loaded).join("\n");
-    expect(summary).toMatch(/pejabat\/kabinet-merah-putih: 51 member, 283 foto/);
+    expect(summary).toMatch(/pejabat\/kabinet-merah-putih: 72 member, 72 foto/);
     expect(summary).toMatch(/meme\/jomok: 18 member, 108 foto/);
   });
 });

@@ -14,18 +14,46 @@ import {
   extractCommonsCategory,
   extractWikibaseItem,
   fetchJsonCached,
+  fetchSetnegPhoto,
   MAX_FILES_PER_MEMBER,
   MAX_PHOTOS_PER_MEMBER,
   MIN_PHOTOS_PER_MEMBER,
   parseCommonsResponse,
   rankPhotos,
+  scorePhoto,
   selectEligible,
+  SETNEG_AUTHOR,
+  SETNEG_LICENSE,
+  SETNEG_SOURCE_PAGE,
   slugifyMemberId,
   wikidataClaimsUrl,
   wikipediaPagePropsUrl,
   type EligiblePhoto,
 } from "./lib/discover-commons.js";
 
+const wikiSourceSchema = z.object({
+  wikipedia: z.object({
+    lang: z.string().min(1),
+    title: z.string().min(1),
+  }),
+});
+const categorySourceSchema = z.object({
+  commonsCategory: z.string().min(1),
+});
+const setnegSourceSchema = z.object({
+  setneg: z.object({
+    photoUrl: z.string().refine((v) => v.startsWith("https://"), {
+      message: "setneg.photoUrl must be an https URL",
+    }),
+    jabatan: z.string().min(1),
+  }),
+});
+const rosterEntryBaseSchema = z.object({
+  name: z.string().min(1),
+  fullName: z.string().min(1),
+  wikipediaTitleFallback: z.string().min(1).optional(),
+  commonsCategoryFallback: z.string().min(1).optional(),
+});
 const rosterSchema = z.object({
   pool: z.string().min(1),
   group: z.object({
@@ -34,19 +62,20 @@ const rosterSchema = z.object({
     badge: z.string().min(1),
   }),
   roster: z.array(
-    z.object({
-      name: z.string().min(1),
-      fullName: z.string().min(1),
-      wikipedia: z
-        .object({
-          lang: z.string().min(1),
-          title: z.string().min(1),
-        })
-        .optional(),
-      commonsCategory: z.string().min(1).optional(),
-    }).refine((e) => e.wikipedia !== undefined || e.commonsCategory !== undefined, {
-      message: "entry needs wikipedia or commonsCategory",
-    }),
+    z
+      .union([wikiSourceSchema, categorySourceSchema, setnegSourceSchema])
+      .and(rosterEntryBaseSchema),
+  ).refine(
+    (entries) =>
+      entries.every((e) => {
+        const sources = [
+          "wikipedia" in e && e.wikipedia !== undefined,
+          "commonsCategory" in e && e.commonsCategory !== undefined,
+          "setneg" in e && e.setneg !== undefined,
+        ].filter(Boolean).length;
+        return sources === 1;
+      }),
+    { message: "entry needs exactly one of wikipedia|commonsCategory|setneg" },
   ),
 });
 
@@ -72,16 +101,16 @@ export interface DiscoverSummary {
   reportPath: string;
 }
 
-async function discoverMember(
+async function resolveCommonsCategory(
   entry: Roster["roster"][number],
+  direct: string | undefined,
   cacheDir: string,
-): Promise<{ eligible: EligiblePhoto[]; skippedCount: number }> {
-  const direct = entry.commonsCategory;
-  let category: string;
+): Promise<string> {
   if (direct !== undefined) {
-    category = direct;
-    console.log(`  category override: ${category}`);
-  } else if (entry.wikipedia !== undefined) {
+    console.log(`  category override: ${direct}`);
+    return direct;
+  }
+  if ("wikipedia" in entry && entry.wikipedia !== undefined) {
     const wiki = entry.wikipedia;
     const pageData = await fetchJsonCached(
       wikipediaPagePropsUrl(wiki.lang, wiki.title),
@@ -103,10 +132,15 @@ async function discoverMember(
         throw new Error(`wikidata-fetch-failed:${msg}`);
       },
     );
-    category = extractCommonsCategory(claimsData);
-  } else {
-    throw new Error("roster-entry-missing-source");
+    return extractCommonsCategory(claimsData);
   }
+  throw new Error("roster-entry-missing-source");
+}
+
+async function discoverCommonsCategory(
+  category: string,
+  cacheDir: string,
+): Promise<{ eligible: EligiblePhoto[]; skippedCount: number; seen: number }> {
   const eligible: EligiblePhoto[] = [];
   let skippedCount = 0;
   let cont: string | null = null;
@@ -144,6 +178,84 @@ async function discoverMember(
     cont = page.next;
     if (eligible.length >= MAX_PHOTOS_PER_MEMBER * 3) break;
   }
+  return { eligible, skippedCount, seen };
+}
+
+async function discoverMember(
+  entry: Roster["roster"][number],
+  cacheDir: string,
+): Promise<{ eligible: EligiblePhoto[]; skippedCount: number }> {
+  if ("setneg" in entry && entry.setneg !== undefined) {
+    const setnegDims = await fetchSetnegPhoto(entry.setneg.photoUrl);
+    console.log(
+      `  eligible: ${entry.fullName} (Setneg ${setnegDims.width}x${setnegDims.height}, ${SETNEG_LICENSE})`,
+    );
+    const setnegPhoto: EligiblePhoto = {
+      title: entry.fullName,
+      imageUrl: entry.setneg.photoUrl,
+      sourcePageUrl: SETNEG_SOURCE_PAGE,
+      license: SETNEG_LICENSE,
+      author: SETNEG_AUTHOR,
+      width: setnegDims.width,
+      height: setnegDims.height,
+    };
+    const direct =
+      "commonsCategoryFallback" in entry ? entry.commonsCategoryFallback : undefined;
+    if (direct === undefined && entry.wikipediaTitleFallback === undefined) {
+      return { eligible: [setnegPhoto], skippedCount: 0 };
+    }
+    let category: string | null = null;
+    try {
+      if (direct !== undefined) {
+        category = direct;
+        console.log(`  category override: ${category}`);
+      } else if (entry.wikipediaTitleFallback !== undefined) {
+        const pageData = await fetchJsonCached(
+          wikipediaPagePropsUrl("id", entry.wikipediaTitleFallback),
+          cacheDir,
+        );
+        category = extractCommonsCategory(
+          await fetchJsonCached(
+            wikidataClaimsUrl(extractWikibaseItem(pageData)),
+            cacheDir,
+          ),
+        );
+      }
+    } catch (err: unknown) {
+      const reason = err instanceof Error ? err.message : String(err);
+      console.log(`  fallback Commons unavailable: ${reason}`);
+    }
+    if (category === null) return { eligible: [setnegPhoto], skippedCount: 0 };
+    const commons = await discoverCommonsCategory(category, cacheDir);
+    const rest = rankPhotos(
+      commons.eligible.filter((p) => p.imageUrl !== setnegPhoto.imageUrl),
+    );
+    // Setneg portrait always rank-1: one point above the max Commons score
+    // (a literal PORTRAIT_BONUS+1 would lose to large Commons portraits,
+    // which also carry PORTRAIT_BONUS — intent here is absolute rank-1).
+    const maxCommonsScore = Math.max(
+      0,
+      ...commons.eligible.map((p) => scorePhoto(p.width, p.height)),
+    );
+    const ranked: EligiblePhoto = {
+      ...setnegPhoto,
+      scoreOverride: maxCommonsScore + 1,
+    };
+    const eligible = [ranked, ...rest].slice(0, MAX_PHOTOS_PER_MEMBER);
+    if (eligible.length < MIN_PHOTOS_PER_MEMBER) {
+      throw new Error(
+        `fewer-than-3-eligible-photos (n=${eligible.length})`,
+      );
+    }
+    return { eligible, skippedCount: commons.skippedCount };
+  }
+  const direct =
+    "commonsCategory" in entry ? entry.commonsCategory : undefined;
+  const category = await resolveCommonsCategory(entry, direct, cacheDir);
+  const { eligible, skippedCount, seen } = await discoverCommonsCategory(
+    category,
+    cacheDir,
+  );
   if (seen === 0) throw new Error("commons-no-category-files");
   if (eligible.length < MIN_PHOTOS_PER_MEMBER) {
     throw new Error(
@@ -177,7 +289,7 @@ ${m.photos
   .map(
     (p) => `      <figure>
         <img src="${esc(p.imageUrl)}" width="300" loading="lazy" alt="${esc(p.title)}">
-        <figcaption>${esc(p.title)} — ${esc(p.license)}${p.author === null ? "" : ` — ${esc(p.author)}`} [${esc(p.rarity)}]</figcaption>
+        <figcaption>${esc(p.title)} — ${esc(p.license)}${p.author === null ? "" : ` — ${esc(p.author)}`} [${esc(p.rarity)}] (${p.sourcePageUrl === SETNEG_SOURCE_PAGE ? "Setneg" : "Commons"})</figcaption>
       </figure>`,
   )
   .join("\n")}

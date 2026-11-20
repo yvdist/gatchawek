@@ -7,416 +7,683 @@
   "pool": "pejabat",
   "roster": [
     {
-      "fullName": "Abdul Kadir Karding",
-      "name": "Karding",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Abdul Kadir Karding"
-      }
+      "name": "Prabowo",
+      "fullName": "Prabowo Subianto",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/PRABOWO-SUBIANTO.jpg",
+        "jabatan": "Presiden"
+      },
+      "wikipediaTitleFallback": "Prabowo Subianto"
     },
     {
-      "fullName": "Abdul Muhaimin Iskandar",
-      "name": "Muhaimin",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Muhaimin Iskandar"
-      }
+      "name": "Gibran",
+      "fullName": "Gibran Rakabuming Raka",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/GIBRAN-RAKABUMING.jpg",
+        "jabatan": "Wakil Presiden"
+      },
+      "wikipediaTitleFallback": "Gibran Rakabuming Raka"
     },
     {
-      "fullName": "Agus Andrianto",
-      "name": "Agus Andrianto",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Agus Andrianto"
-      }
+      "name": "Budi Gunawan",
+      "fullName": "Budi Gunawan",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Budi-Gunawan-1.jpg",
+        "jabatan": "Menteri Koordinator Bidang Politik dan Keamanan"
+      },
+      "wikipediaTitleFallback": "Budi Gunawan"
     },
     {
-      "fullName": "Agus Gumiwang Kartasasmita",
-      "name": "Agus Gumiwang",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Agus Gumiwang Kartasasmita"
-      }
+      "name": "Djamari",
+      "fullName": "Djamari Chaniago",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/09/CBS_5521-removebg-preview-205x270.png",
+        "jabatan": "Menteri Koordinator Bidang Politik dan Keamanan"
+      },
+      "wikipediaTitleFallback": "Djamari Chaniago"
     },
     {
-      "fullName": "Agus Subiyanto",
-      "name": "Agus Subiyanto",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Agus Subiyanto"
-      }
+      "name": "Yusril",
+      "fullName": "Yusril Ihza Mahendra",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/YUSRIL-IHZA.jpg",
+        "jabatan": "Menteri Koordinator Bidang Hukum, Hak Asasi Manusia, Imigrasi, dan Pemasyarakatan"
+      },
+      "wikipediaTitleFallback": "Yusril Ihza Mahendra"
     },
     {
-      "fullName": "Airlangga Hartarto",
       "name": "Airlangga",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Airlangga Hartarto"
-      }
+      "fullName": "Airlangga Hartarto",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2019/10/02-AIRLANGGA-HARTARTO-MENTERI-KOORDINATOR-BIDANG-PEREKONOMIAN-235x300.jpg",
+        "jabatan": "Menteri Koordinator Bidang Perekonomian"
+      },
+      "wikipediaTitleFallback": "Airlangga Hartarto"
     },
     {
-      "fullName": "Amran Sulaiman",
+      "name": "Pratikno",
+      "fullName": "Pratikno",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2019/10/05-PRATIKNO-MENTERI-SEKRETARIS-NEGARA-232x300.jpg",
+        "jabatan": "Menteri Koordinator Bidang Pembangunan Manusia dan Kebudayaan"
+      },
+      "wikipediaTitleFallback": "Pratikno"
+    },
+    {
+      "name": "AHY",
+      "fullName": "Agus Harimurti Yudhoyono",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Agus-Harimurti-Yudhoyono.jpg",
+        "jabatan": "Menteri Koordinator Bidang Infrastruktur dan Pembangunan Kewilayahan"
+      },
+      "wikipediaTitleFallback": "Agus Harimurti Yudhoyono"
+    },
+    {
+      "name": "Muhaimin",
+      "fullName": "Abdul Muhaimin Iskandar",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Abdul-Muhaimin-Iskandar.jpg",
+        "jabatan": "Menteri Koordinator Bidang Pemberdayaan Masyarakat"
+      },
+      "wikipediaTitleFallback": "Muhaimin Iskandar"
+    },
+    {
+      "name": "Zulkifli Hasan",
+      "fullName": "Zulkifli Hasan",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Zulkifli-Hasan.jpg",
+        "jabatan": "Menteri Koordinator Bidang Pangan"
+      },
+      "wikipediaTitleFallback": "Zulkifli Hasan"
+    },
+    {
+      "name": "Prasetyo Hadi",
+      "fullName": "Prasetyo Hadi",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Prasetyo-Hadi.jpg",
+        "jabatan": "Menteri Sekretaris Negara"
+      },
+      "wikipediaTitleFallback": "Prasetyo Hadi"
+    },
+    {
+      "name": "Tito Karnavian",
+      "fullName": "Muhammad Tito Karnavian",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2019/10/06-TITO-KARNAVIAN-MENTERI-DALAM-NEGERI-233x300.jpg",
+        "jabatan": "Menteri Dalam Negeri"
+      },
+      "wikipediaTitleFallback": "Tito Karnavian"
+    },
+    {
+      "name": "Sugiono",
+      "fullName": "Sugiono",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Sugiono.jpg",
+        "jabatan": "Menteri Luar Negeri"
+      },
+      "wikipediaTitleFallback": "Sugiono (politikus)"
+    },
+    {
+      "name": "Sjafrie",
+      "fullName": "Sjafrie Sjamsoeddin",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Sjafrie-Sjamsoeddin.jpg",
+        "jabatan": "Menteri Pertahanan"
+      },
+      "wikipediaTitleFallback": "Sjafrie Sjamsoeddin"
+    },
+    {
+      "name": "Nasaruddin",
+      "fullName": "Nasaruddin Umar",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Nasaruddin-Umar.jpg",
+        "jabatan": "Menteri Agama"
+      },
+      "wikipediaTitleFallback": "Nasaruddin Umar"
+    },
+    {
+      "name": "Supratman",
+      "fullName": "Supratman Andi Agtas",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Supratman-Andi-Agtas.jpg",
+        "jabatan": "Menteri Hukum"
+      },
+      "wikipediaTitleFallback": "Supratman Andi Agtas"
+    },
+    {
+      "name": "Natalius Pigai",
+      "fullName": "Natalius Pigai",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Natalius-Pigai.jpg",
+        "jabatan": "Menteri Hak Asasi Manusia"
+      },
+      "wikipediaTitleFallback": "Natalius Pigai"
+    },
+    {
+      "name": "Agus Andrianto",
+      "fullName": "Agus Andrianto",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Agus-Andrianto.jpg",
+        "jabatan": "Menteri Imigrasi dan Pemasyarakatan"
+      },
+      "wikipediaTitleFallback": "Agus Andrianto"
+    },
+    {
+      "name": "Sri Mulyani",
+      "fullName": "Sri Mulyani Indrawati",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Sri-Mulyani-Indrawati.jpg",
+        "jabatan": "Menteri Keuangan"
+      },
+      "wikipediaTitleFallback": "Sri Mulyani"
+    },
+    {
+      "name": "Purbaya",
+      "fullName": "Purbaya Yudhi Sadewa",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/09/Purbaya-Yudhi-Sadewa-removebg-preview-205x270.png",
+        "jabatan": "Menteri Keuangan"
+      },
+      "wikipediaTitleFallback": "Purbaya Yudhi Sadewa"
+    },
+    {
+      "name": "Suahasil",
+      "fullName": "Suahasil Nazara",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2026/09/Suahasil-3-205x270.png",
+        "jabatan": "Menteri Keuangan"
+      },
+      "wikipediaTitleFallback": "Suahasil Nazara"
+    },
+    {
+      "name": "Abdul Mu’ti",
+      "fullName": "Abdul Mu’ti",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Abdul-Muti.jpg",
+        "jabatan": "Menteri Pendidikan Dasar dan Menengah"
+      },
+      "commonsCategoryFallback": "Abdul Mu’ti"
+    },
+    {
+      "name": "Satryo",
+      "fullName": "Satryo Brodjonegoro",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/02/Satryo_Brodjonegoro_Menteri_Pendidikan_Tinggi_Sains_dan_Teknologi_2024-205x270.jpg",
+        "jabatan": "Menteri Pendidikan Tinggi, Sains, dan Teknologi"
+      },
+      "wikipediaTitleFallback": "Satryo Brodjonegoro"
+    },
+    {
+      "name": "Brian",
+      "fullName": "Brian Yuliarto",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/02/Brian_Yuliarto_Mendiktisaintek_2025-234x300.png",
+        "jabatan": "Menteri Pendidikan Tinggi, Sains, dan Teknologi"
+      },
+      "wikipediaTitleFallback": "Brian Yuliarto"
+    },
+    {
+      "name": "Fadli Zon",
+      "fullName": "Fadli Zon",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Fadli-Zon.jpg",
+        "jabatan": "Menteri Kebudayaan"
+      },
+      "wikipediaTitleFallback": "Fadli Zon"
+    },
+    {
+      "name": "Budi Gunadi",
+      "fullName": "Budi Gunadi Sadikin",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Budi-Gunadi-Sadikin.jpg",
+        "jabatan": "Menteri Kesehatan"
+      },
+      "wikipediaTitleFallback": "Budi Gunadi Sadikin"
+    },
+    {
+      "name": "Gus Ipul",
+      "fullName": "Saifullah Yusuf",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/MENSOS-SAIFULLAH-YUSUF-234x300.jpg",
+        "jabatan": "Menteri Sosial"
+      },
+      "wikipediaTitleFallback": "Saifullah Yusuf"
+    },
+    {
+      "name": "Yassierli",
+      "fullName": "Yassierli",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Yassierli.jpg",
+        "jabatan": "Menteri Ketenagakerjaan"
+      },
+      "wikipediaTitleFallback": "Yassierli"
+    },
+    {
+      "name": "Karding",
+      "fullName": "Abdul Kadir Karding",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Abdul-Kadir-Karding.jpg",
+        "jabatan": "Kepala Badan Karantina Indonesia"
+      },
+      "wikipediaTitleFallback": "Abdul Kadir Karding"
+    },
+    {
+      "name": "Mukhtarudin",
+      "fullName": "Mukhtarudin",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/09/presidenri.go_.id-09092025125439-68bfc11f903441.73548789-removebg-preview.png",
+        "jabatan": "Menteri Pelindungan Pekerja Migran Indonesia"
+      },
+      "wikipediaTitleFallback": "Mukhtarudin"
+    },
+    {
+      "name": "Agus Gumiwang",
+      "fullName": "Agus Gumiwang Kartasasmita",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Agus-Gumiwang-Kartasasmita.jpg",
+        "jabatan": "Menteri Perindustrian"
+      },
+      "wikipediaTitleFallback": "Agus Gumiwang Kartasasmita"
+    },
+    {
+      "name": "Budi Santoso",
+      "fullName": "Budi Santoso",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Budi-Santoso.jpg",
+        "jabatan": "Menteri Perdagangan"
+      },
+      "commonsCategoryFallback": "Budi Santoso"
+    },
+    {
+      "name": "Bahlil",
+      "fullName": "Bahlil Lahadalia",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Bahlil-Lahadalia.jpg",
+        "jabatan": "Menteri Energi dan Sumber Daya Mineral"
+      },
+      "wikipediaTitleFallback": "Bahlil Lahadalia"
+    },
+    {
+      "name": "Dody",
+      "fullName": "Dody Hanggodo",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Dody-Hanggodo.jpg",
+        "jabatan": "Menteri Pekerjaan Umum"
+      },
+      "wikipediaTitleFallback": "Dody Hanggodo"
+    },
+    {
+      "name": "Maruarar",
+      "fullName": "Maruarar Sirait",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Maruarar-Sirait.jpg",
+        "jabatan": "Menteri Perumahan dan Kawasan Permukiman"
+      },
+      "commonsCategoryFallback": "Maruarar Sirait"
+    },
+    {
+      "name": "Yandri",
+      "fullName": "Yandri Susanto",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Yandri-Susanto.jpg",
+        "jabatan": "Menteri Desa dan Pembangunan Daerah Tertinggal"
+      },
+      "commonsCategoryFallback": "Yandri Susanto"
+    },
+    {
+      "name": "Iftitah",
+      "fullName": "Muhammad Iftitah Sulaiman Suryanagara",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/M.-Iftitah-S.-Suryanagara.jpg",
+        "jabatan": "Menteri Transmigrasi"
+      },
+      "wikipediaTitleFallback": "Muhammad Iftitah Sulaiman Suryanagara"
+    },
+    {
+      "name": "Dudy",
+      "fullName": "Dudy Purwagandhi",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Dudy-Purwagandhi.jpg",
+        "jabatan": "Menteri Perhubungan"
+      },
+      "commonsCategoryFallback": "Dudy Purwagandhi"
+    },
+    {
+      "name": "Meutya",
+      "fullName": "Meutya Viada Hafid",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Meutya-Viada-Hafid.jpg",
+        "jabatan": "Menteri Komunikasi dan Digital"
+      },
+      "wikipediaTitleFallback": "Meutya Hafid"
+    },
+    {
       "name": "Amran",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Amran Sulaiman"
-      }
+      "fullName": "Andi Amran Sulaiman",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Andi-Amran-Sulaiman-1.jpg",
+        "jabatan": "Menteri Pertanian"
+      },
+      "wikipediaTitleFallback": "Amran Sulaiman"
     },
     {
-      "fullName": "Anis Matta",
+      "name": "Raja Juli",
+      "fullName": "Raja Juli Antoni",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Raja-Juli-Antoni.jpg",
+        "jabatan": "Menteri Kehutanan"
+      },
+      "wikipediaTitleFallback": "Raja Juli Antoni"
+    },
+    {
+      "name": "Trenggono",
+      "fullName": "Sakti Wahyu Trenggono",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Sakti-Wahyu-Trenggono.jpg",
+        "jabatan": "Menteri Kelautan dan Perikanan"
+      },
+      "wikipediaTitleFallback": "Sakti Wahyu Trenggono"
+    },
+    {
+      "name": "Nusron",
+      "fullName": "Nusron Wahid",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Nusron-Wahid.jpg",
+        "jabatan": "Menteri Agraria dan Tata Ruang/Kepala Badan Pertanahan Nasional"
+      },
+      "wikipediaTitleFallback": "Nusron Wahid"
+    },
+    {
+      "name": "Rachmat",
+      "fullName": "Rachmat Pambudy",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Rachmat-Pambudy.jpg",
+        "jabatan": "Menteri Perencanaan Pembangunan Nasional/Kepala Bappenas"
+      },
+      "commonsCategoryFallback": "Rachmat Pambudy"
+    },
+    {
+      "name": "Rini",
+      "fullName": "Rini Widyantini",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Rini-Widyantini.jpg",
+        "jabatan": "Menteri Pendayagunaan Aparatur Negara dan Reformasi Birokrasi"
+      },
+      "wikipediaTitleFallback": "Rini Widyantini"
+    },
+    {
+      "name": "Erick Thohir",
+      "fullName": "Erick Thohir",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Erick-Thohir.jpg",
+        "jabatan": "Menteri Pemuda dan Olahraga"
+      },
+      "wikipediaTitleFallback": "Erick Thohir"
+    },
+    {
+      "name": "Wihaji",
+      "fullName": "Wihaji",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Wihaji.jpg",
+        "jabatan": "Menteri Kependudukan dan Pembangunan Keluarga/Kepala BKKBN"
+      },
+      "commonsCategoryFallback": "Wihaji"
+    },
+    {
+      "name": "Hanif Faisol",
+      "fullName": "Hanif Faisol Nurofiq",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Hanif-Faisol-Nurofiq.jpg",
+        "jabatan": "Menteri Lingkungan Hidup/Kepala Badan Pengendalian Lingkungan Hidup"
+      },
+      "commonsCategoryFallback": "Hanif Faisol Nurofiq"
+    },
+    {
+      "name": "Jumhur",
+      "fullName": "Mohammad Jumhur Hidayat",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2026/05/Jumhur_Hidayat_Menteri_Lingkungan_Hidup_2026_cropped.png",
+        "jabatan": "Menteri Lingkungan Hidup/Kepala Badan Pengendalian Lingkungan Hidup"
+      },
+      "commonsCategoryFallback": "Mohammad Jumhur Hidayat"
+    },
+    {
+      "name": "Rosan",
+      "fullName": "Rosan Perkasa Roeslani",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Rosan-Perkasa-Roeslani.jpg",
+        "jabatan": "Menteri Investasi dan Hilirisasi/Kepala BKPM"
+      },
+      "wikipediaTitleFallback": "Rosan Roeslani"
+    },
+    {
+      "name": "Budi Arie",
+      "fullName": "Budi Arie Setiadi",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Budi-Arie-Setiadi.jpg",
+        "jabatan": "Menteri Koperasi"
+      },
+      "wikipediaTitleFallback": "Budi Arie Setiadi"
+    },
+    {
+      "name": "Ferry Joko",
+      "fullName": "Ferry Joko Yuliantono",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/09/WhatsApp_Image_2025-09-09_at_15.11.30-removebg-preview.png",
+        "jabatan": "Menteri Koperasi"
+      },
+      "commonsCategoryFallback": "Ferry Joko Yuliantono"
+    },
+    {
+      "name": "Maman",
+      "fullName": "Maman Abdurrahman",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Maman-Abdurrahman.jpg",
+        "jabatan": "Menteri Usaha Mikro, Kecil, dan Menengah"
+      },
+      "wikipediaTitleFallback": "Maman Abdurrahman (politikus)"
+    },
+    {
+      "name": "Widiyanti",
+      "fullName": "Widiyanti Putri Wardhana",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Widiyanti-Putri.jpg",
+        "jabatan": "Menteri Pariwisata"
+      },
+      "wikipediaTitleFallback": "Widiyanti Putri Wardhana"
+    },
+    {
+      "name": "Riefky",
+      "fullName": "Teuku Riefky Harsya",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Teuku-Riefky-Harsha.jpg",
+        "jabatan": "Menteri Ekonomi Kreatif/Kepala Badan Ekonomi Kreatif"
+      },
+      "wikipediaTitleFallback": "Teuku Riefky Harsya"
+    },
+    {
+      "name": "Arifatul",
+      "fullName": "Arifatul Choiri Fauzi",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Arifatul-Choiri-Fauzi.jpg",
+        "jabatan": "Menteri Pemberdayaan Perempuan dan Perlindungan Anak"
+      },
+      "commonsCategoryFallback": "Arifatul Choiri Fauzi"
+    },
+    {
+      "name": "Dito",
+      "fullName": "Dito Ariotedjo",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/A.-B.-Nandito-Ariotedjo.jpg",
+        "jabatan": "Menteri Pemuda dan Olahraga"
+      },
+      "wikipediaTitleFallback": "Dito Ariotedjo"
+    },
+    {
+      "name": "Gus Irfan",
+      "fullName": "Mochamad Irfan Yusuf",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/09/WhatsApp_Image_2025-09-09_at_15.10.46-removebg-preview.png",
+        "jabatan": "Menteri Haji dan Umrah"
+      },
+      "wikipediaTitleFallback": "Mochamad Irfan Yusuf"
+    },
+    {
+      "name": "Burhanuddin",
+      "fullName": "Sanitiar Burhanuddin",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2019/10/38-ST-BURHANNUDIN.jpg",
+        "jabatan": "Jaksa Agung"
+      },
+      "wikipediaTitleFallback": "Sanitiar Burhanuddin"
+    },
+    {
+      "name": "Agus Subiyanto",
+      "fullName": "Agus Subiyanto",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/01/AGUS-SUBIYANTO-231x300.jpg",
+        "jabatan": "Panglima Tentara Nasional Indonesia"
+      },
+      "wikipediaTitleFallback": "Agus Subiyanto"
+    },
+    {
+      "name": "Listyo Sigit",
+      "fullName": "Listyo Sigit Prabowo",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2021/01/KAPOLRI-SIGIT.png",
+        "jabatan": "Kepala Kepolisian Negara Republik Indonesia"
+      },
+      "wikipediaTitleFallback": "Listyo Sigit Prabowo"
+    },
+    {
+      "name": "Anto Mukti",
+      "fullName": "Anto Mukti Putranto",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/A.-M.-Putranto.jpg",
+        "jabatan": "Kepala Staf Kepresidenan"
+      },
+      "wikipediaTitleFallback": "Anto Mukti Putranto"
+    },
+    {
+      "name": "Qodari",
+      "fullName": "Muhammad Qodari",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/09/CBS_5613_1_-removebg-preview.png",
+        "jabatan": "Kepala Badan Komunikasi Pemerintah"
+      },
+      "wikipediaTitleFallback": "Muhammad Qodari"
+    },
+    {
+      "name": "Dudung",
+      "fullName": "Dudung Abdurachman",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2026/05/Dudung_Abdurrachman_Kepala_Staf_Kepresidenan_2026_cropped.png",
+        "jabatan": "Kepala Staf Kepresidenan"
+      },
+      "wikipediaTitleFallback": "Dudung Abdurachman"
+    },
+    {
+      "name": "Luhut",
+      "fullName": "Luhut Binsar Pandjaitan",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Luhut-Binsar-Pandjaitan.jpg",
+        "jabatan": "Ketua Dewan Ekonomi Nasional"
+      },
+      "wikipediaTitleFallback": "Luhut Binsar Pandjaitan"
+    },
+    {
+      "name": "Hasan Nasbi",
+      "fullName": "Hasan Nasbi",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Hasan-Nasbi.jpg",
+        "jabatan": "Kepala Kantor Komunikasi Kepresidenan"
+      },
+      "wikipediaTitleFallback": "Hasan Nasbi"
+    },
+    {
+      "name": "Angga Raka",
+      "fullName": "Angga Raka Prabowo",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/09/CBS_5463-removebg-preview.png",
+        "jabatan": "Kepala Badan Komunikasi Pemerintah"
+      },
+      "wikipediaTitleFallback": "Angga Raka Prabowo"
+    },
+    {
+      "name": "Herindra",
+      "fullName": "M. Herindra",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/10/Mohammad-Herindra.jpg",
+        "jabatan": "Kepala Badan Intelijen Negara"
+      },
+      "commonsCategoryFallback": "M. Herindra"
+    },
+    {
+      "name": "Yusuf Ateh",
+      "fullName": "Muhammad Yusuf Ateh",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/03/IMG_0778.png",
+        "jabatan": "Kepala Badan Pengawasan Keuangan dan Pembangunan"
+      },
+      "commonsCategoryFallback": "Muhammad Yusuf Ateh"
+    },
+    {
+      "name": "Amalia",
+      "fullName": "Amalia Adininggar Widyasanti",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/03/IMG_0779-768x1024.png",
+        "jabatan": "Kepala Badan Pusat Statistik"
+      },
+      "wikipediaTitleFallback": "Amalia Adininggar Widyasanti"
+    },
+    {
+      "name": "Nugroho",
+      "fullName": "Nugroho Sulistyo Budi",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2025/03/KA-BSSN--819x1024.jpg",
+        "jabatan": "Kepala Badan Siber dan Sandi Negara"
+      },
+      "commonsCategoryFallback": "Nugroho Sulistyo Budi"
+    },
+    {
+      "name": "Teddy",
+      "fullName": "Teddy Indra Wijaya",
+      "setneg": {
+        "photoUrl": "https://setkab.go.id/wp-content/uploads/2024/12/TEDDY-INDRA-WIJAYA-231x300-1.jpg",
+        "jabatan": "Sekretaris Kabinet"
+      },
+      "wikipediaTitleFallback": "Teddy Indra Wijaya"
+    },
+    {
       "name": "Anis Matta",
+      "fullName": "Anis Matta",
       "wikipedia": {
         "lang": "id",
         "title": "Anis Matta"
       }
     },
     {
-      "fullName": "Anto Mukti Putranto",
-      "name": "Anto Mukti",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Anto Mukti Putranto"
-      }
-    },
-    {
-      "fullName": "Arifah Choiri Fauzi",
-      "name": "Arifah",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Arifah Fauzi"
-      }
-    },
-    {
-      "fullName": "Bahlil Lahadalia",
-      "name": "Bahlil",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Bahlil Lahadalia"
-      }
-    },
-    {
-      "fullName": "Bima Arya Sugiarto",
       "name": "Bima Arya",
+      "fullName": "Bima Arya Sugiarto",
       "wikipedia": {
         "lang": "id",
         "title": "Bima Arya Sugiarto"
       }
     },
     {
-      "fullName": "Brian Yuliarto",
-      "name": "Brian",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Brian Yuliarto"
-      }
-    },
-    {
-      "fullName": "Budi Arie Setiadi",
-      "name": "Budi Arie",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Budi Arie Setiadi"
-      }
-    },
-    {
-      "fullName": "Budi Gunadi Sadikin",
-      "name": "Budi Gunadi",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Budi Gunadi Sadikin"
-      }
-    },
-    {
-      "fullName": "Budi Gunawan",
-      "name": "Budi Gunawan",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Budi Gunawan"
-      }
-    },
-    {
-      "fullName": "Dito Ariotedjo",
-      "name": "Dito",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Dito Ariotedjo"
-      }
-    },
-    {
-      "fullName": "Djamari Chaniago",
-      "name": "Djamari",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Djamari Chaniago"
-      }
-    },
-    {
-      "fullName": "Dudung Abdurachman",
-      "name": "Dudung",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Dudung Abdurachman"
-      }
-    },
-    {
-      "fullName": "Erick Thohir",
-      "name": "Erick Thohir",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Erick Thohir"
-      }
-    },
-    {
-      "fullName": "Fadli Zon",
-      "name": "Fadli Zon",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Fadli Zon"
-      }
-    },
-    {
-      "fullName": "Gibran Rakabuming Raka",
-      "name": "Gibran",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Gibran Rakabuming Raka"
-      }
-    },
-    {
-      "fullName": "Luhut Binsar Pandjaitan",
-      "name": "Luhut",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Luhut Binsar Pandjaitan"
-      }
-    },
-    {
-      "fullName": "Maman Abdurrahman",
-      "name": "Maman",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Maman Abdurrahman (politikus)"
-      }
-    },
-    {
-      "fullName": "Meutya Hafid",
-      "name": "Meutya",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Meutya Hafid"
-      }
-    },
-    {
-      "fullName": "Mochamad Irfan Yusuf",
-      "name": "Gus Irfan",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Mochamad Irfan Yusuf"
-      }
-    },
-    {
-      "fullName": "Muhammad Iftitah Sulaiman Suryanagara",
-      "name": "Iftitah",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Muhammad Iftitah Sulaiman Suryanagara"
-      }
-    },
-    {
-      "fullName": "Muhammad Tito Karnavian",
-      "name": "Tito Karnavian",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Tito Karnavian"
-      }
-    },
-    {
-      "fullName": "Nasaruddin Umar",
-      "name": "Nasaruddin",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Nasaruddin Umar"
-      }
-    },
-    {
-      "fullName": "Natalius Pigai",
-      "name": "Natalius Pigai",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Natalius Pigai"
-      }
-    },
-    {
-      "fullName": "Nezar Patria",
       "name": "Nezar Patria",
+      "fullName": "Nezar Patria",
       "wikipedia": {
         "lang": "id",
         "title": "Nezar Patria"
       }
     },
     {
-      "fullName": "Nusron Wahid",
-      "name": "Nusron",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Nusron Wahid"
-      }
-    },
-    {
-      "fullName": "Prabowo Subianto",
-      "name": "Prabowo",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Prabowo Subianto"
-      }
-    },
-    {
-      "fullName": "Prasetyo Hadi",
-      "name": "Prasetyo Hadi",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Prasetyo Hadi"
-      }
-    },
-    {
-      "fullName": "Pratikno",
-      "name": "Pratikno",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Pratikno"
-      }
-    },
-    {
-      "fullName": "Purbaya Yudhi Sadewa",
-      "name": "Purbaya",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Purbaya Yudhi Sadewa"
-      }
-    },
-    {
-      "fullName": "Raja Juli Antoni",
-      "name": "Raja Juli",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Raja Juli Antoni"
-      }
-    },
-    {
-      "fullName": "Rini Widyantini",
-      "name": "Rini",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Rini Widyantini"
-      }
-    },
-    {
-      "fullName": "Rosan Perkasa Roeslani",
-      "name": "Rosan",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Rosan Roeslani"
-      }
-    },
-    {
-      "fullName": "Saifullah Yusuf",
-      "name": "Gus Ipul",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Saifullah Yusuf"
-      }
-    },
-    {
-      "fullName": "Sakti Wahyu Trenggono",
-      "name": "Trenggono",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Sakti Wahyu Trenggono"
-      }
-    },
-    {
-      "fullName": "Sanitiar Burhanuddin",
-      "commonsCategory": "Sanitiar Burhanuddin",
-      "name": "Burhanuddin"
-    },
-    {
-      "fullName": "Satryo Brodjonegoro",
-      "name": "Satryo",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Satryo Brodjonegoro"
-      }
-    },
-    {
-      "fullName": "Sjafrie Sjamsoeddin",
-      "name": "Sjafrie",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Sjafrie Sjamsoeddin"
-      }
-    },
-    {
-      "fullName": "Sri Mulyani Indrawati",
-      "name": "Sri Mulyani",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Sri Mulyani"
-      }
-    },
-    {
-      "fullName": "Suahasil Nazara",
-      "name": "Suahasil",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Suahasil Nazara"
-      }
-    },
-    {
-      "fullName": "Sugiono",
-      "name": "Sugiono",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Sugiono (politikus)"
-      }
-    },
-    {
-      "fullName": "Teuku Riefky Harsya",
-      "name": "Riefky",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Teuku Riefky Harsya"
-      }
-    },
-    {
-      "fullName": "Todotua Pasaribu",
       "name": "Todotua",
+      "fullName": "Todotua Pasaribu",
       "wikipedia": {
         "lang": "id",
         "title": "Todotua Pasaribu"
-      }
-    },
-    {
-      "fullName": "Widiyanti Putri Wardhana",
-      "name": "Widiyanti",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Widiyanti Putri Wardhana"
-      }
-    },
-    {
-      "fullName": "Yusril Ihza Mahendra",
-      "name": "Yusril",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Yusril Ihza Mahendra"
-      }
-    },
-    {
-      "fullName": "Zulkifli Hasan",
-      "name": "Zulkifli Hasan",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Zulkifli Hasan"
       }
     }
   ]
