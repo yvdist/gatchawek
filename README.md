@@ -79,8 +79,9 @@ pool `pejabat`) atau `jomok` (untuk pool `meme`). `[rarity]` salah satu dari
    unduh gambar (gate 500×700 sama seperti `fetch-images`), upsert langsung ke
    file grup kurasi (`data/groups/pejabat/kabinet-merah-putih.json` atau
    `data/groups/meme/jomok.json`) dengan `photoNo` lanjutan.
-   Member grup kurasi wajib ≥3 foto: submission yang membuat member berakhir
-   di bawah 3 foto DITOLAK (kumpulkan 3 foto dulu, jangan approve sebagian).
+   Satu foto per pesan sudah cukup: tidak ada syarat minimal foto. Member dengan
+   < 3 foto hanya memicu warning di `pnpm validate` (bukan error) sampai foto
+   tambahan masuk.
    Bila unduhan gagal: taruh file manual di `assets/raw/<cardId>.<ext>`, ulangi dengan `--skip-fetch`.
 5. Lanjut pipeline biasa: `pnpm validate && pnpm fetch-images && pnpm seed && pnpm register && pnpm deploy`.
 

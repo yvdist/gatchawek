@@ -78,7 +78,7 @@ function targetFileFor(pool: string, grup: string): string {
 interface CommunityGroupBody {
   schemaVersion: 1;
   pool: string;
-  group: { id: string; name: string; badge: string; allowSinglePhoto?: boolean };
+  group: { id: string; name: string; badge: string };
   members: CommunityMemberBody[];
 }
 
@@ -183,11 +183,9 @@ export async function approve(root: string, options: ApproveOptions): Promise<Ap
   }
   const photos = entry.photos;
   const nextPhotoNo = photos.length + 1;
-  // Curated groups require ≥3 photos per member at validate time. Refuse
-  // early rather than writing a file that fails `pnpm validate`.
-  if (groupBody.group.allowSinglePhoto !== true && nextPhotoNo < 3) {
-    throw new Error(
-      `member "${memberId}" would have ${String(nextPhotoNo)} photos, group "${submission.grup}" requires at least 3 (no allowSinglePhoto); collect ${String(3 - nextPhotoNo)} more photos before approving`,
+  if (nextPhotoNo < 3) {
+    console.warn(
+      `warning: member "${memberId}" will have ${String(nextPhotoNo)} photo(s); collect more photos over time (ideally at least 3)`,
     );
   }
   const cardId = `${memberId}-${String(nextPhotoNo).padStart(2, "0")}`;

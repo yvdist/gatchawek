@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -115,19 +115,16 @@ describe("approve", () => {
     expect(member?.photos.map((p) => p.photoNo)).toEqual([1, 2, 3, 4, 5]);
   });
 
-  it("rejects a new name that would start below 3 photos", async () => {
+  it("creates a new member from a single photo", async () => {
     const root = await makeRoot();
     await writePending(root, "120", { nama: "Citra Lestari", memberId: "citra-lestari" });
     await placeManualRaw(root, "citra-lestari-01");
-    await expect(approve(root, { messageId: "120", skipFetch: true })).rejects.toThrow(
-      /member "citra-lestari" would have 1 photos, group "kabinet-merah-putih" requires at least 3/,
-    );
-    // Still pending after refusal; group file untouched.
-    expect(await readdir(path.join(root, "data", "submissions", "pending"))).toEqual(["120.json"]);
-    const body = JSON.parse(
-      await readFile(path.join(root, "data", "groups", "pejabat", "kabinet-merah-putih.json"), "utf8"),
-    ) as { members: unknown[] };
-    expect(body.members).toHaveLength(1);
+    const result = await approve(root, { messageId: "120", skipFetch: true });
+    expect(result.memberId).toBe("citra-lestari");
+    expect(result.photoNo).toBe(1);
+    const loaded = await loadManifests(root);
+    const member = loaded.groups[0]?.manifest.members.find((m) => m.id === "citra-lestari");
+    expect(member?.photos.map((p) => p.photoNo)).toEqual([1]);
   });
 
   it("rejects a submission grup that does not match the pool", async () => {

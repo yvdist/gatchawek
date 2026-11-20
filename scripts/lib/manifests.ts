@@ -168,6 +168,22 @@ export function rarityWarnings(loaded: LoadedManifests): string[] {
   return warnings;
 }
 
+/** Members with fewer than 3 photos are warnings, never errors: community
+ * inject accepts a single photo per message, top-ups arrive over time. */
+export function photoWarnings(loaded: LoadedManifests): string[] {
+  const warnings: string[] = [];
+  for (const { file, manifest } of loaded.groups) {
+    for (const member of manifest.members) {
+      if (member.photos.length < 3) {
+        warnings.push(
+          `warning: ${file} member "${member.id}" has ${String(member.photos.length)} photo(s), ideally at least 3`,
+        );
+      }
+    }
+  }
+  return warnings;
+}
+
 export function summarize(loaded: LoadedManifests): string[] {
   return loaded.groups.map(({ manifest }) => {
     const counts: Record<string, number> = {

@@ -94,11 +94,12 @@ export async function fetchRemoteImage(
       };
     }
     if (decoded.width < MIN_WIDTH || decoded.height < MIN_HEIGHT) {
-      return {
-        cardId,
-        imageUrl,
-        reason: `too small: ${decoded.width}x${decoded.height} < ${MIN_WIDTH}x${MIN_HEIGHT}`,
-      };
+      // Undersized images still build (upscaled in the frame); quality is a
+      // curation concern, not a fetch failure. Community inject routinely
+      // receives small chat uploads.
+      console.warn(
+        `warning: ${cardId} is ${String(decoded.width)}x${String(decoded.height)}, below ${String(MIN_WIDTH)}x${String(MIN_HEIGHT)}; upscaling`,
+      );
     }
     const outPath = path.join(rawDir, `${cardId}.${ext}`);
     await writeFile(outPath, bytes);

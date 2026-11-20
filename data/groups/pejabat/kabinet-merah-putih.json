@@ -4123,6 +4123,20 @@
       ],
       "sortOrder": 0,
       "enabled": true
+    },
+    {
+      "id": "teddy-cheerleader",
+      "name": "Teddy Cheerleader",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "rare",
+          "imageUrl": "https://cdn.discordapp.com/attachments/1573206124168216637/1573225166056718346/images.png?ex=6b013b9c&is=6affea1c&hm=2ce17a84401dcde315f64eb7768d7f7d25e2c084d968541da1d128e9945f7d19&",
+          "sourcePageUrl": "https://discord.com/channels/869121487020372020/1573206124168216637/1573225166413242390",
+          "license": null,
+          "author": null
+        }
+      ]
     }
   ]
 }

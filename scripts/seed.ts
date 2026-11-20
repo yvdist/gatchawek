@@ -14,6 +14,7 @@ import {
 import {
   loadManifests,
   ManifestError,
+  photoWarnings,
   rarityWarnings,
   resolveManifestRoot,
   summarize,
@@ -288,6 +289,9 @@ async function loadAndReport(root: string) {
     console.log(line);
   }
   for (const warning of rarityWarnings(loaded)) {
+    console.warn(warning);
+  }
+  for (const warning of photoWarnings(loaded)) {
     console.warn(warning);
   }
   return loaded;

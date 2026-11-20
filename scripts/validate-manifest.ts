@@ -1,6 +1,7 @@
 import {
   loadManifests,
   ManifestError,
+  photoWarnings,
   rarityWarnings,
   summarize,
 } from "./lib/manifests.js";
@@ -20,6 +21,9 @@ async function main(): Promise<void> {
     console.log(line);
   }
   for (const warning of rarityWarnings(loaded)) {
+    console.warn(warning);
+  }
+  for (const warning of photoWarnings(loaded)) {
     console.warn(warning);
   }
 }

@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterEach, describe, expect, it } from "vitest";
-import { loadManifests, summarize } from "../scripts/lib/manifests.js";
+import { loadManifests, photoWarnings, summarize } from "../scripts/lib/manifests.js";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 
@@ -35,7 +35,7 @@ interface PhotoDraft {
 interface GroupDraft {
   schemaVersion: number;
   pool: string;
-  group: { id: string; name: string; badge: string; allowSinglePhoto?: boolean };
+  group: { id: string; name: string; badge: string };
   members: {
     id: string;
     name: string;
@@ -140,32 +140,28 @@ describe("manifest validation", () => {
     );
   });
 
-  it("rejects a single-photo member without the community flag", async () => {
+  it("accepts a single-photo member and warns instead of failing", async () => {
     const root = await makeRoot();
-    const broken = goodGroup();
-    const firstMember = broken.members[0];
+    const single = goodGroup();
+    const firstMember = single.members[0];
     expect(firstMember).toBeDefined();
     if (firstMember !== undefined) firstMember.photos.splice(1);
     await writeManifests(root, GOOD_POOLS, [
-      { dir: "pejabat", file: "grup-satu.json", body: broken },
-    ]);
-    await expect(loadManifests(root)).rejects.toThrow(
-      /member must have at least 3 photos/,
-    );
-  });
-
-  it("accepts a single-photo member with allowSinglePhoto", async () => {
-    const root = await makeRoot();
-    const community = goodGroup();
-    community.group.allowSinglePhoto = true;
-    const firstMember = community.members[0];
-    expect(firstMember).toBeDefined();
-    if (firstMember !== undefined) firstMember.photos.splice(1);
-    await writeManifests(root, GOOD_POOLS, [
-      { dir: "pejabat", file: "komunitas-x.json", body: community },
+      { dir: "pejabat", file: "grup-satu.json", body: single },
     ]);
     const loaded = await loadManifests(root);
     expect(loaded.groups).toHaveLength(1);
+    expect(photoWarnings(loaded)).toHaveLength(1);
+    expect(photoWarnings(loaded)[0]).toMatch(/member "tokoh-satu" has 1 photo\(s\), ideally at least 3/);
+  });
+
+  it("emits no photo warning for a complete 3-photo member", async () => {
+    const root = await makeRoot();
+    await writeManifests(root, GOOD_POOLS, [
+      { dir: "pejabat", file: "grup-satu.json", body: goodGroup() },
+    ]);
+    const loaded = await loadManifests(root);
+    expect(photoWarnings(loaded)).toEqual([]);
   });
 
   it("accepts the curated dataset and summarizes 2 groups", async () => {
@@ -173,5 +169,7 @@ describe("manifest validation", () => {
     expect(loaded.pools.map((p) => p.id).sort()).toEqual(["meme", "pejabat"]);
     expect(loaded.groups).toHaveLength(2);
     const summary = summarize(loaded).join("\n");
-    expect(summary).toMatch(/pejabat\/kabinet-merah-putih: 50 member, 282 foto/);
+    expect(summary).toMatch(/pejabat\/kabinet-merah-putih: 51 member, 283 foto/);
     expect(summary).toMatch(/meme\/jomok: 18 member, 108 foto/);
+  });
+});

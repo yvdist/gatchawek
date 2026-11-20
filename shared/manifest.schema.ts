@@ -58,35 +58,21 @@ export const memberSchema = z.object({
   id: slugSchema,
   name: z.string().min(1),
   fullName: z.string().min(1).optional(),
-  photos: z.array(photoSchema).min(1, "member must have at least 3 photos"),
+  photos: z.array(photoSchema).min(1, "member must have at least 1 photo"),
   sortOrder: z.number().int().default(0),
   enabled: z.boolean().default(true),
 });
 
-export const groupManifestSchema = z
-  .object({
-    schemaVersion: z.literal(1),
-    pool: z.string().min(1),
-    group: z.object({
-      id: slugSchema,
-      name: z.string().min(1),
-      badge: badgeSchema,
-      allowSinglePhoto: z.boolean().default(false),
-    }),
-    members: z.array(memberSchema).min(1, "group must have at least 1 member"),
-  })
-  .superRefine((manifest, ctx) => {
-    if (manifest.group.allowSinglePhoto === true) return;
-    for (const [memberIndex, member] of manifest.members.entries()) {
-      if (member.photos.length < 3) {
-        ctx.addIssue({
-          code: "custom",
-          message: "member must have at least 3 photos",
-          path: ["members", memberIndex, "photos"],
-        });
-      }
-    }
-  });
+export const groupManifestSchema = z.object({
+  schemaVersion: z.literal(1),
+  pool: z.string().min(1),
+  group: z.object({
+    id: slugSchema,
+    name: z.string().min(1),
+    badge: badgeSchema,
+  }),
+  members: z.array(memberSchema).min(1, "group must have at least 1 member"),
+});
 
 export const poolSchema = z.object({
   id: slugSchema,

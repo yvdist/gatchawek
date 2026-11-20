@@ -161,9 +161,10 @@ lampiran gambar pesan = foto kartu. Template pesan (pool + grup pilihan tetap):
   dengan pool submission bila keduanya ada. File target yang hilang bersifat
   error keras (grup repo berubah → perbarui `POOL_GROUPS`); `approve` tidak pernah
   membuat file grup baru.
-- Grup kurasi tetap wajib ≥3 foto per member: `approve` menolak submission yang
-  membuat member berakhir di bawah 3 foto (tidak ada lagi file `komunitas-*.json`
-  dengan `allowSinglePhoto`; pengecualian itu sudah dihapus bersama grup fiktif).
+- Satu foto per pesan sudah cukup: tidak ada syarat minimal foto per member.
+  Member dengan < 3 foto hanya memicu warning di `validate` (bukan error) sampai
+  foto tambahan masuk — tidak ada lagi file `komunitas-*.json` dan tidak ada lagi
+  flag `allowSinglePhoto` di skema.
   Tanpa migrasi D1, tanpa perubahan Worker.
 
 ### 4.3 Serial
