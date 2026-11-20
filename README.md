@@ -80,6 +80,7 @@ pool `pejabat`) atau `jomok` (untuk pool `meme`). `[rarity]` salah satu dari
    **Read Message History** di channel itu. Isi `.env`: `INGEST_CHANNEL_ID=<id channel>`, `INGEST_GUILD_ID=<id server>`.
 2. Kontributor posting satu pesan per kartu sesuai template + tepat 1 lampiran gambar (ukuran bebas; gambar kecil hanya jadi warning upscale, bukan penolakan).
 3. `pnpm run ingest` — tarik pesan baru, tulis `data/submissions/pending/*.json` (pesan lama tanpa template/gambar masuk `rejected/` — normal).
+   Setiap pesan invalid BARU langsung dibalas bot dengan me-reply pesan itu: alasan spesifik + template yang benar. Sekali per pesan (tidak spam walau ingest di-run ulang; `--no-reply` untuk mematikan).
 4. Review pending, lalu `pnpm run approve <messageId> [--pool pejabat] [--skip-fetch]` —
    pool diambil dari submission (`--pool` hanya override yang harus cocok),
    unduh gambar, upsert langsung ke

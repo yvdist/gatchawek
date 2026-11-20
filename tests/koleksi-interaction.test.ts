@@ -539,7 +539,7 @@ describe("handleHelp", () => {
     expect(embed?.description).toContain("★★★★");
     expect(embed?.description).toContain("Pejabat");
     expect(embed?.description).toContain("Serie Satu");
-    expect(embed?.footer?.text).toContain("example.test");
+    expect(embed?.footer).toBeUndefined();
   });
 });
 

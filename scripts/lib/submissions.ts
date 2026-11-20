@@ -54,6 +54,33 @@ export type ParseSubmissionResult =
 const FIELD_RE = /^\s*\[([^\]]+)\]\s*(.*)$/;
 const MAX_LABEL = 60;
 
+/** Template shown to contributors when their message is rejected. */
+export const SUBMISSION_TEMPLATE = [
+  "[nama] Nama Lengkap",
+  "[pool] pejabat",
+  "[grup] kabinet-merah-putih",
+  "[rarity] rare",
+  "[label] (opsional, maks 60 karakter)",
+  "[sumber] (opsional, link https)",
+].join("\n");
+
+/**
+ * Pure reply text for a rejected submission: specific reasons first, then the
+ * correct template. No pool/grup ids beyond the fixed POOL_GROUPS choice.
+ */
+export function formatRejectionReply(errors: readonly string[]): string {
+  const reasons = errors.map((e) => `- ${e}`).join("\n");
+  return [
+    "❌ Kartu tidak bisa diproses:",
+    reasons,
+    "",
+    "Template yang benar (copy-paste, timpa yang dalam kurung, upload tepat 1 gambar):",
+    "```",
+    SUBMISSION_TEMPLATE,
+    "```",
+    "Aturan: [pool] pejabat → [grup] kabinet-merah-putih, [pool] meme → [grup] jomok; [rarity] common/rare/super_rare/ultra_rare.",
+  ].join("\n");
+}
 function isHttpsUrl(value: string): boolean {
   if (!value.startsWith("https://")) return false;
   return URL.canParse(value);

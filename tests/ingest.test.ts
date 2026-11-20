@@ -103,7 +103,7 @@ describe("ingest", () => {
       fetchFn,
     });
 
-    expect(result).toEqual({ valid: 1, invalid: 1, skipped: 1, cursor: "12" });
+    expect(result).toEqual({ valid: 1, invalid: 1, replied: 1, skipped: 1, cursor: "12" });
     expect(await readdir(pendingDir)).toEqual(["10.json"]);
     expect(await readdir(rejectedDir)).toEqual(["11.json"]);
     const pending = (await readJson(root, "data", "submissions", "pending", "10.json")) as {
@@ -113,7 +113,8 @@ describe("ingest", () => {
     expect(await readJson(root, "data", "ingest-state.json")).toEqual({
       after: "12",
     });
-    expect(fetchFn).toHaveBeenCalledTimes(1);
+    // 1 list call + 1 auto-reply POST for the invalid message.
+    expect(fetchFn).toHaveBeenCalledTimes(2);
   });
 
   it("is idempotent across runs and resumes from the cursor", async () => {
@@ -128,9 +129,9 @@ describe("ingest", () => {
     await ingest(root, { env, fetchFn: mockFetch(batch1) });
     expect(await readdir(pendingDir)).toEqual(["20.json"]);
 
-    // Same message again: no rewrite, cursor unchanged.
+    // Same message again: no rewrite, no re-reply, cursor unchanged.
     const again = await ingest(root, { env, fetchFn: mockFetch(batch1) });
-    expect(again).toEqual({ valid: 0, invalid: 0, skipped: 1, cursor: "20" });
+    expect(again).toEqual({ valid: 0, invalid: 0, replied: 0, skipped: 1, cursor: "20" });
 
     // New message: after=cursor filters server-side; here emulate it.
     await writeFile(stateFile, JSON.stringify({ after: "20" }));
@@ -168,5 +169,69 @@ describe("ingest", () => {
         fetchFn: forbidden,
       }),
     ).rejects.toThrow(/Read Message History/);
+  });
+
+  it("replies once per invalid message with reasons + template", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "gatchawek-ingest-"));
+    roots.push(root);
+    const pendingDir = path.join(root, "data", "submissions", "pending");
+    const rejectedDir = path.join(root, "data", "submissions", "rejected");
+    const stateFile = path.join(root, "data", "ingest-state.json");
+    const env = { token: "T", channelId: "222", stateFile, pendingDir, rejectedDir };
+
+    const posts: { url: string; body: Record<string, unknown> }[] = [];
+    const fetchFn = (async (input: unknown, init?: { method?: string; body?: string }) => {
+      const url = String(input);
+      if (init?.method === "POST") {
+        posts.push({ url, body: JSON.parse(String(init.body)) as Record<string, unknown> });
+        return new Response(JSON.stringify({ id: "reply-1" }), { status: 200 });
+      }
+      return new Response(
+        JSON.stringify([message({ id: "30", content: "[nama] Tanpa Pool" })]),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+
+    const first = await ingest(root, { env, fetchFn });
+    expect(first.invalid).toBe(1);
+    expect(first.replied).toBe(1);
+    expect(posts).toHaveLength(1);
+    expect(posts[0]?.url).toBe("https://discord.com/api/v10/channels/222/messages");
+    const content = String((posts[0]?.body as Record<string, unknown>)["content"]);
+    expect(content).toContain("[pool]");
+    expect(content).toContain("kabinet-merah-putih");
+    const ref = (posts[0]?.body as Record<string, unknown>)["message_reference"] as {
+      message_id: string;
+    };
+    expect(ref.message_id).toBe("30");
+    expect(
+      (await readJson(root, "data", "submissions", "rejected", "30.json") as { replied: boolean }).replied,
+    ).toBe(true);
+
+    // Second run: same message skipped, no second reply.
+    const second = await ingest(root, { env, fetchFn });
+    expect(second.replied).toBe(0);
+    expect(posts).toHaveLength(1);
+  });
+
+  it("marks unreplied when the reply post fails, without failing ingest", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "gatchawek-ingest-"));
+    roots.push(root);
+    const pendingDir = path.join(root, "data", "submissions", "pending");
+    const rejectedDir = path.join(root, "data", "submissions", "rejected");
+    const stateFile = path.join(root, "data", "ingest-state.json");
+    const env = { token: "T", channelId: "222", stateFile, pendingDir, rejectedDir };
+    const fetchFn = (async (input: unknown, init?: { method?: string }) => {
+      if (init?.method === "POST") return new Response("{}", { status: 403 });
+      return new Response(
+        JSON.stringify([message({ id: "31", content: "[nama] Tanpa Pool" })]),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+    const result = await ingest(root, { env, fetchFn });
+    expect(result).toEqual({ valid: 0, invalid: 1, replied: 0, skipped: 0, cursor: "31" });
+    expect(
+      (await readJson(root, "data", "submissions", "rejected", "31.json") as { replied: boolean }).replied,
+    ).toBe(false);
   });
 });

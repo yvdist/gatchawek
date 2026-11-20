@@ -2,7 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { APIMessage } from "discord-api-types/v10";
-import { parseSubmission } from "./lib/submissions.js";
+import { formatRejectionReply, parseSubmission } from "./lib/submissions.js";
 
 // Load repo .env automatically so `pnpm ingest` works without manual export.
 // No-op on old Node or when CI injects env directly (existing vars win).
@@ -86,8 +86,44 @@ async function fetchMessages(
 export interface IngestCounts {
   valid: number;
   invalid: number;
+  replied: number;
   skipped: number;
   cursor: string | null;
+}
+
+async function replyToMessage(
+  token: string,
+  channelId: string,
+  messageId: string,
+  content: string,
+  fetchFn: typeof fetch = fetch,
+): Promise<boolean> {
+  try {
+    const res = await fetchFn(`${API_BASE}/channels/${channelId}/messages`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bot ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        content,
+        message_reference: { message_id: messageId },
+        allowed_mentions: { parse: [] },
+      }),
+    });
+    if (!res.ok) {
+      console.warn(
+        `warning: auto-reply to ${messageId} failed: HTTP ${String(res.status)} (stays unreplied, retried next run)`,
+      );
+      return false;
+    }
+    return true;
+  } catch (err: unknown) {
+    console.warn(
+      `warning: auto-reply to ${messageId} failed: ${(err as Error).message} (stays unreplied, retried next run)`,
+    );
+    return false;
+  }
 }
 
 export async function ingest(
@@ -107,10 +143,12 @@ export async function ingest(
 
   let valid = 0;
   let invalid = 0;
+  let replied = 0;
   let skipped = 0;
   let cursor = after;
 
   const guildId = process.env.INGEST_GUILD_ID ?? "unknown";
+  const noReply = process.argv.includes("--no-reply");
   for (const message of [...messages].sort((a, b) =>
     a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
   )) {
@@ -145,7 +183,19 @@ export async function ingest(
         await readFile(outPath, "utf8");
         skipped += 1;
       } catch {
-        await writeFile(outPath, `${JSON.stringify(payload, null, 2)}\n`);
+        const record: Record<string, unknown> = { ...payload };
+        if (!parsed.ok && !noReply) {
+          const ok = await replyToMessage(
+            env.token,
+            env.channelId,
+            message.id,
+            formatRejectionReply(parsed.errors),
+            fetchFn,
+          );
+          if (ok) replied += 1;
+          record.replied = ok;
+        }
+        await writeFile(outPath, `${JSON.stringify(record, null, 2)}\n`);
         if (parsed.ok) valid += 1;
         else invalid += 1;
       }
@@ -157,7 +207,7 @@ export async function ingest(
     await mkdir(path.dirname(env.stateFile), { recursive: true });
     await writeFile(env.stateFile, `${JSON.stringify({ after: cursor }, null, 2)}\n`);
   }
-  return { valid, invalid, skipped, cursor };
+  return { valid, invalid, replied, skipped, cursor };
 }
 
 const isMain =
@@ -168,6 +218,6 @@ if (isMain) {
   const root = fileURLToPath(new URL("..", import.meta.url));
   const result = await ingest(root);
   console.log(
-    `ingested ${String(result.valid)} valid, ${String(result.invalid)} invalid (cursor ${result.cursor ?? "none"})`,
+    `ingested ${String(result.valid)} valid, ${String(result.invalid)} invalid, ${String(result.replied)} replied (cursor ${result.cursor ?? "none"})`,
   );
 }
