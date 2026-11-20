@@ -140,12 +140,13 @@ describe("manifest validation", () => {
     );
   });
 
-  it("accepts the dummy dataset and summarizes 4 groups", async () => {
+  it("accepts the dummy dataset and summarizes 5 groups", async () => {
     const loaded = await loadManifests(REPO_ROOT);
     expect(loaded.pools.map((p) => p.id).sort()).toEqual(["meme", "pejabat"]);
-    expect(loaded.groups).toHaveLength(4);
+    expect(loaded.groups).toHaveLength(5);
     const summary = summarize(loaded).join("\n");
     expect(summary).toMatch(/pejabat\/kabinet-fiktif: 3 member, 9 foto/);
+    expect(summary).toMatch(/pejabat\/kabinet-merah-putih: 15 member, 90 foto/);
     expect(summary).toMatch(/pejabat\/dewan-fiktif: 2 member, 6 foto/);
     expect(summary).toMatch(/meme\/meme-klasik: 2 member, 6 foto/);
     expect(summary).toMatch(/meme\/jomok: 18 member, 108 foto/);

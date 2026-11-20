@@ -1,0 +1,130 @@
+{
+  "group": {
+    "badge": "KABINET",
+    "id": "kabinet-merah-putih",
+    "name": "Kabinet Merah Putih"
+  },
+  "pool": "pejabat",
+  "roster": [
+    {
+      "fullName": "Prabowo Subianto",
+      "name": "Prabowo",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Prabowo Subianto"
+      }
+    },
+    {
+      "fullName": "Gibran Rakabuming Raka",
+      "name": "Gibran",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Gibran Rakabuming Raka"
+      }
+    },
+    {
+      "fullName": "Budi Gunawan",
+      "name": "Budi Gunawan",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Budi Gunawan"
+      }
+    },
+    {
+      "fullName": "Yusril Ihza Mahendra",
+      "name": "Yusril",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Yusril Ihza Mahendra"
+      }
+    },
+    {
+      "fullName": "Airlangga Hartarto",
+      "name": "Airlangga",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Airlangga Hartarto"
+      }
+    },
+    {
+      "fullName": "Abdul Muhaimin Iskandar",
+      "name": "Muhaimin",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Muhaimin Iskandar"
+      }
+    },
+    {
+      "fullName": "Pratikno",
+      "name": "Pratikno",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Pratikno"
+      }
+    },
+    {
+      "fullName": "Zulkifli Hasan",
+      "name": "Zulkifli Hasan",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Zulkifli Hasan"
+      }
+    },
+    {
+      "fullName": "Prasetyo Hadi",
+      "name": "Prasetyo Hadi",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Prasetyo Hadi"
+      }
+    },
+    {
+      "fullName": "Muhammad Tito Karnavian",
+      "name": "Tito Karnavian",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Tito Karnavian"
+      }
+    },
+    {
+      "fullName": "Sugiono",
+      "name": "Sugiono",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Sugiono (politikus)"
+      }
+    },
+    {
+      "fullName": "Sjafrie Sjamsoeddin",
+      "name": "Sjafrie",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Sjafrie Sjamsoeddin"
+      }
+    },
+    {
+      "fullName": "Bahlil Lahadalia",
+      "name": "Bahlil",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Bahlil Lahadalia"
+      }
+    },
+    {
+      "fullName": "Dudung Abdurachman",
+      "name": "Dudung",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Dudung Abdurachman"
+      }
+    },
+    {
+      "fullName": "Suahasil Nazara",
+      "name": "Suahasil",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Suahasil Nazara"
+      }
+    }
+  ]
+}
