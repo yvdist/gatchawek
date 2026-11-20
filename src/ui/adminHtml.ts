@@ -8,7 +8,7 @@ import type {
   AdminCardKindFilter,
   AdminCardRow,
   AdminCounts,
-  AdminPoolGroupOption,
+  AdminPoolOption,
   AdminQueueStatus,
 } from "../db/queries/admin.js";
 import type { QueueRow } from "../db/queries/inject.js";
@@ -443,7 +443,7 @@ function buildImportScript(): string {
 }
 
 export function importPage(args: {
-  poolGroups: AdminPoolGroupOption[];
+  pools: AdminPoolOption[];
   results?: ImportBatchItemResult[];
   error?: string | null;
 }): string {
@@ -460,16 +460,16 @@ export function importPage(args: {
           )
           .join("")}</ul></div>`
       : "";
-  const poolOptions = args.poolGroups
+  const poolOptions = args.pools
     .map(
-      (pg) =>
-        `<option value="${escapeHtml(`${pg.poolId}:${pg.groupId}`)}">${escapeHtml(`${pg.poolEmoji} ${pg.poolName} · ${pg.groupName} (${pg.groupBadge})`)}</option>`,
+      (p) =>
+        `<option value="${escapeHtml(p.poolId)}">${escapeHtml(`${p.poolEmoji} ${p.poolName}`)}</option>`,
     )
     .join("");
   const noPoolsWarn =
-    args.poolGroups.length === 0
-      ? `<p class="alert is-err" role="alert">Belum ada pool/grup aktif di database.</p>`
+    args.pools.length === 0
+      ? `<p class="alert is-err" role="alert">Belum ada pool aktif di database.</p>`
       : "";
-  const body = `<div class="pagehead"><span class="eyebrow">Admin · Import</span><h1>Import kartu</h1><p class="lede">Seret gambar, periksa hasil parse nama file, lalu import ke katalog.</p></div>${errBanner}${resultsBlock}${noPoolsWarn}<section class="card guide"><h2>Panduan nama file</h2><ol><li><strong>Beri nama file</strong> dengan pola <code>(rarity) - nama grup - nama kartu.ext</code></li><li><strong>Contoh:</strong> <code>(secret) - Jomok - Refi Kaget.jpg</code> → Rarity: <strong>★★★★★★ Secret</strong>, Grup: <strong>Jomok</strong>, Nama Kartu: <strong>Refi Kaget</strong> (Auto Title Case).</li><li><strong>Grup opsional:</strong> <code>(holo) - refi kaget.jpg</code> ikut target dropdown di bawah, dengan rarity <strong>★★★★★ Holo</strong>. Kode <code>(secret)</code> setara secret.</li></ol><div class="chips"><code>common (c/1)</code><code>rare (r/2)</code><code>super rare (sr/3)</code><code>ultra rare (ur/4)</code><code>holo (h/5)</code><code>secret (s/6)</code></div></section><form id="importForm" method="post" action="/admin/import" enctype="multipart/form-data"><div class="field"><label for="poolGroup">Target pool · grup</label><select id="poolGroup" name="poolGroup" required>${poolOptions}</select></div><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg><p><strong>Seret &amp; letakkan gambar di sini</strong></p><p>atau</p><p><label class="btn" for="fileInput">Pilih file</label></p><p class="hint">JPG, PNG, WebP · maks 8 MB/file</p><input type="file" id="fileInput" class="file-hidden" name="files" accept="image/*" multiple></div><div id="previewWrap" hidden><div class="tablewrap"><table class="import-table"><thead><tr><th>preview</th><th>file</th><th>nama kartu</th><th>rarity</th><th>label (opsional)</th><th>status</th><th></th></tr></thead><tbody id="previewBody"></tbody></table></div><div class="actionbar"><button type="submit" id="submitBtn"${args.poolGroups.length === 0 ? " disabled" : ""} class="btn">Import ke Katalog</button><button type="button" id="clearBtn" class="btn-ghost">Bersihkan Daftar</button><span id="summaryText" class="hint"></span></div></div></form>${buildImportScript()}`;
+  const body = `<div class="pagehead"><span class="eyebrow">Admin · Import</span><h1>Import kartu</h1><p class="lede">Seret gambar, periksa hasil parse nama file, lalu import ke katalog.</p></div>${errBanner}${resultsBlock}${noPoolsWarn}<section class="card guide"><h2>Panduan nama file</h2><ol><li><strong>Pilih pool</strong> di dropdown di bawah — grup mengikuti segmen nama file dan dibuat otomatis bila belum ada.</li><li><strong>Beri nama file</strong> dengan pola <code>(rarity) - nama grup - nama kartu.ext</code></li><li><strong>Contoh:</strong> <code>(secret) - Jomok - Refi Kaget.jpg</code> → Rarity: <strong>★★★★★★ Secret</strong>, Grup: <strong>Jomok</strong>, Nama Kartu: <strong>Refi Kaget</strong> (Auto Title Case).</li><li><strong>Tanpa grup:</strong> <code>(holo) - refi kaget.jpg</code> masuk grup pertama pool pilihan, dengan rarity <strong>★★★★★ Holo</strong>. Kode <code>(secret)</code> setara secret.</li></ol><div class="chips"><code>common (c/1)</code><code>rare (r/2)</code><code>super rare (sr/3)</code><code>ultra rare (ur/4)</code><code>holo (h/5)</code><code>secret (s/6)</code></div></section><form id="importForm" method="post" action="/admin/import" enctype="multipart/form-data"><div class="field"><label for="poolGroup">Target pool</label><select id="poolGroup" name="poolGroup" required>${poolOptions}</select></div><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg><p><strong>Seret &amp; letakkan gambar di sini</strong></p><p>atau</p><p><label class="btn" for="fileInput">Pilih file</label></p><p class="hint">JPG, PNG, WebP · maks 8 MB/file</p><input type="file" id="fileInput" class="file-hidden" name="files" accept="image/*" multiple></div><div id="previewWrap" hidden><div class="tablewrap"><table class="import-table"><thead><tr><th>preview</th><th>file</th><th>nama kartu</th><th>rarity</th><th>label (opsional)</th><th>status</th><th></th></tr></thead><tbody id="previewBody"></tbody></table></div><div class="actionbar"><button type="submit" id="submitBtn"${args.pools.length === 0 ? " disabled" : ""} class="btn">Import ke Katalog</button><button type="button" id="clearBtn" class="btn-ghost">Bersihkan Daftar</button><span id="summaryText" class="hint"></span></div></div></form>${buildImportScript()}`;
   return shell("import", "import", body);
 }
