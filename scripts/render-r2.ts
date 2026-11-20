@@ -41,6 +41,7 @@ interface RemoteCard {
   photo_total: number;
   photo_label: string | null;
   image_file: string;
+  pool_id: string;
 }
 
 async function d1Json(root: string, d1Args: string[], sql: string): Promise<RemoteCard[]> {
@@ -71,7 +72,7 @@ async function main(): Promise<void> {
   let rows = await d1Json(
     root,
     d1Args,
-    "SELECT c.id, c.member_id, m.name AS member_name, c.group_id, g.badge, c.rarity, c.serial, c.photo_no, m.photo_total, c.photo_label, c.image_file FROM cards c JOIN members m ON m.id = c.member_id JOIN groups g ON g.id = c.group_id WHERE c.image_file LIKE 'http%' AND c.enabled = 1",
+    "SELECT c.id, c.member_id, m.name AS member_name, c.group_id, g.badge, c.rarity, c.serial, c.photo_no, m.photo_total, c.photo_label, c.image_file, c.pool_id FROM cards c JOIN members m ON m.id = c.member_id JOIN groups g ON g.id = c.group_id WHERE c.image_file LIKE 'http%' AND c.enabled = 1 AND c.pool_id != 'pejabat'",
   );
   if (only.size > 0) rows = rows.filter((r) => only.has(r.id));
   if (only.size > 0 && rows.length === 0) {
@@ -81,7 +82,7 @@ async function main(): Promise<void> {
     rows = await d1Json(
       root,
       d1Args,
-      `SELECT c.id, c.member_id, m.name AS member_name, c.group_id, g.badge, c.rarity, c.serial, c.photo_no, m.photo_total, c.photo_label, q.image_url AS image_file FROM cards c JOIN members m ON m.id = c.member_id JOIN groups g ON g.id = c.group_id JOIN inject_queue q ON q.nama IS NOT NULL AND q.member_id = c.member_id AND q.status = 'approved' WHERE c.id IN (${ids}) GROUP BY c.id`,
+      `SELECT c.id, c.member_id, m.name AS member_name, c.group_id, g.badge, c.rarity, c.serial, c.photo_no, m.photo_total, c.photo_label, q.image_url AS image_file, c.pool_id FROM cards c JOIN members m ON m.id = c.member_id JOIN groups g ON g.id = c.group_id JOIN inject_queue q ON q.nama IS NOT NULL AND q.member_id = c.member_id AND q.status = 'approved' WHERE c.pool_id != 'pejabat' AND c.id IN (${ids}) GROUP BY c.id`,
     );
     rows = rows.filter((r) => only.has(r.id));
     console.log(`fallback queue-url cards: ${String(rows.length)}`);
