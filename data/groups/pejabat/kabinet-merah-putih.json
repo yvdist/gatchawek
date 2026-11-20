@@ -27,7 +27,7 @@
         },
         {
           "photoNo": 2,
-          "rarity": "rare",
+          "rarity": "ultra_rare",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/38/Muhaimin_Iskandar_MPR_RI_%282014-19%29.jpg/1280px-Muhaimin_Iskandar_MPR_RI_%282014-19%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Muhaimin_Iskandar_MPR_RI_(2014-19).jpg",
           "license": "Public domain",
@@ -40,7 +40,7 @@
         },
         {
           "photoNo": 3,
-          "rarity": "rare",
+          "rarity": "super_rare",
           "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/07/Muhaimin_Iskandar%2C_Candidate_for_Vice_President_of_Indonesia_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Muhaimin_Iskandar,_Candidate_for_Vice_President_of_Indonesia_2024.jpg",
           "license": "Public domain",
@@ -101,7 +101,7 @@
       "photos": [
         {
           "photoNo": 1,
-          "rarity": "super_rare",
+          "rarity": "ultra_rare",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/59/Canisius_Economic_Seminar%2C_11_May_2024_147_%28Airlangga_Hartarto%29.jpg/1280px-Canisius_Economic_Seminar%2C_11_May_2024_147_%28Airlangga_Hartarto%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Canisius_Economic_Seminar,_11_May_2024_147_(Airlangga_Hartarto).jpg",
           "license": "CC0",
@@ -275,7 +275,7 @@
       "photos": [
         {
           "photoNo": 1,
-          "rarity": "super_rare",
+          "rarity": "ultra_rare",
           "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e5/Budi_Gunawan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Budi_Gunawan.jpg",
           "license": "CC BY-SA 4.0",
@@ -449,7 +449,7 @@
       "photos": [
         {
           "photoNo": 1,
-          "rarity": "super_rare",
+          "rarity": "ultra_rare",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Gibran_Rakabuming_2024_official_portrait.jpg/1280px-Gibran_Rakabuming_2024_official_portrait.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Gibran_Rakabuming_2024_official_portrait.jpg",
           "license": "Public domain",
@@ -475,7 +475,7 @@
         },
         {
           "photoNo": 3,
-          "rarity": "rare",
+          "rarity": "common",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/Prabowo-Gibran_Baliho_2023.jpg/1280px-Prabowo-Gibran_Baliho_2023.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Prabowo-Gibran_Baliho_2023.jpg",
           "license": "Public domain",
@@ -549,7 +549,7 @@
         },
         {
           "photoNo": 2,
-          "rarity": "rare",
+          "rarity": "ultra_rare",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/81/Jenderal_Tito_Karnavian.jpg/1280px-Jenderal_Tito_Karnavian.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Jenderal_Tito_Karnavian.jpg",
           "license": "Public domain",
@@ -562,7 +562,7 @@
         },
         {
           "photoNo": 3,
-          "rarity": "rare",
+          "rarity": "super_rare",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Menteri_Dalam_Negeri_Tito_Karnavian.jpg/1280px-Menteri_Dalam_Negeri_Tito_Karnavian.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Dalam_Negeri_Tito_Karnavian.jpg",
           "license": "CC BY-SA 4.0",
@@ -623,7 +623,7 @@
       "photos": [
         {
           "photoNo": 1,
-          "rarity": "super_rare",
+          "rarity": "ultra_rare",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Prabowo_Subianto_2024_official_portrait.jpg/1280px-Prabowo_Subianto_2024_official_portrait.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Prabowo_Subianto_2024_official_portrait.jpg",
           "license": "Public domain",
@@ -636,7 +636,7 @@
         },
         {
           "photoNo": 2,
-          "rarity": "rare",
+          "rarity": "common",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c2/Sertifikat_Diklat_Gerindra_Masa_Depan_%28GMD%29_ditandatangani_oleh_Jenderal_Prabowo_Subianto%2C_Ketua_Dewan_Pembina_Partai_Gerindra_dan_juga_Presiden_Republik_Indonesia_ke-8.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sertifikat_Diklat_Gerindra_Masa_Depan_(GMD)_ditandatangani_oleh_Jenderal_Prabowo_Subianto,_Ketua_Dewan_Pembina_Partai_Gerindra_dan_juga_Presiden_Republik_Indonesia_ke-8.jpg",
           "license": "CC BY-SA 4.0",
@@ -878,93 +878,6 @@
       "enabled": true
     },
     {
-      "id": "sjafrie-sjamsoeddin",
-      "name": "Sjafrie",
-      "fullName": "Sjafrie Sjamsoeddin",
-      "photos": [
-        {
-          "photoNo": 1,
-          "rarity": "super_rare",
-          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/Minister_of_Defense_Sjafrie_Sjamsoeddin_of_Indonesia_visits_Arlington_National_Cemetery%2C_Virginia_on_April_13%2C_2026_-_16.jpg/1280px-Minister_of_Defense_Sjafrie_Sjamsoeddin_of_Indonesia_visits_Arlington_National_Cemetery%2C_Virginia_on_April_13%2C_2026_-_16.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Minister_of_Defense_Sjafrie_Sjamsoeddin_of_Indonesia_visits_Arlington_National_Cemetery,_Virginia_on_April_13,_2026_-_16.jpg",
-          "license": "Public domain",
-          "author": "Arlington National Cemetery",
-          "focus": {
-            "x": 0.5,
-            "y": 0.35
-          },
-          "enabled": true
-        },
-        {
-          "photoNo": 2,
-          "rarity": "rare",
-          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/2025_Sjafrie_Sjamsoeddin_%28cropped%29.jpg/1280px-2025_Sjafrie_Sjamsoeddin_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:2025_Sjafrie_Sjamsoeddin_(cropped).jpg",
-          "license": "Public domain",
-          "author": "U.S. Secretary of War",
-          "focus": {
-            "x": 0.5,
-            "y": 0.35
-          },
-          "enabled": true
-        },
-        {
-          "photoNo": 3,
-          "rarity": "rare",
-          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1d/Aloha_Across_the_Pacific-_Hawai%E2%80%98i_and_Indonesia_Celebrate_20_Years_of_Partnership_%289768872%29.jpg/1280px-Aloha_Across_the_Pacific-_Hawai%E2%80%98i_and_Indonesia_Celebrate_20_Years_of_Partnership_%289768872%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Aloha_Across_the_Pacific-_Hawai%E2%80%98i_and_Indonesia_Celebrate_20_Years_of_Partnership_(9768872).jpg",
-          "license": "Public domain",
-          "author": "U.S. Air National Guard photo by Senior Master Sgt. Mysti Bicoy",
-          "focus": {
-            "x": 0.5,
-            "y": 0.35
-          },
-          "enabled": true
-        },
-        {
-          "photoNo": 4,
-          "rarity": "common",
-          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Assistant_Secretary_of_War_John_Noh_Bertemu_Menhan_Sjafrie_dan_Wamenlu_Havas_%E2%80%93_18_Februari_2026_-_55104906932.jpg/1280px-Assistant_Secretary_of_War_John_Noh_Bertemu_Menhan_Sjafrie_dan_Wamenlu_Havas_%E2%80%93_18_Februari_2026_-_55104906932.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Assistant_Secretary_of_War_John_Noh_Bertemu_Menhan_Sjafrie_dan_Wamenlu_Havas_%E2%80%93_18_Februari_2026_-_55104906932.jpg",
-          "license": "Public domain",
-          "author": "U.S. Embassy Jakarta Indonesia",
-          "focus": {
-            "x": 0.5,
-            "y": 0.35
-          },
-          "enabled": true
-        },
-        {
-          "photoNo": 5,
-          "rarity": "common",
-          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/Assistant_Secretary_of_War_John_Noh_Bertemu_Menhan_Sjafrie_dan_Wamenlu_Havas_%E2%80%93_18_Februari_2026_-_55106168325.jpg/1280px-Assistant_Secretary_of_War_John_Noh_Bertemu_Menhan_Sjafrie_dan_Wamenlu_Havas_%E2%80%93_18_Februari_2026_-_55106168325.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Assistant_Secretary_of_War_John_Noh_Bertemu_Menhan_Sjafrie_dan_Wamenlu_Havas_%E2%80%93_18_Februari_2026_-_55106168325.jpg",
-          "license": "Public domain",
-          "author": "U.S. Embassy Jakarta Indonesia",
-          "focus": {
-            "x": 0.5,
-            "y": 0.35
-          },
-          "enabled": true
-        },
-        {
-          "photoNo": 6,
-          "rarity": "common",
-          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f3/Minister_of_Defense_Sjafrie_Sjamsoeddin_of_Indonesia_visits_Arlington_National_Cemetery%2C_Virginia_on_April_13%2C_2026_-_1.jpg/1280px-Minister_of_Defense_Sjafrie_Sjamsoeddin_of_Indonesia_visits_Arlington_National_Cemetery%2C_Virginia_on_April_13%2C_2026_-_1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Minister_of_Defense_Sjafrie_Sjamsoeddin_of_Indonesia_visits_Arlington_National_Cemetery,_Virginia_on_April_13,_2026_-_1.jpg",
-          "license": "Public domain",
-          "author": "Arlington National Cemetery",
-          "focus": {
-            "x": 0.5,
-            "y": 0.35
-          },
-          "enabled": true
-        }
-      ],
-      "sortOrder": 0,
-      "enabled": true
-    },
-    {
       "id": "suahasil-nazara",
       "name": "Suahasil",
       "fullName": "Suahasil Nazara",
@@ -1145,7 +1058,7 @@
       "photos": [
         {
           "photoNo": 1,
-          "rarity": "super_rare",
+          "rarity": "common",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/32/Poster_Kabinet_Persatuan_Nasional.png/1280px-Poster_Kabinet_Persatuan_Nasional.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Poster_Kabinet_Persatuan_Nasional.png",
           "license": "Public domain",
@@ -1158,7 +1071,7 @@
         },
         {
           "photoNo": 2,
-          "rarity": "rare",
+          "rarity": "ultra_rare",
           "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d4/Kabinet_Gotong_Royong_-_Yusril_Ihza_Mahendra_%282001%29.jpg/1280px-Kabinet_Gotong_Royong_-_Yusril_Ihza_Mahendra_%282001%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Gotong_Royong_-_Yusril_Ihza_Mahendra_(2001).jpg",
           "license": "Public domain",

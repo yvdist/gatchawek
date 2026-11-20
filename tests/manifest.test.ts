@@ -146,7 +146,7 @@ describe("manifest validation", () => {
     expect(loaded.groups).toHaveLength(4);
     const summary = summarize(loaded).join("\n");
     expect(summary).toMatch(/pejabat\/kabinet-fiktif: 3 member, 9 foto/);
-    expect(summary).toMatch(/pejabat\/kabinet-merah-putih: 15 member, 90 foto/);
+    expect(summary).toMatch(/pejabat\/kabinet-merah-putih: 14 member, 84 foto/);
     expect(summary).toMatch(/pejabat\/dewan-fiktif: 2 member, 6 foto/);
     expect(summary).toMatch(/meme\/jomok: 18 member, 108 foto/);
   });
