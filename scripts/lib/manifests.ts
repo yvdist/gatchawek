@@ -8,6 +8,7 @@ import {
   RARITY_KEYS,
   type GroupManifest,
   type PoolManifest,
+  type RarityKey,
 } from "../../shared/manifest.schema.js";
 
 export interface LoadedGroup {
@@ -132,9 +133,9 @@ export async function loadManifests(root?: string): Promise<LoadedManifests> {
   return { pools, poolIds, groups };
 }
 
-const EXPECTED_DIST = { common: 50, rare: 28, super_rare: 9, ultra_rare: 5 };
+const EXPECTED_DIST: Record<RarityKey, number> = { common: 48, rare: 29, super_rare: 11.5, ultra_rare: 8, holo: 3, secret: 0.5 };
 
-/** Rarity mixes far from 50/30/15/5 are warnings, never errors. */
+/** Rarity mixes far from 48/29/11.5/8/3/0.5 are warnings, never errors. */
 export function rarityWarnings(loaded: LoadedManifests): string[] {
   const warnings: string[] = [];
   for (const { file, manifest } of loaded.groups) {
@@ -143,6 +144,8 @@ export function rarityWarnings(loaded: LoadedManifests): string[] {
       rare: 0,
       super_rare: 0,
       ultra_rare: 0,
+      holo: 0,
+      secret: 0,
     };
     let total = 0;
     for (const member of manifest.members) {
@@ -161,7 +164,7 @@ export function rarityWarnings(loaded: LoadedManifests): string[] {
     );
     if (far) {
       warnings.push(
-        `warning: ${file} rarity distribution far from 50/30/15/5 (${dist})`,
+        `warning: ${file} rarity distribution far from 48/29/11.5/8/3/0.5 (${dist})`,
       );
     }
   }
@@ -191,6 +194,8 @@ export function summarize(loaded: LoadedManifests): string[] {
       rare: 0,
       super_rare: 0,
       ultra_rare: 0,
+      holo: 0,
+      secret: 0,
     };
     let photos = 0;
     for (const member of manifest.members) {
@@ -201,7 +206,7 @@ export function summarize(loaded: LoadedManifests): string[] {
     }
     return (
       `${manifest.pool}/${manifest.group.id}: ${manifest.members.length} member, ` +
-      `${photos} foto, [${counts["common"]}/${counts["rare"]}/${counts["super_rare"]}/${counts["ultra_rare"]}]`
+      `${photos} foto, [${counts["common"]}/${counts["rare"]}/${counts["super_rare"]}/${counts["ultra_rare"]}/${counts["holo"]}/${counts["secret"]}]`
     );
   });
 }

@@ -1,5 +1,5 @@
 import { and, asc, eq, sql } from "drizzle-orm";
-import { cards, groups, injectQueue, members } from "../schema.js";
+import { cards, groups, injectQueue, members, type Rarity } from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
 
 export interface QueueRow {
@@ -13,7 +13,7 @@ export interface QueueRow {
   memberId: string | null;
   pool: string | null;
   grup: string | null;
-  rarity: "common" | "rare" | "super_rare" | "ultra_rare" | null;
+  rarity: Rarity | null;
   label: string | null;
   sumber: string | null;
   imageUrl: string | null;
@@ -154,7 +154,7 @@ export async function approveQueued(
         memberId: q.memberId,
         serial,
         photoNo,
-        rarity: (q.rarity ?? "common") as "common" | "rare" | "super_rare" | "ultra_rare",
+        rarity: (q.rarity ?? "common") as Rarity,
         photoLabel: q.label,
         imageFile: q.imageUrl ?? "",
         sourcePageUrl: q.sumber ?? q.messageUrl,

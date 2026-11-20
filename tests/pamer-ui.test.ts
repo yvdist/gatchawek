@@ -5,10 +5,10 @@ import {
   pickHype,
   sanitizeCaption,
 } from "../src/domain/pamer.js";
-import { RARITY_COLOR } from "../src/domain/rarity.js";
+import { RARITY_COLOR, type RarityKey } from "../src/domain/rarity.js";
 import { buildPamerEmbed } from "../src/ui/pamerEmbed.js";
 
-function baseArgs(rarity: "ultra_rare" | "super_rare" | "rare" | "common") {
+function baseArgs(rarity: RarityKey) {
   return {
     userId: "u1",
     memberName: "Anna",
@@ -85,5 +85,24 @@ describe("buildPamerEmbed", () => {
   it("omits the caption line when caption is null", () => {
     const embed = buildPamerEmbed(baseArgs("common"));
     expect(embed.description).not.toContain("💬");
+  });
+
+  it("renders 5-star holo rarity with gold color and HOLO FLEX prefix", () => {
+    const embed = buildPamerEmbed(baseArgs("holo"));
+    expect(embed.title).toBe(
+      `${PAMER_TITLE_PREFIX.holo}: Pose Panggung (Serie Satu)`,
+    );
+    expect(embed.description).toContain("★★★★★ **Holo**");
+    expect(embed.color).toBe(RARITY_COLOR.holo);
+  });
+
+  it("renders 6-star secret rarity with cyan color and SECRET FLEX prefix", () => {
+    const embed = buildPamerEmbed(baseArgs("secret"));
+    expect(embed.title).toBe(
+      `${PAMER_TITLE_PREFIX.secret}: Pose Panggung (Serie Satu)`,
+    );
+    expect(PAMER_TITLE_PREFIX.secret).toBe("💠 SECRET FLEX");
+    expect(embed.description).toContain("★★★★★★ **Secret**");
+    expect(embed.color).toBe(RARITY_COLOR.secret);
   });
 });

@@ -107,7 +107,8 @@ export async function syncInjectChannel(
   const db = createDb(env);
   const [cursor] = await db
     .select({ m: sql<string | null>`max(${injectQueue.messageId})` })
-    .from(injectQueue);
+    .from(injectQueue)
+    .where(sql`${injectQueue.messageId} NOT LIKE '000000-%'`);
   const messages = await listMessages(
     env.DISCORD_BOT_TOKEN,
     env.INGEST_CHANNEL_ID,

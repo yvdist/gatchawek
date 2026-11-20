@@ -1,4 +1,4 @@
-import { and, desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm";
 import {
   cards,
   groups,
@@ -9,6 +9,7 @@ import {
   type Rarity,
 } from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
+import { slugifyBase } from "../../domain/submissions.js";
 import type { QueueRow } from "./inject.js";
 
 export type CardImageKind = "static" | "remote" | "empty";
@@ -229,4 +230,234 @@ export async function getAdminCounts(db: Db): Promise<AdminCounts> {
   const n = (i: number): number =>
     Number((res[i]?.results?.[0] as { n?: number } | undefined)?.n ?? 0);
   return { total: n(0), empty: n(1), remote: n(2), pending: n(3) };
+}
+
+export interface AdminPoolGroupOption {
+  poolId: string;
+  poolName: string;
+  poolEmoji: string;
+  groupId: string;
+  groupName: string;
+  groupBadge: string;
+}
+
+export async function listAdminPoolGroups(
+  db: Db,
+): Promise<AdminPoolGroupOption[]> {
+  return db
+    .select({
+      poolId: pools.id,
+      poolName: pools.name,
+      poolEmoji: pools.emoji,
+      groupId: groups.id,
+      groupName: groups.name,
+      groupBadge: groups.badge,
+    })
+    .from(groups)
+    .innerJoin(pools, eq(groups.poolId, pools.id))
+    .where(and(eq(pools.enabled, true), eq(groups.enabled, true)))
+    .orderBy(asc(pools.sortOrder), asc(groups.sortOrder), asc(groups.id));
+}
+
+export interface ImportAdminCardInput {
+  poolId: string;
+  groupId: string;
+  nama: string;
+  rarity: Rarity;
+  label: string | null;
+  imageUrl: string;
+  messageUrl: string;
+  channelId?: string | null;
+  guildId?: string | null;
+  now: number;
+}
+
+export type ImportAdminCardOutcome =
+  | {
+      status: "ok";
+      cardId: string;
+      memberId: string;
+      nama: string;
+      rarity: Rarity;
+      photoNo: number;
+      serial: number;
+    }
+  | { status: "unknown-group" }
+  | {
+      status: "member-group-mismatch";
+      existingPoolId: string;
+      existingGroupId: string;
+    }
+  | { status: "conflict" }
+  | { status: "invalid-input"; error: string };
+
+/**
+ * Direct-to-D1 card import from the admin GUI. Inserts a new member when
+ * absent, appends the card with pool-scoped serial = max+1 and photo_no =
+ * max+1, refreshes group/pool member counts, and records an approved audit row
+ * in inject_queue so `seed.ts` preserves the card across future syncs.
+ */
+export async function importAdminCard(
+  db: Db,
+  input: ImportAdminCardInput,
+): Promise<ImportAdminCardOutcome> {
+  const nama = input.nama.trim();
+  if (nama === "") {
+    return { status: "invalid-input", error: "Nama kartu wajib diisi." };
+  }
+  const imageUrl = input.imageUrl.trim();
+  if (imageUrl === "") {
+    return { status: "invalid-input", error: "URL gambar wajib diisi." };
+  }
+  const label =
+    input.label !== null && input.label.trim() !== ""
+      ? input.label.trim()
+      : null;
+
+  const [groupRow] = await db
+    .select({ id: groups.id })
+    .from(groups)
+    .where(and(eq(groups.id, input.groupId), eq(groups.poolId, input.poolId)))
+    .limit(1);
+  if (groupRow === undefined) return { status: "unknown-group" };
+
+  const memberId = slugifyBase(nama);
+  const [memberRow] = await db
+    .select({
+      id: members.id,
+      poolId: members.poolId,
+      groupId: members.groupId,
+    })
+    .from(members)
+    .where(eq(members.id, memberId))
+    .limit(1);
+  if (
+    memberRow !== undefined &&
+    (memberRow.poolId !== input.poolId || memberRow.groupId !== input.groupId)
+  ) {
+    return {
+      status: "member-group-mismatch",
+      existingPoolId: memberRow.poolId,
+      existingGroupId: memberRow.groupId,
+    };
+  }
+
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const [serialRow] = await db
+      .select({ m: sql<number | null>`max(serial)` })
+      .from(cards)
+      .where(eq(cards.poolId, input.poolId));
+    const serial = (serialRow?.m ?? 0) + 1;
+    const [photoRow] = await db
+      .select({ m: sql<number | null>`max(photo_no)` })
+      .from(cards)
+      .where(eq(cards.memberId, memberId));
+    const photoNo = (photoRow?.m ?? 0) + 1;
+    const cardId = `${memberId}-${String(photoNo).padStart(2, "0")}`;
+    const rand6 = crypto
+      .randomUUID()
+      .replace(/-/g, "")
+      .slice(0, 6);
+    const queueMessageId = `000000-gui-${String(input.now)}-${cardId}-${rand6}`;
+
+    const stmts = [];
+    if (memberRow === undefined) {
+      stmts.push(
+        db
+          .insert(members)
+          .values({
+            id: memberId,
+            poolId: input.poolId,
+            groupId: input.groupId,
+            name: nama,
+            nameLower: nama.toLowerCase(),
+            fullName: null,
+            photoTotal: 0,
+            sortOrder: 0,
+            enabled: true,
+          })
+          .onConflictDoNothing(),
+      );
+    }
+    stmts.push(
+      db.insert(cards).values({
+        id: cardId,
+        poolId: input.poolId,
+        groupId: input.groupId,
+        memberId,
+        serial,
+        photoNo,
+        rarity: input.rarity,
+        photoLabel: label,
+        imageFile: imageUrl,
+        sourcePageUrl: imageUrl,
+        enabled: true,
+        holoEnabled: input.rarity === "holo" || input.rarity === "secret",
+      }),
+      db
+        .update(members)
+        .set({
+          photoTotal: sql`${members.photoTotal} + 1`,
+          enabled: true,
+        })
+        .where(eq(members.id, memberId)),
+      db
+        .update(groups)
+        .set({
+          memberCount: sql`(SELECT COUNT(*) FROM ${members} WHERE ${members.groupId} = ${input.groupId} AND ${members.enabled} = 1)`,
+        })
+        .where(eq(groups.id, input.groupId)),
+      db
+        .update(pools)
+        .set({
+          memberCount: sql`(SELECT COUNT(*) FROM ${members} WHERE ${members.poolId} = ${input.poolId} AND ${members.enabled} = 1)`,
+        })
+        .where(eq(pools.id, input.poolId)),
+      db
+        .insert(injectQueue)
+        .values({
+          messageId: queueMessageId,
+          channelId: input.channelId ?? "admin-import",
+          guildId: input.guildId ?? "admin-import",
+          authorId: "admin-web",
+          submittedAt: input.now,
+          messageUrl: input.messageUrl,
+          nama,
+          memberId,
+          pool: input.poolId,
+          grup: input.groupId,
+          rarity: input.rarity,
+          label,
+          sumber: imageUrl,
+          imageUrl,
+          status: "approved",
+          errors: null,
+          reviewedBy: "admin-web",
+          reviewedAt: input.now,
+        })
+        .onConflictDoNothing(),
+    );
+
+    try {
+      await nativeBatch(db, stmts);
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        err.message.includes("UNIQUE constraint failed")
+      ) {
+        continue;
+      }
+      throw err;
+    }
+    return {
+      status: "ok",
+      cardId,
+      memberId,
+      nama,
+      rarity: input.rarity,
+      photoNo,
+      serial,
+    };
+  }
+  return { status: "conflict" };
 }

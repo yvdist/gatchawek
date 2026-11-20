@@ -39,10 +39,10 @@ describe("help hardening (phase 5)", () => {
     let total = 0;
     for (const k of RARITY_KEYS) total += RARITY_WEIGHTS[k];
     for (const key of RARITY_KEYS) {
-      const pct =
-        total > 0 ? Math.round((RARITY_WEIGHTS[key] / total) * 100) : 0;
+      const raw = total > 0 ? (RARITY_WEIGHTS[key] / total) * 100 : 0;
+      const pct = Number.isInteger(raw) ? `${String(raw)}%` : `${raw.toFixed(1)}%`;
       expect(embed.description).toContain(
-        `${RARITY_STARS[key]} ${RARITY_LABEL[key]} — ${pct}%`,
+        `${RARITY_STARS[key]} ${RARITY_LABEL[key]} — ${pct}`,
       );
     }
   });

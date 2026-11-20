@@ -5,6 +5,8 @@ export const RARITY_KEYS = [
   "rare",
   "super_rare",
   "ultra_rare",
+  "holo",
+  "secret",
 ] as const;
 export type RarityKey = (typeof RARITY_KEYS)[number];
 

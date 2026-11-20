@@ -12,7 +12,14 @@ import { sql } from "drizzle-orm";
 const flag = (n: string) =>
   integer(n, { mode: "boolean" }).notNull().default(true);
 
-export const RARITIES = ["common", "rare", "super_rare", "ultra_rare"] as const;
+export const RARITIES = [
+  "common",
+  "rare",
+  "super_rare",
+  "ultra_rare",
+  "holo",
+  "secret",
+] as const;
 export type Rarity = (typeof RARITIES)[number];
 
 export const pools = sqliteTable("pools", {

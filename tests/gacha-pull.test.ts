@@ -200,12 +200,12 @@ describe("executePull labels and progress", () => {
     expect(first.groupOwned).toBe(1);
     expect(first.groupTotal).toBe(2);
 
-    // pull 2: roll into rare (0.9), index 0 of 2 rare cards → aa-02
+    // pull 2: roll into rare (0.7 in [96/177, 154/177)); weights common 96/rare 58/super_rare 23 renormalized over total 177 → index 0 of 2 rare cards → aa-02
     const second = await executePull(db, {
       userId,
       pool: POOL,
       now: now + 10,
-      rand: scripted([0.9, 0.0]),
+      rand: scripted([0.7, 0.0]),
     });
     expect(second.status).toBe("ok");
     if (second.status !== "ok") return;
@@ -218,7 +218,7 @@ describe("executePull labels and progress", () => {
       userId,
       pool: POOL,
       now: now + 20,
-      rand: scripted([0.9, 0.0]),
+      rand: scripted([0.7, 0.0]),
     });
     expect(third.status).toBe("ok");
     if (third.status !== "ok") return;
@@ -282,7 +282,7 @@ describe("executePull holo", () => {
   it("banks holo_qty without touching quantity under the threshold", async () => {
     const userId = "pull-holo";
     const now = 7_000_000;
-    // rarity roll 0.95 → super_rare (60+28+9=97 window over total 100);
+    // rarity roll 0.95 → super_rare (common 96 + rare 58 + super_rare 23 = 177; window [154/177, 1));
     // index 0 of 1; holo roll 0.01 < 0.08.
     const out = await executePull(db, {
       userId,

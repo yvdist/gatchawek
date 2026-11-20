@@ -11,7 +11,9 @@ import { createDb } from "../db/client.js";
 import {
   getAdminCard,
   getAdminCounts,
+  importAdminCard,
   listAdminCards,
+  listAdminPoolGroups,
   listAdminQueue,
   setAdminCardEnabled,
   setAdminCardImage,
@@ -19,24 +21,130 @@ import {
   type AdminQueueStatus,
 } from "../db/queries/admin.js";
 import { approveQueued, rejectQueued } from "../db/queries/inject.js";
+import {
+  parseCardFilename,
+  parseRarityAlias,
+} from "../domain/cardImport.js";
 import type { Env } from "../env.js";
 import {
   cardDetailPage,
   cardsPage,
   dashboardPage,
+  importPage,
   injectPage,
   loginPage,
+  type ImportBatchItemResult,
 } from "../ui/adminHtml.js";
 
 const MAX_UPLOAD_BYTES = 8_000_000;
 const MAX_MANUAL_URL_LEN = 500;
+const MAX_LABEL_LEN = 60;
+
+async function uploadImageToDiscord(
+  env: Env,
+  file: File,
+  content: string,
+): Promise<
+  | { ok: true; url: string; messageId: string; messageUrl: string }
+  | { ok: false; error: string }
+> {
+  if (!file.type.startsWith("image/")) {
+    return { ok: false, error: "File harus gambar." };
+  }
+  if (file.size > MAX_UPLOAD_BYTES) {
+    return { ok: false, error: "File melebihi 8 MB." };
+  }
+  const discord = new FormData();
+  discord.set("content", content);
+  discord.set("file", file, file.name || "upload");
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://discord.com/api/v10/channels/${env.INGEST_CHANNEL_ID}/messages`,
+      {
+        method: "POST",
+        headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+        body: discord,
+      },
+    );
+  } catch {
+    return {
+      ok: false,
+      error: "Upload ke Discord gagal (jaringan). D1 tidak diubah.",
+    };
+  }
+  if (!res.ok) {
+    return {
+      ok: false,
+      error: `Upload ke Discord gagal (${res.status}). D1 tidak diubah.`,
+    };
+  }
+  let payload: {
+    attachments?: { url?: string }[];
+    id?: string;
+    channel_id?: string;
+  };
+  try {
+    payload = (await res.json()) as typeof payload;
+  } catch {
+    return {
+      ok: false,
+      error: "Respons Discord tak terbaca. D1 tidak diubah.",
+    };
+  }
+  const cdn = payload.attachments?.[0]?.url;
+  if (typeof cdn !== "string" || cdn === "") {
+    return {
+      ok: false,
+      error: "Discord tak mengembalikan URL. D1 tidak diubah.",
+    };
+  }
+  const messageId = typeof payload.id === "string" ? payload.id : "";
+  const channelId =
+    typeof payload.channel_id === "string" && payload.channel_id !== ""
+      ? payload.channel_id
+      : env.INGEST_CHANNEL_ID;
+  const messageUrl =
+    messageId !== ""
+      ? `https://discord.com/channels/${env.INGEST_GUILD_ID}/${channelId}/${messageId}`
+      : cdn;
+  return { ok: true, url: cdn, messageId, messageUrl };
+}
+
+/**
+ * Resolve a per-file group segment against known pool groups. Prefers the
+ * dropdown pool; allows cross-pool matches when the name is unique there.
+ * Returns the matched `{ poolId, groupId }` or the reason it cannot resolve.
+ */
+function resolveImportGroup(
+  poolGroups: { poolId: string; groupId: string; groupName: string }[],
+  rawGroup: string | null,
+  preferredPoolId: string,
+): { poolId: string; groupId: string } | "unknown" | "ambiguous" {
+  const norm = (raw: string): string =>
+    raw.trim().toLowerCase().replace(/\s+/g, " ");
+  if (rawGroup === null) return "unknown";
+  const want = norm(rawGroup);
+  if (want === "") return "unknown";
+  const matches = poolGroups.filter(
+    (pg) => norm(pg.groupName) === want || norm(pg.groupId) === want,
+  );
+  if (matches.length === 0) return "unknown";
+  const inPool = matches.filter((pg) => pg.poolId === preferredPoolId);
+  if (inPool.length === 1) {
+    const hit = inPool[0] as { poolId: string; groupId: string };
+    return { poolId: hit.poolId, groupId: hit.groupId };
+  }
+  if (inPool.length > 1) return "ambiguous";
+  if (matches.length === 1) {
+    const hit = matches[0] as { poolId: string; groupId: string };
+    return { poolId: hit.poolId, groupId: hit.groupId };
+  }
+  return "ambiguous";
+}
 
 // Single-user owner panel: cookie is HttpOnly + SameSite=Lax + Secure with
 // POST-only mutations, proportional to this threat model (no CSRF token).
-
-function loginRedirect(): Response {
-  return Response.redirect("/admin/login", 302);
-}
 
 export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
   const admin = new Hono<{ Bindings: Env }>();
@@ -50,7 +158,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       value !== "" &&
       (await verifySession(c.env.ADMIN_SECRET, value, nowSec));
     if (!ok) {
-      if (c.req.method === "GET") return loginRedirect();
+      if (c.req.method === "GET") return c.redirect("/admin/login", 302);
       return c.text("Unauthorized", 401);
     }
     return next();
@@ -152,38 +260,13 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent(message)}`,
       );
     if (file instanceof File && file.size > 0) {
-      if (!file.type.startsWith("image/")) return fail("File harus gambar.");
-      if (file.size > MAX_UPLOAD_BYTES) return fail("File melebihi 8 MB.");
-      const discord = new FormData();
-      discord.set("content", `🗂️ admin upload untuk ${id} oleh owner`);
-      discord.set("file", file, file.name || "upload");
-      let res: Response;
-      try {
-        res = await fetch(
-          `https://discord.com/api/v10/channels/${c.env.INGEST_CHANNEL_ID}/messages`,
-          {
-            method: "POST",
-            headers: { Authorization: `Bot ${c.env.DISCORD_BOT_TOKEN}` },
-            body: discord,
-          },
-        );
-      } catch {
-        return fail("Upload ke Discord gagal (jaringan). D1 tidak diubah.");
-      }
-      if (!res.ok) {
-        return fail(`Upload ke Discord gagal (${res.status}). D1 tidak diubah.`);
-      }
-      let payload: { attachments?: { url?: string }[] };
-      try {
-        payload = (await res.json()) as typeof payload;
-      } catch {
-        return fail("Respons Discord tak terbaca. D1 tidak diubah.");
-      }
-      const cdn = payload.attachments?.[0]?.url;
-      if (typeof cdn !== "string" || cdn === "") {
-        return fail("Discord tak mengembalikan URL. D1 tidak diubah.");
-      }
-      await setAdminCardImage(db, id, cdn);
+      const uploaded = await uploadImageToDiscord(
+        c.env,
+        file,
+        `🗂️ admin upload untuk ${id} oleh owner`,
+      );
+      if (!uploaded.ok) return fail(uploaded.error);
+      await setAdminCardImage(db, id, uploaded.url);
       return done("Image diperbarui (remote/CDN).");
     }
     if (url !== "") {
@@ -252,6 +335,189 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const messageId = c.req.param("messageId");
     await rejectQueued(createDb(c.env), messageId, "admin-web", Date.now());
     return c.redirect("/admin/inject?status=rejected");
+  });
+
+  admin.get("/import", async (c) => {
+    const poolGroups = await listAdminPoolGroups(createDb(c.env));
+    return c.html(importPage({ poolGroups }));
+  });
+
+  admin.post("/import", async (c) => {
+    const wantsJson = (c.req.header("accept") ?? "").includes(
+      "application/json",
+    );
+    const db = createDb(c.env);
+    const poolGroups = await listAdminPoolGroups(db);
+    let formData: FormData;
+    try {
+      formData = await c.req.formData();
+    } catch {
+      const msg = "Form tidak terbaca.";
+      return wantsJson
+        ? c.json({ ok: false, error: msg, results: [] }, 400)
+        : c.html(importPage({ poolGroups, error: msg }), 400);
+    }
+
+    const poolGroupRaw = formData.get("poolGroup");
+    const poolGroupStr =
+      typeof poolGroupRaw === "string" ? poolGroupRaw.trim() : "";
+    const sep = poolGroupStr.indexOf(":");
+    const poolId = sep > 0 ? poolGroupStr.slice(0, sep) : "";
+    const groupId = sep > 0 ? poolGroupStr.slice(sep + 1) : "";
+    const target = poolGroups.find(
+      (pg) => pg.poolId === poolId && pg.groupId === groupId,
+    );
+    if (target === undefined) {
+      const msg = "Pilih target pool dan grup yang valid.";
+      return wantsJson
+        ? c.json({ ok: false, error: msg, results: [] }, 400)
+        : c.html(importPage({ poolGroups, error: msg }), 400);
+    }
+
+    const rawFiles = [
+      ...formData.getAll("files"),
+      ...formData.getAll("file"),
+    ].filter((v): v is File => v instanceof File && v.size > 0);
+    if (rawFiles.length === 0) {
+      const msg = "Pilih minimal 1 file gambar.";
+      return wantsJson
+        ? c.json({ ok: false, error: msg, results: [] }, 400)
+        : c.html(importPage({ poolGroups, error: msg }), 400);
+    }
+
+    const namaList = formData
+      .getAll("nama")
+      .map((v) => (typeof v === "string" ? v : ""));
+    const rarityList = formData
+      .getAll("rarity")
+      .map((v) => (typeof v === "string" ? v : ""));
+    const labelList = formData
+      .getAll("label")
+      .map((v) => (typeof v === "string" ? v : ""));
+
+    const results: ImportBatchItemResult[] = [];
+    const baseNow = Date.now();
+    for (let i = 0; i < rawFiles.length; i += 1) {
+      const file = rawFiles[i];
+      if (file === undefined) continue;
+      const parsed = parseCardFilename(file.name);
+      const namaOverride = (namaList[i] ?? "").trim();
+      const nama = namaOverride !== "" ? namaOverride : parsed.nama;
+      if (nama === "") {
+        results.push({
+          filename: file.name,
+          ok: false,
+          message: "Nama kartu wajib diisi.",
+        });
+        continue;
+      }
+      const rarityRaw = (rarityList[i] ?? "").trim();
+      const rarity =
+        rarityRaw !== "" ? parseRarityAlias(rarityRaw) : parsed.rarity;
+      if (rarity === null) {
+        results.push({
+          filename: file.name,
+          ok: false,
+          message: "Rarity tidak valid atau tidak terdeteksi dari nama file.",
+        });
+        continue;
+      }
+      const labelRaw = (labelList[i] ?? "").trim();
+      if (labelRaw.length > MAX_LABEL_LEN) {
+        results.push({
+          filename: file.name,
+          ok: false,
+          message: `Label maks ${String(MAX_LABEL_LEN)} karakter.`,
+        });
+        continue;
+      }
+      let destPoolId = target.poolId;
+      let destGroupId = target.groupId;
+      if (parsed.rawGroup !== null) {
+        const resolved = resolveImportGroup(
+          poolGroups,
+          parsed.rawGroup,
+          target.poolId,
+        );
+        if (resolved === "unknown" || resolved === "ambiguous") {
+          results.push({
+            filename: file.name,
+            ok: false,
+            message:
+              resolved === "ambiguous"
+                ? `Grup "${parsed.rawGroup}" ambigu, pilih lebih spesifik.`
+                : `Grup "${parsed.rawGroup}" tidak dikenal.`,
+          });
+          continue;
+        }
+        destPoolId = resolved.poolId;
+        destGroupId = resolved.groupId;
+      }
+      const uploaded = await uploadImageToDiscord(
+        c.env,
+        file,
+        `📥 admin import ${nama} (${rarity}) oleh owner`,
+      );
+      if (!uploaded.ok) {
+        results.push({
+          filename: file.name,
+          ok: false,
+          message: uploaded.error,
+        });
+        continue;
+      }
+      const outcome = await importAdminCard(db, {
+        poolId: destPoolId,
+        groupId: destGroupId,
+        nama,
+        rarity,
+        label: labelRaw !== "" ? labelRaw : null,
+        imageUrl: uploaded.url,
+        messageUrl: uploaded.messageUrl,
+        channelId: c.env.INGEST_CHANNEL_ID,
+        guildId: c.env.INGEST_GUILD_ID,
+        now: baseNow + i,
+      });
+      if (outcome.status === "ok") {
+        results.push({
+          filename: file.name,
+          ok: true,
+          message: `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)})`,
+          cardId: outcome.cardId,
+          serial: outcome.serial,
+        });
+      } else if (outcome.status === "member-group-mismatch") {
+        results.push({
+          filename: file.name,
+          ok: false,
+          message: `Member "${nama}" sudah terdaftar di ${outcome.existingPoolId}/${outcome.existingGroupId}.`,
+        });
+      } else if (outcome.status === "unknown-group") {
+        results.push({
+          filename: file.name,
+          ok: false,
+          message: "Pool/grup tidak ditemukan.",
+        });
+      } else if (outcome.status === "conflict") {
+        results.push({
+          filename: file.name,
+          ok: false,
+          message: "Konflik serial/foto, coba lagi.",
+        });
+      } else {
+        results.push({
+          filename: file.name,
+          ok: false,
+          message: outcome.error,
+        });
+      }
+    }
+
+    const allOk = results.every((r) => r.ok);
+    if (wantsJson) {
+      return c.json({ ok: allOk, results });
+    }
+    return c.html(importPage({ poolGroups, results, error: null }));
   });
 
   // Mounted under /admin by the caller.

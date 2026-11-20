@@ -1,6 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { eq } from "drizzle-orm";
 import { Miniflare } from "miniflare";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createDb, type Db } from "../src/db/client.js";
@@ -16,11 +17,14 @@ import {
 import {
   getAdminCard,
   getAdminCounts,
+  importAdminCard,
   listAdminCards,
+  listAdminPoolGroups,
   listAdminQueue,
   setAdminCardEnabled,
   setAdminCardImage,
 } from "../src/db/queries/admin.js";
+import { syncInjectChannel } from "../src/scheduled.js";
 import type { Env } from "../src/env.js";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -165,5 +169,222 @@ describe("listAdminQueue / getAdminCounts", () => {
       total: 4,
       pending: 1,
     });
+  });
+});
+
+describe("listAdminPoolGroups / importAdminCard", () => {
+  it("lists active pool-group pairs", async () => {
+    const pgs = await listAdminPoolGroups(db);
+    expect(pgs).toHaveLength(2);
+    expect(pgs.map((p) => `${p.poolId}:${p.groupId}`).sort()).toEqual([
+      "pejabat:g1",
+      "pejabat:g2",
+    ]);
+  });
+
+  it("imports a new 5-star holo card directly to D1 and updates counts", async () => {
+    const out1 = await importAdminCard(db, {
+      poolId: "pejabat",
+      groupId: "g1",
+      nama: "Refi Kaget",
+      rarity: "holo",
+      label: null,
+      imageUrl: "https://cdn.discordapp.com/attachments/1/2/refi.jpg",
+      messageUrl: "https://discord.com/channels/g/c/m-refi-1",
+      channelId: "c",
+      guildId: "g",
+      now: 1_700_000_000_000,
+    });
+    expect(out1).toEqual({
+      status: "ok",
+      cardId: "refi-kaget-01",
+      memberId: "refi-kaget",
+      nama: "Refi Kaget",
+      rarity: "holo",
+      photoNo: 1,
+      serial: 5,
+    });
+    const detail1 = await getAdminCard(db, "refi-kaget-01");
+    expect(detail1).toMatchObject({
+      memberName: "Refi Kaget",
+      rarity: "holo",
+      holoEnabled: true,
+      enabled: true,
+      imageKind: "remote",
+    });
+
+    // Adding a second photo for the same member increments photoNo without duplicating member count.
+    const out2 = await importAdminCard(db, {
+      poolId: "pejabat",
+      groupId: "g1",
+      nama: "Refi Kaget",
+      rarity: "rare",
+      label: "Pose 2",
+      imageUrl: "https://cdn.discordapp.com/attachments/1/2/refi2.jpg",
+      messageUrl: "https://discord.com/channels/g/c/m-refi-2",
+      channelId: "c",
+      guildId: "g",
+      now: 1_700_000_000_001,
+    });
+    expect(out2).toMatchObject({
+      status: "ok",
+      cardId: "refi-kaget-02",
+      photoNo: 2,
+      serial: 6,
+    });
+    const [grp] = await db.select().from(groups).where(eq(groups.id, "g1")).limit(1);
+    const [pl] = await db.select().from(pools).where(eq(pools.id, "pejabat")).limit(1);
+    expect(grp?.memberCount).toBe(2);
+    expect(pl?.memberCount).toBe(3);
+
+    const [audit] = await db
+      .select()
+      .from(injectQueue)
+      .where(eq(injectQueue.memberId, "refi-kaget"))
+      .limit(1);
+    expect(audit?.status).toBe("approved");
+    expect(audit?.messageId.startsWith("000000-gui-")).toBe(true);
+    expect(audit?.messageUrl).toBe("https://discord.com/channels/g/c/m-refi-1");
+    expect(audit?.sumber).toBe("https://cdn.discordapp.com/attachments/1/2/refi.jpg");
+  });
+
+  it("rejects unknown groups and member group mismatches", async () => {
+    await expect(
+      importAdminCard(db, {
+        poolId: "pejabat",
+        groupId: "missing",
+        nama: "Test",
+        rarity: "common",
+        label: null,
+        imageUrl: "https://cdn.discordapp.com/x.png",
+        messageUrl: "https://discord.com/channels/g/c/m-missing",
+        now: 100,
+      }),
+    ).resolves.toEqual({ status: "unknown-group" });
+
+    await expect(
+      importAdminCard(db, {
+        poolId: "pejabat",
+        groupId: "g2",
+        nama: "Refi Kaget",
+        rarity: "common",
+        label: null,
+        imageUrl: "https://cdn.discordapp.com/x.png",
+        messageUrl: "https://discord.com/channels/g/c/m-mismatch",
+        now: 101,
+      }),
+    ).resolves.toEqual({
+      status: "member-group-mismatch",
+      existingPoolId: "pejabat",
+      existingGroupId: "g1",
+    });
+  });
+
+  it("imports a secret card with holoEnabled and pool-scoped serial max+1", async () => {
+    const before = await db.select().from(cards);
+    const maxSerial = Math.max(0, ...before.filter((c) => c.poolId === "pejabat").map((c) => c.serial));
+    const out = await importAdminCard(db, {
+      poolId: "pejabat",
+      groupId: "g2",
+      nama: "Secret Star",
+      rarity: "secret",
+      label: null,
+      imageUrl: "https://cdn.discordapp.com/attachments/1/2/secret.jpg",
+      messageUrl: "https://discord.com/channels/g/c/m-secret-1",
+      channelId: "c",
+      guildId: "g",
+      now: 1_700_000_000_020,
+    });
+    expect(out.status).toBe("ok");
+    if (out.status !== "ok") return;
+    expect(out.serial).toBe(maxSerial + 1);
+    expect(out.photoNo).toBe(1);
+    const detail = await getAdminCard(db, out.cardId);
+    expect(detail).toMatchObject({ rarity: "secret", holoEnabled: true, enabled: true });
+    const [audit] = await db
+      .select()
+      .from(injectQueue)
+      .where(eq(injectQueue.memberId, out.memberId))
+      .limit(1);
+    expect(audit?.messageUrl).toBe("https://discord.com/channels/g/c/m-secret-1");
+    expect(audit?.sumber).toBe("https://cdn.discordapp.com/attachments/1/2/secret.jpg");
+  });
+
+  it("gives distinct audit messageIds for two imports in the same millisecond", async () => {
+    const now = 1_700_000_000_030;
+    const [a, b] = await Promise.all([
+      importAdminCard(db, {
+        poolId: "pejabat",
+        groupId: "g1",
+        nama: "Twin A",
+        rarity: "common",
+        label: null,
+        imageUrl: "https://cdn.discordapp.com/attachments/1/2/twin-a.jpg",
+        messageUrl: "https://discord.com/channels/g/c/m-twin-a",
+        channelId: "c",
+        guildId: "g",
+        now,
+      }),
+      importAdminCard(db, {
+        poolId: "pejabat",
+        groupId: "g1",
+        nama: "Twin B",
+        rarity: "common",
+        label: null,
+        imageUrl: "https://cdn.discordapp.com/attachments/1/2/twin-b.jpg",
+        messageUrl: "https://discord.com/channels/g/c/m-twin-b",
+        channelId: "c",
+        guildId: "g",
+        now,
+      }),
+    ]);
+    expect(a.status).toBe("ok");
+    expect(b.status).toBe("ok");
+    if (a.status !== "ok" || b.status !== "ok") return;
+    expect(a.cardId).not.toBe(b.cardId);
+    const rows = await db.select().from(injectQueue).where(eq(injectQueue.submittedAt, now));
+    expect(rows).toHaveLength(2);
+    const ids = rows.map((r) => r.messageId).sort();
+    expect(ids[0]).not.toBe(ids[1]);
+    for (const id of ids) {
+      expect(id.startsWith(`000000-gui-${String(now)}-`)).toBe(true);
+    }
+    expect(rows.map((r) => r.messageUrl).sort()).toEqual([
+      "https://discord.com/channels/g/c/m-twin-a",
+      "https://discord.com/channels/g/c/m-twin-b",
+    ]);
+  });
+
+  it("keeps GUI audit rows out of the Discord sync cursor", async () => {
+    const d1 = await mf.getD1Database("DB");
+    await db.delete(injectQueue);
+    await importAdminCard(db, {
+      poolId: "pejabat",
+      groupId: "g1",
+      nama: "Cursor Guard",
+      rarity: "holo",
+      label: null,
+      imageUrl: "https://cdn.discordapp.com/attachments/1/2/cg.jpg",
+      messageUrl: "https://discord.com/channels/g/c/m-cursor",
+      now: 1_700_000_000_010,
+    });
+    const seenUrls: string[] = [];
+    const fetchMock = (async (input: unknown) => {
+      seenUrls.push(String(input));
+      return new Response("[]", { headers: { "content-type": "application/json" } });
+    }) as typeof fetch;
+    const syncEnv = {
+      DISCORD_PUBLIC_KEY: "x",
+      DB: d1,
+      PUBLIC_BASE_URL: "example.test",
+      DISCORD_BOT_TOKEN: "token",
+      INGEST_CHANNEL_ID: "c-inject",
+      INGEST_GUILD_ID: "g",
+      INJECT_APPROVER_IDS: "boss",
+      ADMIN_PASSWORD: "pw",
+      ADMIN_SECRET: "sec",
+    } satisfies Env;
+    await syncInjectChannel(syncEnv, fetchMock);
+    expect(seenUrls[0]).toBe("https://discord.com/api/v10/channels/c-inject/messages?limit=100");
   });
 });

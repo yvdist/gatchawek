@@ -35,10 +35,14 @@
 
 | key | Bintang | Label | Bobot default | Warna embed |
 | --- | --- | --- | --- | --- |
-| `common` | ★ | Common | 60 | `#9CA3AF` |
-| `rare` | ★★ | Rare | 28 | `#A855F7` |
-| `super_rare` | ★★★ | Super Rare | 9 | `#F59E0B` |
-| `ultra_rare` | ★★★★ | Ultra Rare | 3 | `#EC4899` |
+| `common` | ★ | Common | 96 | `#9CA3AF` |
+| `rare` | ★★ | Rare | 58 | `#A855F7` |
+| `super_rare` | ★★★ | Super Rare | 23 | `#F59E0B` |
+| `ultra_rare` | ★★★★ | Ultra Rare | 16 | `#EC4899` |
+| `holo` | ★★★★★ | Holo | 6 | `#FFD700` |
+| `secret` | ★★★★★★ | Secret | 1 | `#22D3EE` |
+
+Total bobot 200 ⇒ peluang 48/29/11,5/8/3/0,5%.
 
 Konstanta ini hidup di `src/domain/rarity.ts` (satu sumber kebenaran, dipakai juga oleh scripts dan `/help`).
 
@@ -125,11 +129,11 @@ Aturan validasi (Zod di `shared/manifest.schema.ts`):
 
 - `id` slug `a-z0-9-`, maksimal 30 karakter; `member.id` unik global. Card id = `<member.id>-<NN>` (dua digit).
 - `photoNo` mulai 1, berurutan tanpa celah. `photoTotal` member = jumlah foto.
-- `rarity` salah satu dari empat key. Minimal 3 foto per member (disarankan 5 sampai 13).
+- `rarity` salah satu dari enam key. Minimal 3 foto per member (disarankan 5 sampai 13).
 - `imageUrl` https langsung ke file gambar. `sourcePageUrl` wajib. `license` dan `author` boleh `null`. `focus` opsional (default x 0.5, y 0.35).
 - `badge` huruf besar, maksimal 8 karakter.
 - `enabled` opsional, default true. `false` = takedown.
-- Distribusi rarity per grup yang jauh dari 50/30/15/5 hanya **peringatan**, bukan error.
+- Distribusi rarity per grup yang jauh dari 48/29/11,5/8/3/0,5 hanya **peringatan**, bukan error.
 
 ### 4.2.1 Inject komunitas (`community-inject`)
 
@@ -148,7 +152,7 @@ lampiran gambar pesan = foto kartu. Template pesan (pool + grup pilihan tetap):
 - `nama`/`pool`/`grup`/`rarity` wajib (key case-insensitive); `pool` harus `pejabat`
   atau `meme`; `grup` harus `kabinet-merah-putih` untuk pool `pejabat`, `jomok`
   untuk pool `meme` (pemetaan tunggal di `POOL_GROUPS`, `scripts/lib/submissions.ts`).
-  `rarity` salah satu dari empat key.
+  `rarity` salah satu dari enam key: `common`/`rare`/`super_rare`/`ultra_rare`/`holo`/`secret`.
 - `sumber` opsional; default permalink pesan `https://discord.com/channels/<guild>/<channel>/<message>`.
 - Wajib tepat 1 lampiran gambar; selain itu submission invalid dengan alasan jelas.
 - Alur operator: `pnpm run ingest` (poll REST `GET /channels/{id}/messages`, tulis
@@ -180,7 +184,7 @@ import { sqliteTable, text, integer, primaryKey, index, uniqueIndex, check } fro
 import { sql } from 'drizzle-orm';
 
 const flag = (n: string) => integer(n, { mode: 'boolean' }).notNull().default(true);
-const RARITIES = ['common', 'rare', 'super_rare', 'ultra_rare'] as const;
+const RARITIES = ['common', 'rare', 'super_rare', 'ultra_rare', 'holo', 'secret'] as const;
 
 export const pools = sqliteTable('pools', {
   id: text('id').primaryKey(),

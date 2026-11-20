@@ -24,6 +24,8 @@ import type { PhotoManifest } from "../shared/manifest.schema.js";
 const HOLO_RARITIES: ReadonlySet<PhotoManifest["rarity"]> = new Set([
   "super_rare",
   "ultra_rare",
+  "holo",
+  "secret",
 ]);
 
 /**

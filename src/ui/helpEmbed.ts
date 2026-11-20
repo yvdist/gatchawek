@@ -13,11 +13,16 @@ export interface HelpEmbedArgs {
   commands: readonly { name: string; description: string }[];
 }
 
+function fmtPct(weight: number, total: number): string {
+  if (total <= 0) return "0%";
+  const pct = (weight / total) * 100;
+  return `${Number.isInteger(pct) ? pct : pct.toFixed(1)}%`;
+}
+
 function rateTable(): string {
   const total = RARITY_KEYS.reduce((sum, k) => sum + RARITY_WEIGHTS[k], 0);
   return RARITY_KEYS.map((key) => {
-    const pct = total > 0 ? Math.round((RARITY_WEIGHTS[key] / total) * 100) : 0;
-    return `${RARITY_STARS[key]} ${RARITY_LABEL[key]} — ${pct}%`;
+    return `${RARITY_STARS[key]} ${RARITY_LABEL[key]} — ${fmtPct(RARITY_WEIGHTS[key], total)}`;
   }).join("\n");
 }
 

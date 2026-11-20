@@ -3,6 +3,7 @@ import {
   cardDetailPage,
   cardsPage,
   dashboardPage,
+  importPage,
   injectPage,
   loginPage,
 } from "../src/ui/adminHtml.js";
@@ -167,5 +168,63 @@ describe("injectPage", () => {
     });
     expect(approved).not.toContain("m1/approve");
     expect(approved).not.toContain("m1/reject");
+  });
+});
+
+describe("importPage", () => {
+  const poolGroups = [
+    {
+      poolId: "ahli-ngebul",
+      poolName: "Ahli Ngebul",
+      poolEmoji: "💨",
+      groupId: "default",
+      groupName: "Default",
+      groupBadge: "NGEBUL",
+    },
+  ];
+
+  it("renders drag-and-drop import UI, template guide, and Holo/Secret options", () => {
+    const html = importPage({ poolGroups });
+    expect(html).toContain('id="dropzone"');
+    expect(html).toContain('enctype="multipart/form-data"');
+    expect(html).toContain("(rarity) - nama grup - nama kartu.ext");
+    expect(html).toContain("(secret) - Jomok - Refi Kaget.jpg");
+    expect(html).toContain("★★★★★★ Secret");
+    expect(html).toContain("(holo) - refi kaget.jpg");
+    expect(html).toContain("★★★★★ Holo");
+    expect(html).toContain("(secret)");
+    expect(html).toContain('value="ahli-ngebul:default"');
+    expect(html).toContain("Ahli Ngebul · Default (NGEBUL)");
+  });
+
+  it("escapes error messages, pool labels, and batch result filenames", () => {
+    const basePg = poolGroups[0];
+    if (basePg === undefined) throw new Error("expected fixture");
+    const html = importPage({
+      poolGroups: [
+        {
+          ...basePg,
+          groupName: "<script>bad()</script>",
+        },
+      ],
+      error: "<img src=x onerror=alert(1)>",
+      results: [
+        {
+          filename: "<svg onload=alert(1)>.jpg",
+          ok: true,
+          message: "ok",
+        },
+      ],
+    });
+    expect(html).not.toContain("<script>bad()</script>");
+    expect(html).toContain("&lt;script&gt;bad()&lt;/script&gt;");
+    expect(html).not.toContain("<img src=x onerror=alert(1)>");
+    expect(html).not.toContain("<svg onload=alert(1)>");
+  });
+
+  it("disables submit when no active pool groups exist", () => {
+    const html = importPage({ poolGroups: [] });
+    expect(html).toContain("Belum ada pool/grup aktif");
+    expect(html).toContain('id="submitBtn" disabled');
   });
 });
