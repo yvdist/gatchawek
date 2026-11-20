@@ -266,6 +266,7 @@ export interface ImportAdminCardInput {
   rarity: Rarity;
   label: string | null;
   imageUrl: string;
+  messageUrl: string;
   channelId?: string | null;
   guildId?: string | null;
   now: number;
@@ -287,6 +288,7 @@ export type ImportAdminCardOutcome =
       existingPoolId: string;
       existingGroupId: string;
     }
+  | { status: "conflict" }
   | { status: "invalid-input"; error: string };
 
 /**
@@ -340,42 +342,45 @@ export async function importAdminCard(
     };
   }
 
-  const [serialRow] = await db
-    .select({ m: sql<number | null>`max(serial)` })
-    .from(cards)
-    .where(eq(cards.poolId, input.poolId));
-  const serial = (serialRow?.m ?? 0) + 1;
-  const [photoRow] = await db
-    .select({ m: sql<number | null>`max(photo_no)` })
-    .from(cards)
-    .where(eq(cards.memberId, memberId));
-  const photoNo = (photoRow?.m ?? 0) + 1;
-  const cardId = `${memberId}-${String(photoNo).padStart(2, "0")}`;
-  const queueMessageId = `000000-gui-${String(input.now)}-${cardId}`;
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const [serialRow] = await db
+      .select({ m: sql<number | null>`max(serial)` })
+      .from(cards)
+      .where(eq(cards.poolId, input.poolId));
+    const serial = (serialRow?.m ?? 0) + 1;
+    const [photoRow] = await db
+      .select({ m: sql<number | null>`max(photo_no)` })
+      .from(cards)
+      .where(eq(cards.memberId, memberId));
+    const photoNo = (photoRow?.m ?? 0) + 1;
+    const cardId = `${memberId}-${String(photoNo).padStart(2, "0")}`;
+    const rand6 = crypto
+      .randomUUID()
+      .replace(/-/g, "")
+      .slice(0, 6);
+    const queueMessageId = `000000-gui-${String(input.now)}-${cardId}-${rand6}`;
 
-  const stmts = [];
-  if (memberRow === undefined) {
+    const stmts = [];
+    if (memberRow === undefined) {
+      stmts.push(
+        db
+          .insert(members)
+          .values({
+            id: memberId,
+            poolId: input.poolId,
+            groupId: input.groupId,
+            name: nama,
+            nameLower: nama.toLowerCase(),
+            fullName: null,
+            photoTotal: 0,
+            sortOrder: 0,
+            enabled: true,
+          })
+          .onConflictDoNothing(),
+      );
+    }
     stmts.push(
-      db
-        .insert(members)
-        .values({
-          id: memberId,
-          poolId: input.poolId,
-          groupId: input.groupId,
-          name: nama,
-          nameLower: nama.toLowerCase(),
-          fullName: null,
-          photoTotal: 0,
-          sortOrder: 0,
-          enabled: true,
-        })
-        .onConflictDoNothing(),
-    );
-  }
-  stmts.push(
-    db
-      .insert(cards)
-      .values({
+      db.insert(cards).values({
         id: cardId,
         poolId: input.poolId,
         groupId: input.groupId,
@@ -387,61 +392,72 @@ export async function importAdminCard(
         imageFile: imageUrl,
         sourcePageUrl: imageUrl,
         enabled: true,
-        holoEnabled: input.rarity === "holo",
-      })
-      .onConflictDoNothing(),
-    db
-      .update(members)
-      .set({
-        photoTotal: sql`${members.photoTotal} + 1`,
-        enabled: true,
-      })
-      .where(eq(members.id, memberId)),
-    db
-      .update(groups)
-      .set({
-        memberCount: sql`(SELECT COUNT(*) FROM ${members} WHERE ${members.groupId} = ${input.groupId} AND ${members.enabled} = 1)`,
-      })
-      .where(eq(groups.id, input.groupId)),
-    db
-      .update(pools)
-      .set({
-        memberCount: sql`(SELECT COUNT(*) FROM ${members} WHERE ${members.poolId} = ${input.poolId} AND ${members.enabled} = 1)`,
-      })
-      .where(eq(pools.id, input.poolId)),
-    db
-      .insert(injectQueue)
-      .values({
-        messageId: queueMessageId,
-        channelId: input.channelId ?? "admin-import",
-        guildId: input.guildId ?? "admin-import",
-        authorId: "admin-web",
-        submittedAt: input.now,
-        messageUrl: imageUrl,
-        nama,
-        memberId,
-        pool: input.poolId,
-        grup: input.groupId,
-        rarity: input.rarity,
-        label,
-        sumber: imageUrl,
-        imageUrl,
-        status: "approved",
-        errors: null,
-        reviewedBy: "admin-web",
-        reviewedAt: input.now,
-      })
-      .onConflictDoNothing(),
-  );
+        holoEnabled: input.rarity === "holo" || input.rarity === "secret",
+      }),
+      db
+        .update(members)
+        .set({
+          photoTotal: sql`${members.photoTotal} + 1`,
+          enabled: true,
+        })
+        .where(eq(members.id, memberId)),
+      db
+        .update(groups)
+        .set({
+          memberCount: sql`(SELECT COUNT(*) FROM ${members} WHERE ${members.groupId} = ${input.groupId} AND ${members.enabled} = 1)`,
+        })
+        .where(eq(groups.id, input.groupId)),
+      db
+        .update(pools)
+        .set({
+          memberCount: sql`(SELECT COUNT(*) FROM ${members} WHERE ${members.poolId} = ${input.poolId} AND ${members.enabled} = 1)`,
+        })
+        .where(eq(pools.id, input.poolId)),
+      db
+        .insert(injectQueue)
+        .values({
+          messageId: queueMessageId,
+          channelId: input.channelId ?? "admin-import",
+          guildId: input.guildId ?? "admin-import",
+          authorId: "admin-web",
+          submittedAt: input.now,
+          messageUrl: input.messageUrl,
+          nama,
+          memberId,
+          pool: input.poolId,
+          grup: input.groupId,
+          rarity: input.rarity,
+          label,
+          sumber: imageUrl,
+          imageUrl,
+          status: "approved",
+          errors: null,
+          reviewedBy: "admin-web",
+          reviewedAt: input.now,
+        })
+        .onConflictDoNothing(),
+    );
 
-  await nativeBatch(db, stmts);
-  return {
-    status: "ok",
-    cardId,
-    memberId,
-    nama,
-    rarity: input.rarity,
-    photoNo,
-    serial,
-  };
+    try {
+      await nativeBatch(db, stmts);
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        err.message.includes("UNIQUE constraint failed")
+      ) {
+        continue;
+      }
+      throw err;
+    }
+    return {
+      status: "ok",
+      cardId,
+      memberId,
+      nama,
+      rarity: input.rarity,
+      photoNo,
+      serial,
+    };
+  }
+  return { status: "conflict" };
 }

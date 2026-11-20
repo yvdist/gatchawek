@@ -44,7 +44,10 @@ async function uploadImageToDiscord(
   env: Env,
   file: File,
   content: string,
-): Promise<{ ok: true; url: string } | { ok: false; error: string }> {
+): Promise<
+  | { ok: true; url: string; messageId: string; messageUrl: string }
+  | { ok: false; error: string }
+> {
   if (!file.type.startsWith("image/")) {
     return { ok: false, error: "File harus gambar." };
   }
@@ -76,7 +79,11 @@ async function uploadImageToDiscord(
       error: `Upload ke Discord gagal (${res.status}). D1 tidak diubah.`,
     };
   }
-  let payload: { attachments?: { url?: string }[] };
+  let payload: {
+    attachments?: { url?: string }[];
+    id?: string;
+    channel_id?: string;
+  };
   try {
     payload = (await res.json()) as typeof payload;
   } catch {
@@ -92,7 +99,48 @@ async function uploadImageToDiscord(
       error: "Discord tak mengembalikan URL. D1 tidak diubah.",
     };
   }
-  return { ok: true, url: cdn };
+  const messageId = typeof payload.id === "string" ? payload.id : "";
+  const channelId =
+    typeof payload.channel_id === "string" && payload.channel_id !== ""
+      ? payload.channel_id
+      : env.INGEST_CHANNEL_ID;
+  const messageUrl =
+    messageId !== ""
+      ? `https://discord.com/channels/${env.INGEST_GUILD_ID}/${channelId}/${messageId}`
+      : cdn;
+  return { ok: true, url: cdn, messageId, messageUrl };
+}
+
+/**
+ * Resolve a per-file group segment against known pool groups. Prefers the
+ * dropdown pool; allows cross-pool matches when the name is unique there.
+ * Returns the matched `{ poolId, groupId }` or the reason it cannot resolve.
+ */
+function resolveImportGroup(
+  poolGroups: { poolId: string; groupId: string; groupName: string }[],
+  rawGroup: string | null,
+  preferredPoolId: string,
+): { poolId: string; groupId: string } | "unknown" | "ambiguous" {
+  const norm = (raw: string): string =>
+    raw.trim().toLowerCase().replace(/\s+/g, " ");
+  if (rawGroup === null) return "unknown";
+  const want = norm(rawGroup);
+  if (want === "") return "unknown";
+  const matches = poolGroups.filter(
+    (pg) => norm(pg.groupName) === want || norm(pg.groupId) === want,
+  );
+  if (matches.length === 0) return "unknown";
+  const inPool = matches.filter((pg) => pg.poolId === preferredPoolId);
+  if (inPool.length === 1) {
+    const hit = inPool[0] as { poolId: string; groupId: string };
+    return { poolId: hit.poolId, groupId: hit.groupId };
+  }
+  if (inPool.length > 1) return "ambiguous";
+  if (matches.length === 1) {
+    const hit = matches[0] as { poolId: string; groupId: string };
+    return { poolId: hit.poolId, groupId: hit.groupId };
+  }
+  return "ambiguous";
 }
 
 // Single-user owner panel: cookie is HttpOnly + SameSite=Lax + Secure with
@@ -383,6 +431,28 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         });
         continue;
       }
+      let destPoolId = target.poolId;
+      let destGroupId = target.groupId;
+      if (parsed.rawGroup !== null) {
+        const resolved = resolveImportGroup(
+          poolGroups,
+          parsed.rawGroup,
+          target.poolId,
+        );
+        if (resolved === "unknown" || resolved === "ambiguous") {
+          results.push({
+            filename: file.name,
+            ok: false,
+            message:
+              resolved === "ambiguous"
+                ? `Grup "${parsed.rawGroup}" ambigu, pilih lebih spesifik.`
+                : `Grup "${parsed.rawGroup}" tidak dikenal.`,
+          });
+          continue;
+        }
+        destPoolId = resolved.poolId;
+        destGroupId = resolved.groupId;
+      }
       const uploaded = await uploadImageToDiscord(
         c.env,
         file,
@@ -397,12 +467,13 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         continue;
       }
       const outcome = await importAdminCard(db, {
-        poolId: target.poolId,
-        groupId: target.groupId,
+        poolId: destPoolId,
+        groupId: destGroupId,
         nama,
         rarity,
         label: labelRaw !== "" ? labelRaw : null,
         imageUrl: uploaded.url,
+        messageUrl: uploaded.messageUrl,
         channelId: c.env.INGEST_CHANNEL_ID,
         guildId: c.env.INGEST_GUILD_ID,
         now: baseNow + i,
@@ -426,6 +497,12 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
           filename: file.name,
           ok: false,
           message: "Pool/grup tidak ditemukan.",
+        });
+      } else if (outcome.status === "conflict") {
+        results.push({
+          filename: file.name,
+          ok: false,
+          message: "Konflik serial/foto, coba lagi.",
         });
       } else {
         results.push({

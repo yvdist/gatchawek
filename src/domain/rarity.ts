@@ -4,16 +4,18 @@ export const RARITY_KEYS = [
   "super_rare",
   "ultra_rare",
   "holo",
+  "secret",
 ] as const;
 
 export type RarityKey = (typeof RARITY_KEYS)[number];
 
 export const RARITY_WEIGHTS: Record<RarityKey, number> = {
-  common: 50,
-  rare: 30,
-  super_rare: 12,
-  ultra_rare: 9,
-  holo: 3,
+  common: 96,
+  rare: 58,
+  super_rare: 23,
+  ultra_rare: 16,
+  holo: 6,
+  secret: 1,
 };
 
 export const RARITY_LABEL: Record<RarityKey, string> = {
@@ -22,6 +24,7 @@ export const RARITY_LABEL: Record<RarityKey, string> = {
   super_rare: "Super Rare",
   ultra_rare: "Ultra Rare",
   holo: "Holo",
+  secret: "Secret",
 };
 
 export const RARITY_COLOR: Record<RarityKey, number> = {
@@ -30,6 +33,7 @@ export const RARITY_COLOR: Record<RarityKey, number> = {
   super_rare: 0xf59e0b,
   ultra_rare: 0xec4899,
   holo: 0xffd700,
+  secret: 0x22d3ee,
 };
 
 export const RARITY_STARS: Record<RarityKey, string> = {
@@ -38,6 +42,7 @@ export const RARITY_STARS: Record<RarityKey, string> = {
   super_rare: "★★★",
   ultra_rare: "★★★★",
   holo: "★★★★★",
+  secret: "★★★★★★",
 };
 
 export const HOLO_CHANCE: Record<

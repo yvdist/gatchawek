@@ -18,6 +18,7 @@ export const RARITIES = [
   "super_rare",
   "ultra_rare",
   "holo",
+  "secret",
 ] as const;
 export type Rarity = (typeof RARITIES)[number];
 

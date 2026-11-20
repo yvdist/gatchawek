@@ -1,6 +1,7 @@
 import { pickIndex, type RarityKey } from "./rarity.js";
 
 export const PAMER_TITLE_PREFIX: Record<RarityKey, string> = {
+  secret: "💠 SECRET FLEX",
   holo: "💎 HOLO FLEX",
   ultra_rare: "🌟 ULTRA FLEX",
   super_rare: "🔥 SUPER FLEX",
@@ -9,6 +10,11 @@ export const PAMER_TITLE_PREFIX: Record<RarityKey, string> = {
 };
 
 export const PAMER_HYPE: Record<RarityKey, readonly [string, string, string]> = {
+  secret: [
+    "💠 SECRET BINTANG ENAM TURUN 💠",
+    "🌌 KARTU PALING LANGKA SERVER 🌌",
+    "👑 CUMA 0,5% YANG SEBERUNTUNG INI 👑",
+  ],
   holo: [
     "💎 HOLO BINTANG LIMA TURUN GUNUNG 💎",
     "🌈 KILAU HOLO BIKIN SILAU 🌈",

@@ -38,6 +38,16 @@ describe("parseRarityAlias", () => {
     expect(parseRarityAlias("5")).toBe("holo");
     expect(parseRarityAlias("★★★★★")).toBe("holo");
     expect(parseRarityAlias("bintang 5")).toBe("holo");
+
+    expect(parseRarityAlias("secret")).toBe("secret");
+    expect(parseRarityAlias("SECRET")).toBe("secret");
+    expect(parseRarityAlias("s")).toBe("secret");
+    expect(parseRarityAlias("scr")).toBe("secret");
+    expect(parseRarityAlias("6")).toBe("secret");
+    expect(parseRarityAlias("★★★★★★")).toBe("secret");
+    expect(parseRarityAlias("******")).toBe("secret");
+    expect(parseRarityAlias("bintang 6")).toBe("secret");
+    expect(parseRarityAlias("bintang-6")).toBe("secret");
   });
 
   it("returns null for unknown or empty values", () => {
@@ -64,6 +74,8 @@ describe("parseCardFilename", () => {
       memberId: "refi-kaget",
       rarity: "holo",
       rawRarity: "holo",
+      group: null,
+      rawGroup: null,
       templateMatched: true,
     });
   });
@@ -75,6 +87,8 @@ describe("parseCardFilename", () => {
       memberId: "budi-santoso",
       rarity: "super_rare",
       rawRarity: "SR",
+      group: null,
+      rawGroup: null,
       templateMatched: true,
     });
     expect(parseCardFilename("C:\\fakepath\\(ultra rare)-ani wijaya.webp")).toEqual({
@@ -83,6 +97,8 @@ describe("parseCardFilename", () => {
       memberId: "ani-wijaya",
       rarity: "ultra_rare",
       rawRarity: "ultra rare",
+      group: null,
+      rawGroup: null,
       templateMatched: true,
     });
     expect(parseCardFilename("cards/(r) joko.jpeg")).toEqual({
@@ -91,6 +107,8 @@ describe("parseCardFilename", () => {
       memberId: "joko",
       rarity: "rare",
       rawRarity: "r",
+      group: null,
+      rawGroup: null,
       templateMatched: true,
     });
   });
@@ -102,6 +120,8 @@ describe("parseCardFilename", () => {
       memberId: "refi-kaget",
       rarity: null,
       rawRarity: null,
+      group: null,
+      rawGroup: null,
       templateMatched: false,
     });
     expect(parseCardFilename("(mythic) - refi kaget.jpg")).toEqual({
@@ -110,7 +130,61 @@ describe("parseCardFilename", () => {
       memberId: "refi-kaget",
       rarity: null,
       rawRarity: "mythic",
+      group: null,
+      rawGroup: null,
       templateMatched: false,
+    });
+  });
+
+  it("parses the 3-segment form with secret rarity and group", () => {
+    expect(parseCardFilename("(secret) - Jomok - Refi Kaget.jpg")).toEqual({
+      originalFilename: "(secret) - Jomok - Refi Kaget.jpg",
+      nama: "Refi Kaget",
+      memberId: "refi-kaget",
+      rarity: "secret",
+      rawRarity: "secret",
+      group: "Jomok",
+      rawGroup: "Jomok",
+      templateMatched: true,
+    });
+  });
+
+  it("treats legacy 2-segment holo names as group-less", () => {
+    expect(parseCardFilename("(holo) - refi kaget.jpg")).toEqual({
+      originalFilename: "(holo) - refi kaget.jpg",
+      nama: "Refi Kaget",
+      memberId: "refi-kaget",
+      rarity: "holo",
+      rawRarity: "holo",
+      group: null,
+      rawGroup: null,
+      templateMatched: true,
+    });
+  });
+
+  it("keeps dashed slugs intact when splitting group and name", () => {
+    expect(parseCardFilename("(r) - kabinet-merah-putih - ani.jpg")).toEqual({
+      originalFilename: "(r) - kabinet-merah-putih - ani.jpg",
+      nama: "Ani",
+      memberId: "ani",
+      rarity: "rare",
+      rawRarity: "r",
+      group: "Kabinet Merah Putih",
+      rawGroup: "kabinet-merah-putih",
+      templateMatched: true,
+    });
+  });
+
+  it("rejoins multi-dash card names with ' - '", () => {
+    expect(parseCardFilename("(c) - Jomok - Ani - Edisi Spesial.jpg")).toEqual({
+      originalFilename: "(c) - Jomok - Ani - Edisi Spesial.jpg",
+      nama: "Ani Edisi Spesial",
+      memberId: "ani-edisi-spesial",
+      rarity: "common",
+      rawRarity: "c",
+      group: "Jomok",
+      rawGroup: "Jomok",
+      templateMatched: true,
     });
   });
 });

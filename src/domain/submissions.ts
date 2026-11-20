@@ -98,7 +98,7 @@ export function formatRejectionReply(errors: readonly string[]): string {
     "```",
     SUBMISSION_TEMPLATE,
     "```",
-    "Aturan: [pool] pejabat → [grup] kabinet-merah-putih, [pool] meme → [grup] jomok, [pool] ahli-ngebul → [grup] default; [rarity] common/rare/super_rare/ultra_rare/holo.",
+    "Aturan: [pool] pejabat → [grup] kabinet-merah-putih, [pool] meme → [grup] jomok, [pool] ahli-ngebul → [grup] default; [rarity] common/rare/super_rare/ultra_rare/holo/secret.",
   ].join("\n");
 }
 

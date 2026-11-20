@@ -95,4 +95,14 @@ describe("buildPamerEmbed", () => {
     expect(embed.description).toContain("★★★★★ **Holo**");
     expect(embed.color).toBe(RARITY_COLOR.holo);
   });
+
+  it("renders 6-star secret rarity with cyan color and SECRET FLEX prefix", () => {
+    const embed = buildPamerEmbed(baseArgs("secret"));
+    expect(embed.title).toBe(
+      `${PAMER_TITLE_PREFIX.secret}: Pose Panggung (Serie Satu)`,
+    );
+    expect(PAMER_TITLE_PREFIX.secret).toBe("💠 SECRET FLEX");
+    expect(embed.description).toContain("★★★★★★ **Secret**");
+    expect(embed.color).toBe(RARITY_COLOR.secret);
+  });
 });

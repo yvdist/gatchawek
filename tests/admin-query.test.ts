@@ -190,6 +190,9 @@ describe("listAdminPoolGroups / importAdminCard", () => {
       rarity: "holo",
       label: null,
       imageUrl: "https://cdn.discordapp.com/attachments/1/2/refi.jpg",
+      messageUrl: "https://discord.com/channels/g/c/m-refi-1",
+      channelId: "c",
+      guildId: "g",
       now: 1_700_000_000_000,
     });
     expect(out1).toEqual({
@@ -218,6 +221,9 @@ describe("listAdminPoolGroups / importAdminCard", () => {
       rarity: "rare",
       label: "Pose 2",
       imageUrl: "https://cdn.discordapp.com/attachments/1/2/refi2.jpg",
+      messageUrl: "https://discord.com/channels/g/c/m-refi-2",
+      channelId: "c",
+      guildId: "g",
       now: 1_700_000_000_001,
     });
     expect(out2).toMatchObject({
@@ -238,6 +244,8 @@ describe("listAdminPoolGroups / importAdminCard", () => {
       .limit(1);
     expect(audit?.status).toBe("approved");
     expect(audit?.messageId.startsWith("000000-gui-")).toBe(true);
+    expect(audit?.messageUrl).toBe("https://discord.com/channels/g/c/m-refi-1");
+    expect(audit?.sumber).toBe("https://cdn.discordapp.com/attachments/1/2/refi.jpg");
   });
 
   it("rejects unknown groups and member group mismatches", async () => {
@@ -249,6 +257,7 @@ describe("listAdminPoolGroups / importAdminCard", () => {
         rarity: "common",
         label: null,
         imageUrl: "https://cdn.discordapp.com/x.png",
+        messageUrl: "https://discord.com/channels/g/c/m-missing",
         now: 100,
       }),
     ).resolves.toEqual({ status: "unknown-group" });
@@ -261,6 +270,7 @@ describe("listAdminPoolGroups / importAdminCard", () => {
         rarity: "common",
         label: null,
         imageUrl: "https://cdn.discordapp.com/x.png",
+        messageUrl: "https://discord.com/channels/g/c/m-mismatch",
         now: 101,
       }),
     ).resolves.toEqual({
@@ -268,6 +278,81 @@ describe("listAdminPoolGroups / importAdminCard", () => {
       existingPoolId: "pejabat",
       existingGroupId: "g1",
     });
+  });
+
+  it("imports a secret card with holoEnabled and pool-scoped serial max+1", async () => {
+    const before = await db.select().from(cards);
+    const maxSerial = Math.max(0, ...before.filter((c) => c.poolId === "pejabat").map((c) => c.serial));
+    const out = await importAdminCard(db, {
+      poolId: "pejabat",
+      groupId: "g2",
+      nama: "Secret Star",
+      rarity: "secret",
+      label: null,
+      imageUrl: "https://cdn.discordapp.com/attachments/1/2/secret.jpg",
+      messageUrl: "https://discord.com/channels/g/c/m-secret-1",
+      channelId: "c",
+      guildId: "g",
+      now: 1_700_000_000_020,
+    });
+    expect(out.status).toBe("ok");
+    if (out.status !== "ok") return;
+    expect(out.serial).toBe(maxSerial + 1);
+    expect(out.photoNo).toBe(1);
+    const detail = await getAdminCard(db, out.cardId);
+    expect(detail).toMatchObject({ rarity: "secret", holoEnabled: true, enabled: true });
+    const [audit] = await db
+      .select()
+      .from(injectQueue)
+      .where(eq(injectQueue.memberId, out.memberId))
+      .limit(1);
+    expect(audit?.messageUrl).toBe("https://discord.com/channels/g/c/m-secret-1");
+    expect(audit?.sumber).toBe("https://cdn.discordapp.com/attachments/1/2/secret.jpg");
+  });
+
+  it("gives distinct audit messageIds for two imports in the same millisecond", async () => {
+    const now = 1_700_000_000_030;
+    const [a, b] = await Promise.all([
+      importAdminCard(db, {
+        poolId: "pejabat",
+        groupId: "g1",
+        nama: "Twin A",
+        rarity: "common",
+        label: null,
+        imageUrl: "https://cdn.discordapp.com/attachments/1/2/twin-a.jpg",
+        messageUrl: "https://discord.com/channels/g/c/m-twin-a",
+        channelId: "c",
+        guildId: "g",
+        now,
+      }),
+      importAdminCard(db, {
+        poolId: "pejabat",
+        groupId: "g1",
+        nama: "Twin B",
+        rarity: "common",
+        label: null,
+        imageUrl: "https://cdn.discordapp.com/attachments/1/2/twin-b.jpg",
+        messageUrl: "https://discord.com/channels/g/c/m-twin-b",
+        channelId: "c",
+        guildId: "g",
+        now,
+      }),
+    ]);
+    expect(a.status).toBe("ok");
+    expect(b.status).toBe("ok");
+    if (a.status !== "ok" || b.status !== "ok") return;
+    expect(a.cardId).not.toBe(b.cardId);
+    const rows = await db.select().from(injectQueue).where(eq(injectQueue.submittedAt, now));
+    expect(rows).toHaveLength(2);
+    const ids = rows.map((r) => r.messageId).sort();
+    expect(ids[0]).not.toBe(ids[1]);
+    for (const id of ids) {
+      expect(id.startsWith(`000000-gui-${String(now)}-`)).toBe(true);
+    }
+    expect(rows.map((r) => r.messageUrl).sort()).toEqual([
+      "https://discord.com/channels/g/c/m-twin-a",
+      "https://discord.com/channels/g/c/m-twin-b",
+    ]);
   });
 
   it("keeps GUI audit rows out of the Discord sync cursor", async () => {
@@ -280,6 +365,7 @@ describe("listAdminPoolGroups / importAdminCard", () => {
       rarity: "holo",
       label: null,
       imageUrl: "https://cdn.discordapp.com/attachments/1/2/cg.jpg",
+      messageUrl: "https://discord.com/channels/g/c/m-cursor",
       now: 1_700_000_000_010,
     });
     const seenUrls: string[] = [];

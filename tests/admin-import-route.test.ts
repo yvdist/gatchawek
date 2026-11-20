@@ -1,6 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { eq } from "drizzle-orm";
 import { Hono } from "hono";
 import { Miniflare } from "miniflare";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
@@ -8,7 +9,7 @@ import { ADMIN_SESSION_COOKIE, signSession } from "../src/admin/auth.js";
 import { registerAdminRoutes } from "../src/admin/routes.js";
 import { createDb } from "../src/db/client.js";
 import { getAdminCard } from "../src/db/queries/admin.js";
-import { groups, pools } from "../src/db/schema.js";
+import { cards, groups, injectQueue, pools } from "../src/db/schema.js";
 import type { Env } from "../src/env.js";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -68,6 +69,24 @@ beforeAll(async () => {
     memberCount: 0,
     enabled: true,
   });
+  await db.insert(pools).values({
+    id: "pejabat",
+    name: "Pejabat",
+    emoji: "🏛️",
+    staminaMax: 10,
+    regenIntervalSec: 100,
+    resetCooldownSec: 3600,
+    memberCount: 0,
+    enabled: true,
+  });
+  await db.insert(groups).values({
+    id: "kabinet",
+    poolId: "pejabat",
+    name: "Kabinet",
+    badge: "KAB",
+    memberCount: 0,
+    enabled: true,
+  });
 
   app = new Hono<{ Bindings: Env }>();
   registerAdminRoutes(app);
@@ -106,6 +125,8 @@ describe("admin /admin/import routes", () => {
     const fetchMock = vi.fn(async () => {
       return new Response(
         JSON.stringify({
+          id: "m1",
+          channel_id: "c-ingest",
           attachments: [
             { url: "https://cdn.discordapp.com/attachments/1/2/refi-kaget.jpg" },
           ],
@@ -151,6 +172,140 @@ describe("admin /admin/import routes", () => {
         holoEnabled: true,
         imageFile: "https://cdn.discordapp.com/attachments/1/2/refi-kaget.jpg",
       });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("routes a 3-segment secret filename into its own group and keeps audit messageUrl", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          id: "m2",
+          channel_id: "c-ingest",
+          attachments: [
+            { url: "https://cdn.discordapp.com/attachments/1/2/x.jpg" },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.set("poolGroup", "pejabat:kabinet");
+      fd.set(
+        "files",
+        new File([new Uint8Array([9, 9, 9])], "(secret) - Default - X.jpg", {
+          type: "image/jpeg",
+        }),
+      );
+      const res = await app.request(
+        "/admin/import",
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie,
+            Accept: "application/json",
+          },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        ok: boolean;
+        results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
+      };
+      expect(body.ok).toBe(true);
+      expect(body.results).toHaveLength(1);
+      expect(body.results[0]?.cardId).toBe("x-01");
+
+      const db = createDb(env);
+      const [row] = await db.select().from(cards).where(eq(cards.id, "x-01")).limit(1);
+      expect(row?.rarity).toBe("secret");
+      expect(row?.poolId).toBe("ahli-ngebul");
+      expect(row?.groupId).toBe("default");
+      const [audit] = await db
+        .select()
+        .from(injectQueue)
+        .where(eq(injectQueue.memberId, "x"))
+        .limit(1);
+      expect(audit?.messageUrl).toBe("https://discord.com/channels/g-ingest/c-ingest/m2");
+      expect(audit?.sumber).toBe("https://cdn.discordapp.com/attachments/1/2/x.jpg");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("routes a cross-pool group name to the other pool and continues past unknown groups", async () => {
+    let discordCalls = 0;
+    const fetchMock = vi.fn(async () => {
+      discordCalls += 1;
+      return new Response(
+        JSON.stringify({
+          id: `m-cross-${String(discordCalls)}`,
+          channel_id: "c-ingest",
+          attachments: [
+            { url: `https://cdn.discordapp.com/attachments/1/2/cross-${String(discordCalls)}.jpg` },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.append(
+        "files",
+        new File([new Uint8Array([5])], "(rare) - Kabinet - Cross Kid.jpg", {
+          type: "image/jpeg",
+        }),
+      );
+      fd.append(
+        "files",
+        new File([new Uint8Array([6])], "(common) - Atlantis - Lost Kid.jpg", {
+          type: "image/jpeg",
+        }),
+      );
+      fd.append(
+        "files",
+        new File([new Uint8Array([7])], "(common) - batch kid.jpg", {
+          type: "image/jpeg",
+        }),
+      );
+      const res = await app.request(
+        "/admin/import",
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie,
+            Accept: "application/json",
+          },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        ok: boolean;
+        results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
+      };
+      expect(body.ok).toBe(false);
+      expect(body.results).toHaveLength(3);
+      expect(body.results[0]).toMatchObject({ ok: true, cardId: "cross-kid-01" });
+      expect(body.results[1]).toMatchObject({ ok: false });
+      expect(body.results[1]?.message).toContain('Grup "Atlantis" tidak dikenal.');
+      expect(body.results[2]).toMatchObject({ ok: true, cardId: "batch-kid-01" });
+
+      const db = createDb(env);
+      const [cross] = await db.select().from(cards).where(eq(cards.id, "cross-kid-01")).limit(1);
+      expect(cross?.poolId).toBe("pejabat");
+      expect(cross?.groupId).toBe("kabinet");
+      const [batch] = await db.select().from(cards).where(eq(cards.id, "batch-kid-01")).limit(1);
+      expect(batch?.poolId).toBe("ahli-ngebul");
+      expect(batch?.groupId).toBe("default");
     } finally {
       vi.unstubAllGlobals();
     }

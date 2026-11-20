@@ -184,7 +184,8 @@ function buildImportScript(): string {
     rare:"rare",r:"rare","2":"rare","\\u2605\\u2605":"rare","**":"rare",bintang_2:"rare",
     super_rare:"super_rare",sr:"super_rare","3":"super_rare","\\u2605\\u2605\\u2605":"super_rare","***":"super_rare",bintang_3:"super_rare",
     ultra_rare:"ultra_rare",ur:"ultra_rare","4":"ultra_rare","\\u2605\\u2605\\u2605\\u2605":"ultra_rare","****":"ultra_rare",bintang_4:"ultra_rare",
-    holo:"holo",h:"holo",holographic:"holo",ssr:"holo","5":"holo","\\u2605\\u2605\\u2605\\u2605\\u2605":"holo","*****":"holo",bintang_5:"holo"
+    holo:"holo",h:"holo",holographic:"holo",ssr:"holo","5":"holo","\\u2605\\u2605\\u2605\\u2605\\u2605":"holo","*****":"holo",bintang_5:"holo",
+    secret:"secret",s:"secret",scr:"secret","6":"secret",bintang_6:"secret","\\u2605\\u2605\\u2605\\u2605\\u2605\\u2605":"secret","******":"secret"
   };
   var TEMPLATE_RE=/^\\s*[\\(\\[]\\s*([^\\)\\]]+?)\\s*[\\)\\]]\\s*(?:[-\\u2013\\u2014_:]+\\s*|\\s+)(.+?)\\s*$/;
   function parseAlias(raw){
@@ -196,6 +197,11 @@ function buildImportScript(): string {
     if(!c)return"";
     return c.split(" ").map(function(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();}).join(" ");
   }
+  function splitGroupAndName(rest){
+    var parts=String(rest||"").split(/\\s+[-\\u2013\\u2014:]+\\s+/).map(function(p){return p.trim();}).filter(function(p){return p!=="";});
+    if(parts.length>=2){return{group:parts[0],name:parts.slice(1).join(" - ")};}
+    return{group:null,name:String(rest||"").trim()};
+  }
   function parseFilename(name){
     var base=String(name||"").split(/[/\\\\]/).pop()||name;
     var stem=base.replace(/\\.[^.]+$/,"");
@@ -203,10 +209,12 @@ function buildImportScript(): string {
     if(m){
       var rawR=m[1].trim();
       var r=parseAlias(rawR);
-      var nama=toTitleCase(m[2]);
-      return{nama:nama,rarity:r,rawRarity:rawR,matched:Boolean(r&&nama)};
+      var split=splitGroupAndName(m[2]);
+      var nama=toTitleCase(split.name);
+      var rawG=split.group;
+      return{nama:nama,rarity:r,rawRarity:rawR,group:rawG?toTitleCase(rawG):null,rawGroup:rawG,matched:Boolean(r&&nama)};
     }
-    return{nama:toTitleCase(stem),rarity:null,rawRarity:null,matched:false};
+    return{nama:toTitleCase(stem),rarity:null,rawRarity:null,group:null,rawGroup:null,matched:false};
   }
   var form=document.getElementById("importForm");
   var dropzone=document.getElementById("dropzone");
@@ -434,6 +442,6 @@ export function importPage(args: {
     args.poolGroups.length === 0
       ? `<p role="alert"><mark>Belum ada pool/grup aktif di database.</mark></p>`
       : "";
-  const body = `<h1>📥 Import Kartu (Drag &amp; Drop)</h1>${errBanner}${resultsBlock}${noPoolsWarn}<section class="tpl-box"><strong>Template Nama File:</strong> <code>(rarity) - nama kartu.ext</code><br><small>Contoh: <code>(holo) - refi kaget.jpg</code> → Rarity: <strong>★★★★★ Holo</strong>, Nama Kartu: <strong>Refi Kaget</strong> (Auto Title Case)</small><br><small>Kode Rarity: <code>(common)</code>/<code>(c)</code>/<code>(1)</code> · <code>(rare)</code>/<code>(r)</code>/<code>(2)</code> · <code>(super rare)</code>/<code>(sr)</code>/<code>(3)</code> · <code>(ultra rare)</code>/<code>(ur)</code>/<code>(4)</code> · <code>(holo)</code>/<code>(h)</code>/<code>(5)</code></small></section><form id="importForm" method="post" action="/admin/import" enctype="multipart/form-data"><label>Target Pool · Grup<select id="poolGroup" name="poolGroup" required>${poolOptions}</select></label><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"><p><strong>Drag &amp; drop gambar kartu ke sini</strong> atau pilih file di bawah</p><small>Format: JPG, PNG, WebP (maks 8 MB/file)</small><div style="margin-top:.75rem"><input type="file" id="fileInput" name="files" accept="image/*" multiple></div></div><div id="previewWrap" hidden><table class="import-table"><thead><tr><th>preview</th><th>file</th><th>nama kartu</th><th>rarity</th><th>label (opsional)</th><th>status</th><th></th></tr></thead><tbody id="previewBody"></tbody></table><div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><button type="submit" id="submitBtn"${args.poolGroups.length === 0 ? " disabled" : ""}>🚀 Import ke Katalog</button><button type="button" id="clearBtn" class="secondary outline">Bersihkan Daftar</button><span id="summaryText"></span></div></div></form>${buildImportScript()}`;
+  const body = `<h1>📥 Import Kartu (Drag &amp; Drop)</h1>${errBanner}${resultsBlock}${noPoolsWarn}<section class="tpl-box"><strong>Template Nama File:</strong> <code>(rarity) - nama grup - nama kartu.ext</code><br><small>Contoh: <code>(secret) - Jomok - Refi Kaget.jpg</code> → Rarity: <strong>★★★★★★ Secret</strong>, Grup: <strong>Jomok</strong>, Nama Kartu: <strong>Refi Kaget</strong> (Auto Title Case). Grup opsional: <code>(holo) - refi kaget.jpg</code> ikut target dropdown.</small><br><small>Kode Rarity: <code>(common)</code>/<code>(c)</code>/<code>(1)</code> · <code>(rare)</code>/<code>(r)</code>/<code>(2)</code> · <code>(super rare)</code>/<code>(sr)</code>/<code>(3)</code> · <code>(ultra rare)</code>/<code>(ur)</code>/<code>(4)</code> · <code>(holo)</code>/<code>(h)</code>/<code>(5)</code> · <code>(secret)</code>/<code>(s)</code>/<code>(6)</code></small></section><form id="importForm" method="post" action="/admin/import" enctype="multipart/form-data"><label>Target Pool · Grup<select id="poolGroup" name="poolGroup" required>${poolOptions}</select></label><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"><p><strong>Drag &amp; drop gambar kartu ke sini</strong> atau pilih file di bawah</p><small>Format: JPG, PNG, WebP (maks 8 MB/file)</small><div style="margin-top:.75rem"><input type="file" id="fileInput" name="files" accept="image/*" multiple></div></div><div id="previewWrap" hidden><table class="import-table"><thead><tr><th>preview</th><th>file</th><th>nama kartu</th><th>rarity</th><th>label (opsional)</th><th>status</th><th></th></tr></thead><tbody id="previewBody"></tbody></table><div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><button type="submit" id="submitBtn"${args.poolGroups.length === 0 ? " disabled" : ""}>🚀 Import ke Katalog</button><button type="button" id="clearBtn" class="secondary outline">Bersihkan Daftar</button><span id="summaryText"></span></div></div></form>${buildImportScript()}`;
   return shell("import", "import", body);
 }

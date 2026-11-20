@@ -183,12 +183,16 @@ describe("importPage", () => {
     },
   ];
 
-  it("renders drag-and-drop import UI, template guide, and 5-star Holo option", () => {
+  it("renders drag-and-drop import UI, template guide, and Holo/Secret options", () => {
     const html = importPage({ poolGroups });
     expect(html).toContain('id="dropzone"');
     expect(html).toContain('enctype="multipart/form-data"');
+    expect(html).toContain("(rarity) - nama grup - nama kartu.ext");
+    expect(html).toContain("(secret) - Jomok - Refi Kaget.jpg");
+    expect(html).toContain("★★★★★★ Secret");
     expect(html).toContain("(holo) - refi kaget.jpg");
     expect(html).toContain("★★★★★ Holo");
+    expect(html).toContain("(secret)");
     expect(html).toContain('value="ahli-ngebul:default"');
     expect(html).toContain("Ahli Ngebul · Default (NGEBUL)");
   });
