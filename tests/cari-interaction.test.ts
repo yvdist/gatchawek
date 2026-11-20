@@ -273,8 +273,7 @@ describe("/cari", () => {
     const names = (res.data.choices ?? []).map((c) => c.name);
     expect(names.some((n) => n.includes("Katak"))).toBe(true);
   });
-
-  it("finds members by photo label and ranks the labeled card first", async () => {
+  it("finds members by photo label and shows only the matching card", async () => {
     const fetchMock = vi.fn(async () => new Response(JSON.stringify({}), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     try {
@@ -290,6 +289,8 @@ describe("/cari", () => {
       };
       expect(body.embeds[0]?.description).toContain("Budi");
       expect(body.embeds[0]?.description).toContain("Ryan Unjuk Kebolehan");
+      // Strict: sibling non-matching cards of the label-hit member are hidden.
+      expect(body.embeds[0]?.description).not.toContain("Foto 1");
     } finally {
       vi.unstubAllGlobals();
     }

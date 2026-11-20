@@ -123,16 +123,18 @@ export function sanitizeCariPrefix(raw: string): string {
      )
      .orderBy(cards.photoNo)
      .limit(memberRows.length * CARI_CARD_LIMIT);
-   // Label-matching cards first within each member (cap preserved).
-   if (sanitized !== "") {
-     const rank = (label: string | null): number =>
-       label !== null && label.toLowerCase().includes(sanitized) ? 0 : 1;
-     cardRows.sort(
-       (a, b) => rank(a.photoLabel) - rank(b.photoLabel) || a.photoNo - b.photoNo,
-     );
-   }
+  // Label-only members: show ONLY label-matching cards (strict per-photo
+  // result). Name-matched members keep all their cards. Cap preserved.
+  const nameHitIds = new Set(nameRows.map((m) => m.id));
   const byMember = new Map<string, CariCard[]>();
   for (const c of cardRows) {
+    if (
+      sanitized !== "" &&
+      !nameHitIds.has(c.memberId) &&
+      (c.photoLabel === null || !c.photoLabel.toLowerCase().includes(sanitized))
+    ) {
+      continue;
+    }
     const list = byMember.get(c.memberId) ?? [];
     if (list.length < CARI_CARD_LIMIT) {
       list.push({ cardId: c.id, photoNo: c.photoNo, photoLabel: c.photoLabel, rarity: c.rarity, owners: [] });
