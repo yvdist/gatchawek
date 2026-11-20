@@ -100,11 +100,11 @@ describe("seed idempotency", () => {
     );
     const files2 = (await readdir(path.join(fixture, "public", "cards"))).sort();
 
-    expect(counts1).toEqual({ pools: 2, groups: 5, members: 77, cards: 130, groups_live: 2, members_live: 69, cards_live: 109 });
+    expect(counts1).toEqual({ pools: 3, groups: 3, members: 102, cards: 122, groups_live: 3, members_live: 102, cards_live: 122 });
     expect(counts2).toEqual(counts1);
     expect(lock2).toBe(lock1);
     expect(files2).toEqual(files1);
-    expect(files1).toHaveLength(109);
+    expect(files1).toHaveLength(122);
   }, 300_000);
 
   it("removing a photo disables the card and prunes its file", async () => {

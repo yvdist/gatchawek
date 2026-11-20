@@ -48,6 +48,17 @@ describe("parseSubmission", () => {
     expect(result.value.pool).toBe("meme");
     expect(result.value.grup).toBe("jomok");
   });
+  it("accepts pool ahli-ngebul + grup default", () => {
+    const content = `[nama] Isal Perek
+[pool] ahli-ngebul
+[grup] default
+[rarity] rare`;
+    const result = parseSubmission({ content, attachments: [IMG], ...BASE });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.pool).toBe("ahli-ngebul");
+    expect(result.value.grup).toBe("default");
+  });
 
   it("accepts a case-insensitive pool", () => {
     const content = `[nama] Aynid Morbulet
@@ -68,7 +79,7 @@ describe("parseSubmission", () => {
     const result = parseSubmission({ content, attachments: [IMG], ...BASE });
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.errors).toContain('invalid [pool] "dewan": must be pejabat or meme');
+    expect(result.errors).toContain('invalid [pool] "dewan": must be pejabat or meme or ahli-ngebul');
   });
 
   it("rejects a grup that does not match the pool", () => {

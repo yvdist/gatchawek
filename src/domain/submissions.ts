@@ -43,7 +43,7 @@ export type ParseBulkResult =
 
 export const BULK_MAX_CARDS = 50;
 
-export type PoolChoice = "pejabat" | "meme";
+export type PoolChoice = "pejabat" | "meme" | "ahli-ngebul";
 
 /** Fixed pool → curated group mapping. Single source for the template text,
  * the parser, approve paths, and Worker ingest (no pool/group ids hardcoded
@@ -51,6 +51,7 @@ export type PoolChoice = "pejabat" | "meme";
 export const POOL_GROUPS: Record<PoolChoice, string> = {
   pejabat: "kabinet-merah-putih",
   meme: "jomok",
+  "ahli-ngebul": "default",
 };
 
 export interface ParsedSubmission {
@@ -96,7 +97,7 @@ export function formatRejectionReply(errors: readonly string[]): string {
     "```",
     SUBMISSION_TEMPLATE,
     "```",
-    "Aturan: [pool] pejabat → [grup] kabinet-merah-putih, [pool] meme → [grup] jomok; [rarity] common/rare/super_rare/ultra_rare.",
+    "Aturan: [pool] pejabat → [grup] kabinet-merah-putih, [pool] meme → [grup] jomok, [pool] ahli-ngebul → [grup] default; [rarity] common/rare/super_rare/ultra_rare.",
   ].join("\n");
 }
 
@@ -143,10 +144,10 @@ export function parseSubmission(
     errors.push("missing required field [pool]");
   } else {
     const normalized = poolRaw.toLowerCase();
-    if (normalized !== "pejabat" && normalized !== "meme") {
-      errors.push(`invalid [pool] "${poolRaw}": must be pejabat or meme`);
+    if (!(normalized in POOL_GROUPS)) {
+      errors.push(`invalid [pool] "${poolRaw}": must be ${Object.keys(POOL_GROUPS).join(" or ")}`);
     } else {
-      pool = normalized;
+      pool = normalized as PoolChoice;
     }
   }
 
@@ -290,10 +291,10 @@ export function parseBulkSubmission(
     errors.push("missing required field [pool]");
   } else {
     const normalized = poolRaw.toLowerCase();
-    if (normalized !== "pejabat" && normalized !== "meme") {
-      errors.push(`invalid [pool] "${poolRaw}": must be pejabat or meme`);
+    if (!(normalized in POOL_GROUPS)) {
+      errors.push(`invalid [pool] "${poolRaw}": must be ${Object.keys(POOL_GROUPS).join(" or ")}`);
     } else {
-      pool = normalized;
+      pool = normalized as PoolChoice;
     }
   }
   let grup: string | null = null;
