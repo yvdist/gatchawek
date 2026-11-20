@@ -1,4 +1,4 @@
-import { mkdir, writeFile } from "node:fs/promises";
+import { access, mkdir, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import * as path from "node:path";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
@@ -119,10 +119,23 @@ interface Job {
   imageUrl: string;
 }
 
+async function rawExists(rawDir: string, cardId: string): Promise<boolean> {
+  for (const ext of ["jpg", "png", "webp"]) {
+    try {
+      await access(path.join(rawDir, `${cardId}.${ext}`));
+      return true;
+    } catch {
+      // try next extension
+    }
+  }
+  return false;
+}
+
 async function runPool(
   jobs: Job[],
   rawDir: string,
   failed: FetchFailure[],
+  gapMs: number,
 ): Promise<void> {
   let next = 0;
   async function worker(): Promise<void> {
@@ -130,6 +143,10 @@ async function runPool(
       const job = jobs[next] as Job | undefined;
       next++;
       if (job === undefined) return;
+      if (gapMs > 0) {
+        await new Promise((resolve) => setTimeout(resolve, gapMs));
+      }
+      if (await rawExists(rawDir, job.cardId)) continue;
       const color = parseColor(job.imageUrl);
       if (color !== null) {
         await writeSolidPng(color, path.join(rawDir, `${job.cardId}.png`));
@@ -139,13 +156,13 @@ async function runPool(
       if (typeof result !== "string") failed.push(result);
     }
   }
-  await Promise.all(
-    Array.from({ length: Math.min(CONCURRENCY, jobs.length) }, () => worker()),
-  );
+  const workers = gapMs > 0 ? 1 : Math.min(CONCURRENCY, jobs.length);
+  await Promise.all(Array.from({ length: workers }, () => worker()));
 }
 
 export async function fetchAllImages(
   root?: string,
+  opts?: { gapMs?: number },
 ): Promise<{ downloaded: number; failed: FetchFailure[] }> {
   const base = root ?? resolveManifestRoot();
   const loaded = await loadManifests(base);
@@ -166,7 +183,7 @@ export async function fetchAllImages(
   }
 
   const failed: FetchFailure[] = [];
-  await runPool(jobs, rawDir, failed);
+  await runPool(jobs, rawDir, failed, opts?.gapMs ?? 0);
 
   const reportDir = path.join(base, "data", "reports");
   await mkdir(reportDir, { recursive: true });
@@ -181,7 +198,13 @@ export async function fetchAllImages(
 const isMain = process.argv[1] !== undefined && fileURLToPath(import.meta.url) === path.resolve(process.argv[1]);
 if (isMain) {
   try {
-    const { downloaded, failed } = await fetchAllImages();
+    const gapFlag = process.argv.indexOf("--gap-ms");
+    const gapMs = gapFlag >= 0 ? Number(process.argv[gapFlag + 1] ?? "0") : 0;
+    if (!Number.isFinite(gapMs) || gapMs < 0) {
+      console.error("error: --gap-ms requires a non-negative number");
+      process.exit(1);
+    }
+    const { downloaded, failed } = await fetchAllImages(undefined, { gapMs });
     console.log(`fetched ${downloaded} image(s), ${failed.length} failed`);
   } catch (err: unknown) {
     if (err instanceof ManifestError) {

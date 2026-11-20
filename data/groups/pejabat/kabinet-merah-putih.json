@@ -4,9 +4,97 @@
   "group": {
     "id": "kabinet-merah-putih",
     "name": "Kabinet Merah Putih",
-    "badge": "KABINET"
+    "badge": "KABINET",
+    "allowSinglePhoto": false
   },
   "members": [
+    {
+      "id": "abdul-kadir-karding",
+      "name": "Karding",
+      "fullName": "Abdul Kadir Karding",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5b/Abdul_Kadir_Karding.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Abdul_Kadir_Karding.jpg",
+          "license": "CC0",
+          "author": "Unknown authorUnknown author",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Abdul_Kadir_Karding%2C_Kepala_Barantin_%282026%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Abdul_Kadir_Karding,_Kepala_Barantin_(2026).png",
+          "license": "Public domain",
+          "author": "Badan Karantina Indonesja",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/23%C2%BA_Foro_Parlamentario_Asia_Pac%C3%ADfico_-_Abdul_Kadir_Kading_%28INDONESIA%29_%2816087090598%29.jpg/1280px-23%C2%BA_Foro_Parlamentario_Asia_Pac%C3%ADfico_-_Abdul_Kadir_Kading_%28INDONESIA%29_%2816087090598%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:23%C2%BA_Foro_Parlamentario_Asia_Pac%C3%ADfico_-_Abdul_Kadir_Kading_(INDONESIA)_(16087090598).jpg",
+          "license": "CC BY-SA 2.0",
+          "author": "Asamblea Nacional del Ecuador",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5c/23%C2%BA_Foro_Parlamentario_Asia_Pac%C3%ADfico_-_Abdul_Kadir_Kading_%28INDONESIA%29_%2816088757417%29.jpg/1280px-23%C2%BA_Foro_Parlamentario_Asia_Pac%C3%ADfico_-_Abdul_Kadir_Kading_%28INDONESIA%29_%2816088757417%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:23%C2%BA_Foro_Parlamentario_Asia_Pac%C3%ADfico_-_Abdul_Kadir_Kading_(INDONESIA)_(16088757417).jpg",
+          "license": "CC BY-SA 2.0",
+          "author": "Asamblea Nacional del Ecuador",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
     {
       "id": "abdul-muhaimin-iskandar",
       "name": "Muhaimin",
@@ -84,6 +172,267 @@
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Muhaimin_Iskandar_(2).jpg",
           "license": "CC BY 3.0",
           "author": "AntaraTV",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "agus-andrianto",
+      "name": "Agus Andrianto",
+      "fullName": "Agus Andrianto",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a9/Portrait_of_Minister_Agus_Andrianto.jpg/1280px-Portrait_of_Minister_Agus_Andrianto.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Portrait_of_Minister_Agus_Andrianto.jpg",
+          "license": "Public domain",
+          "author": "Ministry of Immigration and Corrections of the Republic of Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/bd/Agus_Andrianto%2C_Menteri_Imigrasi_dan_Pemasyarakatan_%282024%29.jpg/1280px-Agus_Andrianto%2C_Menteri_Imigrasi_dan_Pemasyarakatan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Agus_Andrianto,_Menteri_Imigrasi_dan_Pemasyarakatan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Rutan Kelas II B Sukadana, Kementerian Imigrasi dan Pemasyarakatan Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a7/Portrait_Minister_Agus_Andrianto.jpg/1280px-Portrait_Minister_Agus_Andrianto.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Portrait_Minister_Agus_Andrianto.jpg",
+          "license": "Public domain",
+          "author": "Ministry of Immigration and Corrections of the Republic of Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/Menteri_Imigrasi_dan_Pemasyarakatan_Agus_Andrianto_%26_Wamen_Silmy_Karim_%282024%29.jpg/1280px-Menteri_Imigrasi_dan_Pemasyarakatan_Agus_Andrianto_%26_Wamen_Silmy_Karim_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Imigrasi_dan_Pemasyarakatan_Agus_Andrianto_%26_Wamen_Silmy_Karim_(2024).jpg",
+          "license": "Public domain",
+          "author": "Direktorat Jenderal Imigrasi Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/70/Agus_Andrianto_batik.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Agus_Andrianto_batik.jpg",
+          "license": "Public domain",
+          "author": "Indonesian National Police",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "agus-gumiwang-kartasasmita",
+      "name": "Agus Gumiwang",
+      "fullName": "Agus Gumiwang Kartasasmita",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Agus_Gumiwang_Kartasasmita%2C_Menteri_Perindustrian_%282024%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Agus_Gumiwang_Kartasasmita,_Menteri_Perindustrian_(2024).png",
+          "license": "CC BY-SA 4.0",
+          "author": "Ryuji takeda",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Christopher_Luxon_shakes_hands_with_Agus_Gumiwang_Kartasasmita_2024.jpg/1280px-Christopher_Luxon_shakes_hands_with_Agus_Gumiwang_Kartasasmita_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Christopher_Luxon_shakes_hands_with_Agus_Gumiwang_Kartasasmita_2024.jpg",
+          "license": "Public domain",
+          "author": "Sekretariat Presiden Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Indonesia-New_Zealand_leaders_meeting_in_Melbourne%2C_2024.jpg/1280px-Indonesia-New_Zealand_leaders_meeting_in_Melbourne%2C_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Indonesia-New_Zealand_leaders_meeting_in_Melbourne,_2024.jpg",
+          "license": "Public domain",
+          "author": "Sekretariat Presiden Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024_(wide).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "agus-subiyanto",
+      "name": "Agus Subiyanto",
+      "fullName": "Agus Subiyanto",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Panglima_TNI_Jenderal_TNI_Agus_Subiyanto.jpg/1280px-Panglima_TNI_Jenderal_TNI_Agus_Subiyanto.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Panglima_TNI_Jenderal_TNI_Agus_Subiyanto.jpg",
+          "license": "Public domain",
+          "author": "Indonesian National Armed Forces",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/18/1._FOTO_RESMI_PDU_4_WAKASAD_%281%29.jpg/1280px-1._FOTO_RESMI_PDU_4_WAKASAD_%281%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:1._FOTO_RESMI_PDU_4_WAKASAD_(1).jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Charlezo",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cb/Army_Chief_of_Staff_General_Agus_Subiyanto.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Army_Chief_of_Staff_General_Agus_Subiyanto.jpg",
+          "license": "Public domain",
+          "author": "Indonesian Army Information Services",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f1/Mayjen_TNI_Agus_Subiyanto%2C_Pangdam_Siliwangi.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Mayjen_TNI_Agus_Subiyanto,_Pangdam_Siliwangi.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "P3ndamtree",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/05/Wakil_Kepala_Staf_Angkatan_Darat_Agus_Subiyanto.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Wakil_Kepala_Staf_Angkatan_Darat_Agus_Subiyanto.jpg",
+          "license": "Public domain",
+          "author": "PPID Tentara Nasional Indonesia Angkatan Darat",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c3/Agus_Subiyanto%2C_Commander_of_the_Surakarta_Military_District.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Agus_Subiyanto,_Commander_of_the_Surakarta_Military_District.jpg",
+          "license": "Public domain",
+          "author": "Surakarta Military District",
           "focus": {
             "x": 0.5,
             "y": 0.35
@@ -182,6 +531,228 @@
       "enabled": true
     },
     {
+      "id": "amran-sulaiman",
+      "name": "Amran",
+      "fullName": "Amran Sulaiman",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Amran_Sulaiman_%282025%29.png/1280px-Amran_Sulaiman_%282025%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Amran_Sulaiman_(2025).png",
+          "license": "Public domain",
+          "author": "Badan Pangan Nasional",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0d/Amran_Sulaiman_%282025%29_%28cropped%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Amran_Sulaiman_(2025)_(cropped).png",
+          "license": "Public domain",
+          "author": "Badan Pangan Nasional",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f4/Amran_Sulaiman_%28Mentan%29_%26_Sudaryono_%28Wamentan%29_seusai_pelantikan_3_Wakil_Menteri_di_Istana_Negara_%282024%29.jpg/1280px-Amran_Sulaiman_%28Mentan%29_%26_Sudaryono_%28Wamentan%29_seusai_pelantikan_3_Wakil_Menteri_di_Istana_Negara_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Amran_Sulaiman_(Mentan)_%26_Sudaryono_(Wamentan)_seusai_pelantikan_3_Wakil_Menteri_di_Istana_Negara_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pertanian Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a3/Mentan_Amran_Sulaiman_Pimpin_Upacara_Hari_Pancasila_di_Merauke_%282024%29.jpg/1280px-Mentan_Amran_Sulaiman_Pimpin_Upacara_Hari_Pancasila_di_Merauke_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Mentan_Amran_Sulaiman_Pimpin_Upacara_Hari_Pancasila_di_Merauke_(2024).jpg",
+          "license": "Public domain",
+          "author": "Pemerintah Kabupaten Merauke",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Menteri_Pertanian_RI_A._Amran_Sulaiman_menghadiri_Peluncuruan_Program_BUN500_di_Desa_Sido_Mulyo%2C_Kota_Palangka_Raya_%282019%29.jpg/1280px-Menteri_Pertanian_RI_A._Amran_Sulaiman_menghadiri_Peluncuruan_Program_BUN500_di_Desa_Sido_Mulyo%2C_Kota_Palangka_Raya_%282019%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Pertanian_RI_A._Amran_Sulaiman_menghadiri_Peluncuruan_Program_BUN500_di_Desa_Sido_Mulyo,_Kota_Palangka_Raya_(2019).jpg",
+          "license": "Public domain",
+          "author": "Pemerintah Provinsi Kalimantan Tengah",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "anis-matta",
+      "name": "Anis Matta",
+      "fullName": "Anis Matta",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/03/Pemimpin_muda_PKS_gaul_dan_merangkul.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pemimpin_muda_PKS_gaul_dan_merangkul.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Merekayangpeduli",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/55/Wakil_Menteri_Luar_Negeri_RI_-_Anis_Matta.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Wakil_Menteri_Luar_Negeri_RI_-_Anis_Matta.jpg",
+          "license": "Public domain",
+          "author": "Dokumentasi Partai Gelora",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Wakil_Menteri_Luar_Negeri_Republik_Indonesia_Muhammad_Anis_Matta.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Wakil_Menteri_Luar_Negeri_Republik_Indonesia_Muhammad_Anis_Matta.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Luar Negeri Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/President_Prabowo_Subianto_Announces_56_Deputy_Ministers_in_Red_and_White_Cabinet.jpg/1280px-President_Prabowo_Subianto_Announces_56_Deputy_Ministers_in_Red_and_White_Cabinet.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:President_Prabowo_Subianto_Announces_56_Deputy_Ministers_in_Red_and_White_Cabinet.jpg",
+          "license": "Public domain",
+          "author": "Ministry of State Secretariat of the Republic of Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Foto_Formasi_Wakil_Menteri_Kabinet_Merah_Putih_%282024%29.jpg/1280px-Foto_Formasi_Wakil_Menteri_Kabinet_Merah_Putih_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Foto_Formasi_Wakil_Menteri_Kabinet_Merah_Putih_(2024).jpg",
+          "license": "Public domain",
+          "author": "Biro Pers, Media dan Informasi Sekretariat Presiden Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Anis_Matta_di_Padang.jpg/1280px-Anis_Matta_di_Padang.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Anis_Matta_di_Padang.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Emdebuilding",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "arifah-choiri-fauzi",
+      "name": "Arifah",
+      "fullName": "Arifah Choiri Fauzi",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024_(wide).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
       "id": "bahlil-lahadalia",
       "name": "Bahlil",
       "fullName": "Bahlil Lahadalia",
@@ -258,6 +829,354 @@
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Bahlil_Lahadalia,_Menteri_ESDM_(2024).jpg",
           "license": "Public domain",
           "author": "Kementerian Energi dan Sumber Daya Mineral RI",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "bima-arya-sugiarto",
+      "name": "Bima Arya",
+      "fullName": "Bima Arya Sugiarto",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/45/Wali_Kota_Bogor_Bima_Arya_Sugiarto_2020.jpg/1280px-Wali_Kota_Bogor_Bima_Arya_Sugiarto_2020.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Wali_Kota_Bogor_Bima_Arya_Sugiarto_2020.jpg",
+          "license": "Public domain",
+          "author": "Government of Bogor City, West Java, Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e6/Bima_Arya_portrait.jpg/1280px-Bima_Arya_portrait.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Bima_Arya_portrait.jpg",
+          "license": "Public domain",
+          "author": "Bogor City Government",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9f/Wamen_Bima_Arya_Sugiarto.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Wamen_Bima_Arya_Sugiarto.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Dalam Negeri Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/eb/Bima_Arya.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Bima_Arya.jpg",
+          "license": "Public domain",
+          "author": "Pemerintah Kota Bogor",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Wali_Kota_Bogor_Bima_Arya_2019.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Wali_Kota_Bogor_Bima_Arya_2019.jpg",
+          "license": "Public domain",
+          "author": "Government of Bogor city, Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/aa/Surat_Penetapan_Penghentian_Pembangunan_Masjid_Oleh_Wali_Kota_Bogor_Bima_Arya.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Surat_Penetapan_Penghentian_Pembangunan_Masjid_Oleh_Wali_Kota_Bogor_Bima_Arya.jpg",
+          "license": "Public domain",
+          "author": "Pemerintah Kota Bogor",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "brian-yuliarto",
+      "name": "Brian",
+      "fullName": "Brian Yuliarto",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/86/Brian_Yuliarto_in_Pandawa_Restaurant%2C_Sydney_November_2025.jpg/1280px-Brian_Yuliarto_in_Pandawa_Restaurant%2C_Sydney_November_2025.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Brian_Yuliarto_in_Pandawa_Restaurant,_Sydney_November_2025.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0e/Menteri_Pendidikan_Tinggi%2C_Sains%2C_dan_Teknologi_Republik_Indonesia_Brian_Yuliarto.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Pendidikan_Tinggi,_Sains,_dan_Teknologi_Republik_Indonesia_Brian_Yuliarto.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendidikan Tinggi, Sains, dan Teknologi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/54/Brian_Yuliarto%2C_Pelantikan_Menteri_Pendidikan_Tinggi%2C_Sains_dan_Teknologi_%282025%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Brian_Yuliarto,_Pelantikan_Menteri_Pendidikan_Tinggi,_Sains_dan_Teknologi_(2025).png",
+          "license": "CC BY 3.0",
+          "author": "Narasi Newsroom",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/56/Handover_of_Indonesia_Naik_Kelas_book_to_state_officials_at_the_Indonesia_Naik_Kelas_book_launching%2C_21_November_2025_47_%28Brian_Yuliarto%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Handover_of_Indonesia_Naik_Kelas_book_to_state_officials_at_the_Indonesia_Naik_Kelas_book_launching,_21_November_2025_47_(Brian_Yuliarto).jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/73/Brian_Yuliarto_at_the_Indonesia_Naik_Kelas_book_launching%2C_21_November_2025_01.jpg/1280px-Brian_Yuliarto_at_the_Indonesia_Naik_Kelas_book_launching%2C_21_November_2025_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Brian_Yuliarto_at_the_Indonesia_Naik_Kelas_book_launching,_21_November_2025_01.jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Brian_Yuliarto_at_the_Indonesia_Naik_Kelas_book_launching%2C_21_November_2025_02.jpg/1280px-Brian_Yuliarto_at_the_Indonesia_Naik_Kelas_book_launching%2C_21_November_2025_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Brian_Yuliarto_at_the_Indonesia_Naik_Kelas_book_launching,_21_November_2025_02.jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "budi-arie-setiadi",
+      "name": "Budi Arie",
+      "fullName": "Budi Arie Setiadi",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/03/Budi_arie_3.jpg/1280px-Budi_arie_3.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Budi_arie_3.jpg",
+          "license": "CC0",
+          "author": "Hariadhi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/0a/Budi_Arie_Setiadi%2C_Menteri_Komunikasi_dan_Informatika_%282023%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Budi_Arie_Setiadi,_Menteri_Komunikasi_dan_Informatika_(2023).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Komunikasi dan Informasi, Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/b/b2/Budi_Arie_2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Budi_Arie_2.jpg",
+          "license": "CC0",
+          "author": "Hariadhi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f8/Budi_Arie%2C_Menkominfo.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Budi_Arie,_Menkominfo.jpg",
+          "license": "CC0",
+          "author": "Hariadhi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c8/Budi_Arie_Setiadi_Dies_Natalis_FISIP_UI_2023_11_%28Budi_Arie_Setiadi%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Budi_Arie_Setiadi_Dies_Natalis_FISIP_UI_2023_11_(Budi_Arie_Setiadi).jpg",
+          "license": "CC0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0d/Budi_Arie_Setiadi_Dies_Natalis_FISIP_UI_2023_01.jpg/1280px-Budi_Arie_Setiadi_Dies_Natalis_FISIP_UI_2023_01.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Budi_Arie_Setiadi_Dies_Natalis_FISIP_UI_2023_01.jpg",
+          "license": "CC0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "budi-gunadi-sadikin",
+      "name": "Budi Gunadi",
+      "fullName": "Budi Gunadi Sadikin",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Menteri_Kesehatan_Indonesia_Budi_Gunadi_Sadikin.png/1280px-Menteri_Kesehatan_Indonesia_Budi_Gunadi_Sadikin.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Kesehatan_Indonesia_Budi_Gunadi_Sadikin.png",
+          "license": "Public domain",
+          "author": "Kementerian Kesehatan",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7b/Menkes_Budi_Gunadi_Sadikin.png/1280px-Menkes_Budi_Gunadi_Sadikin.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menkes_Budi_Gunadi_Sadikin.png",
+          "license": "Public domain",
+          "author": "Kementerian Kesehatan",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/2025_Budi_Gunadi_Sadikin_%28cropped%29.png/1280px-2025_Budi_Gunadi_Sadikin_%28cropped%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:2025_Budi_Gunadi_Sadikin_(cropped).png",
+          "license": "Public domain",
+          "author": "Kementerian Kesehatan",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Menteri_Buni_Gunadi_Sadikin%2C_Satryo_Brodjonegoro%2C_Yassierli%2C_Iftitah_Sulaiman_Suryanagara%2C_Budi_Arie_dan_Yandri_Susanto_usai_foto_formasi_anggota_Kabinet_Merah_Putih_%282024%29.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Buni_Gunadi_Sadikin,_Satryo_Brodjonegoro,_Yassierli,_Iftitah_Sulaiman_Suryanagara,_Budi_Arie_dan_Yandri_Susanto_usai_foto_formasi_anggota_Kabinet_Merah_Putih_(2024).jpg",
+          "license": "Public domain",
+          "author": "BPMI Sekretariat Presiden; Muchlis Jr.",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/5d/Budi_Gunadi_Sadikin%2C_Menteri_Kesehatan_%282025%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Budi_Gunadi_Sadikin,_Menteri_Kesehatan_(2025).png",
+          "license": "Public domain",
+          "author": "Kementerian Kesehatan Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fa/V20230905LJ-0138_%2853892255634%29.jpg/1280px-V20230905LJ-0138_%2853892255634%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:V20230905LJ-0138_(53892255634).jpg",
+          "license": "Public domain",
+          "author": "The White House",
           "focus": {
             "x": 0.5,
             "y": 0.35
@@ -356,6 +1275,154 @@
       "enabled": true
     },
     {
+      "id": "dito-ariotedjo",
+      "name": "Dito",
+      "fullName": "Dito Ariotedjo",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f2/Dito_Ariotedjo%2C_Angkatan_Muda_Pembaharuan_Indonesia.jpg/1280px-Dito_Ariotedjo%2C_Angkatan_Muda_Pembaharuan_Indonesia.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Dito_Ariotedjo,_Angkatan_Muda_Pembaharuan_Indonesia.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Ario Bimo Nandito Ariotedjo",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cc/Dito_Ariotedjo.jpg/1280px-Dito_Ariotedjo.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Dito_Ariotedjo.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Erlanggagm",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/ae/Dito_Ariotedjo_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Dito_Ariotedjo_(cropped).jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Erlanggagm",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/de/Puteri_Indonesia_2024_coronation_night_%282%29.jpg/1280px-Puteri_Indonesia_2024_coronation_night_%282%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Puteri_Indonesia_2024_coronation_night_(2).jpg",
+          "license": "Public domain",
+          "author": "Indonesian Presidential Advisory Council",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/79/Puteri_Indonesia_2024_coronation_night_%283%29.png/1280px-Puteri_Indonesia_2024_coronation_night_%283%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Puteri_Indonesia_2024_coronation_night_(3).png",
+          "license": "Public domain",
+          "author": "Indonesian Presidential Advisory Council",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "djamari-chaniago",
+      "name": "Djamari",
+      "fullName": "Djamari Chaniago",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/c7/Menko_Polkam_Djamari_Chainago.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menko_Polkam_Djamari_Chainago.png",
+          "license": "CC BY 4.0",
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/ca/Djamari_Chaniago%2C_Menteri_Koordinator_Bidang_Politik_dan_Keamanan_%282025%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Djamari_Chaniago,_Menteri_Koordinator_Bidang_Politik_dan_Keamanan_(2025).png",
+          "license": "Public domain",
+          "author": "Kementerian Koordinator Bidang Politik dan Keamanan Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8e/Djamari_Chaniago.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Djamari_Chaniago.jpg",
+          "license": "Public domain",
+          "author": "Brigade Infanteri Para Raider 18/Trisula",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/93/Djamari_Chaniago_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Djamari_Chaniago_(cropped).jpg",
+          "license": "Public domain",
+          "author": "Brigade Infanteri Para Raider 18/Trisula",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
       "id": "dudung-abdurachman",
       "name": "Dudung",
       "fullName": "Dudung Abdurachman",
@@ -432,6 +1499,180 @@
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kasad_Hadiri_Pemberangkatan_Satgas_BGC_Konga_XXXIX-E_dan_Kizi_Konga_XX-T_Monusco._Thumbnail.jpg",
           "license": "Public domain",
           "author": "TNI Angkatan Darat",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "erick-thohir",
+      "name": "Erick Thohir",
+      "fullName": "Erick Thohir",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d9/Pintu_Utama_Masjid_At-Thohir.jpg/1280px-Pintu_Utama_Masjid_At-Thohir.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pintu_Utama_Masjid_At-Thohir.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "RasyaAbhirama13",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/57/Erick_Thohir_Official_Portrait.png/1280px-Erick_Thohir_Official_Portrait.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Erick_Thohir_Official_Portrait.png",
+          "license": "Public domain",
+          "author": "Indonesian Government",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/5/58/Erick_Thohir_Official_Portrait_%28cropped%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Erick_Thohir_Official_Portrait_(cropped).png",
+          "license": "Public domain",
+          "author": "Indonesian Government",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/a/a3/Menpora_Erick_Thohir.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menpora_Erick_Thohir.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pemuda dan Olahraga",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/41/Prabowo_Subianto_shaking_hand_with_Marc_M%C3%A1rquez_%282025-09-30%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Prabowo_Subianto_shaking_hand_with_Marc_M%C3%A1rquez_(2025-09-30).jpg",
+          "license": "Public domain",
+          "author": "Bureau of Press, Media, and Information of the President's Secretariat/Laily Rachev",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/da/Erick_Thohir%2C_Menteri_BUMN_RI_%282024%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Erick_Thohir,_Menteri_BUMN_RI_(2024).png",
+          "license": "Public domain",
+          "author": "Kementerian Badan Usaha Milik Negara Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "fadli-zon",
+      "name": "Fadli Zon",
+      "fullName": "Fadli Zon",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/39/Africa_in_Today%27s_World_Where_is_Indonesia_Seminar%2C_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa%2C_July_2024_28.jpg/1280px-Africa_in_Today%27s_World_Where_is_Indonesia_Seminar%2C_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa%2C_July_2024_28.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Africa_in_Today%27s_World_Where_is_Indonesia_Seminar,_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa,_July_2024_28.jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ae/Africa_in_Today%27s_World_Where_is_Indonesia_Seminar%2C_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa%2C_July_2024_29.jpg/1280px-Africa_in_Today%27s_World_Where_is_Indonesia_Seminar%2C_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa%2C_July_2024_29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Africa_in_Today%27s_World_Where_is_Indonesia_Seminar,_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa,_July_2024_29.jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Africa_in_Today%27s_World_Where_is_Indonesia_Seminar%2C_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa%2C_July_2024_30.jpg/1280px-Africa_in_Today%27s_World_Where_is_Indonesia_Seminar%2C_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa%2C_July_2024_30.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Africa_in_Today%27s_World_Where_is_Indonesia_Seminar,_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa,_July_2024_30.jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b4/Fadli_Zon_at_the_University_of_Indonesia_Graduation_Ceremony%2C_13_September_2025_03.jpg/1280px-Fadli_Zon_at_the_University_of_Indonesia_Graduation_Ceremony%2C_13_September_2025_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Fadli_Zon_at_the_University_of_Indonesia_Graduation_Ceremony,_13_September_2025_03.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/71/Africa_in_Today%27s_World_Where_is_Indonesia_Seminar%2C_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa%2C_July_2024_42_%28Fadli_Zon%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Africa_in_Today%27s_World_Where_is_Indonesia_Seminar,_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa,_July_2024_42_(Fadli_Zon).jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/Africa_in_Today%27s_World_Where_is_Indonesia_Seminar%2C_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa%2C_July_2024_02.jpg/1280px-Africa_in_Today%27s_World_Where_is_Indonesia_Seminar%2C_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa%2C_July_2024_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Africa_in_Today%27s_World_Where_is_Indonesia_Seminar,_House_of_Representatives_of_Indonesia_and_Embassy_of_Indonesia_in_Addis_Ababa,_July_2024_02.jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael",
           "focus": {
             "x": 0.5,
             "y": 0.35
@@ -530,6 +1771,402 @@
       "enabled": true
     },
     {
+      "id": "luhut-binsar-pandjaitan",
+      "name": "Luhut",
+      "fullName": "Luhut Binsar Pandjaitan",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Luhut_Binsar_Panjaitan_Polkam.jpg/1280px-Luhut_Binsar_Panjaitan_Polkam.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Luhut_Binsar_Panjaitan_Polkam.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Koordinator Bidang Politik, Hukum, dan Keamanan Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4d/Luhut_Binsar_Panjaitan_Polkam_%28cropped%29.jpg/1280px-Luhut_Binsar_Panjaitan_Polkam_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Luhut_Binsar_Panjaitan_Polkam_(cropped).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Koordinator Bidang Politik, Hukum, dan Keamanan Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/ff/Luhut_Binsar_Pandjaitan%2C_Penasihat_Khusus_Presiden_%282024%29.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Luhut_Binsar_Pandjaitan,_Penasihat_Khusus_Presiden_(2024).jpeg",
+          "license": "Public domain",
+          "author": "Biro Pers, Media dan Informasi Sekretariat President - Kementerian Sekretariat Negara",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/91/Indonesian_Coordinating_Minister_Luhut_Binsar_Pandjaitan_in_Washington%2C_D.C._on_4_August_2023_-_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Indonesian_Coordinating_Minister_Luhut_Binsar_Pandjaitan_in_Washington,_D.C._on_4_August_2023_-_(cropped).jpg",
+          "license": "Public domain",
+          "author": "U.S. Department of State",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6f/Luhut_Binsar_Pandjaitan%2C_May_2021.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Luhut_Binsar_Pandjaitan,_May_2021.jpg",
+          "license": "CC0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/SD_meets_with_Indonesia%E2%80%99s_Coordinating_Minister_for_Maritime_Affairs_170607-D-SV709-089_%2834355865163%29.jpg/1280px-SD_meets_with_Indonesia%E2%80%99s_Coordinating_Minister_for_Maritime_Affairs_170607-D-SV709-089_%2834355865163%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:SD_meets_with_Indonesia%E2%80%99s_Coordinating_Minister_for_Maritime_Affairs_170607-D-SV709-089_(34355865163).jpg",
+          "license": "CC BY 2.0",
+          "author": "Jim Mattis",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "maman-abdurrahman",
+      "name": "Maman",
+      "fullName": "Maman Abdurrahman",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c4/Anggota_DPR_Maman_Abdurrahman.jpg/1280px-Anggota_DPR_Maman_Abdurrahman.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Anggota_DPR_Maman_Abdurrahman.jpg",
+          "license": "Public domain",
+          "author": "KPU (General Election Commission)",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/ec/Anggota_DPR_Maman_Abdurrahman_%28cropped%29.jpg/1280px-Anggota_DPR_Maman_Abdurrahman_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Anggota_DPR_Maman_Abdurrahman_(cropped).jpg",
+          "license": "Public domain",
+          "author": "KPU (General Election Commission)",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024_(wide).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "meutya-hafid",
+      "name": "Meutya",
+      "fullName": "Meutya Hafid",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8b/Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_02.jpg/1280px-Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_02.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5a/Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_03.jpg/1280px-Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_03.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_03.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_05.jpg/1280px-Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_05.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_05.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a1/Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_06.jpg/1280px-Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_06.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3f/Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_08.jpg/1280px-Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_08.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_08.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6a/Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_10.jpg/1280px-Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_10.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Meutya_Hafid_at_the_Anugerah_Media_Humas_2025_10.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "mochamad-irfan-yusuf",
+      "name": "Gus Irfan",
+      "fullName": "Mochamad Irfan Yusuf",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ad/Menteri_Haji_dan_Umrah_Indonesia_Mochamad_Irfan_Yusuf_Hasyim.jpg/1280px-Menteri_Haji_dan_Umrah_Indonesia_Mochamad_Irfan_Yusuf_Hasyim.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Haji_dan_Umrah_Indonesia_Mochamad_Irfan_Yusuf_Hasyim.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Haji dan Umrah",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b6/Mochamad_Irfan_Yusuf%2C_Menteri_Haji_dan_Umrah_%282025%29.jpg/1280px-Mochamad_Irfan_Yusuf%2C_Menteri_Haji_dan_Umrah_%282025%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Mochamad_Irfan_Yusuf,_Menteri_Haji_dan_Umrah_(2025).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Haji dan Umrah Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/84/KPU_Mochamad_Irfan_Yusuf.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:KPU_Mochamad_Irfan_Yusuf.jpg",
+          "license": "Public domain",
+          "author": "Komisi Pemilihan Umum",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/8b/Pelantikan_Menteri_Perombakan_Kabinet_Merah_Putih_%28September_2025%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pelantikan_Menteri_Perombakan_Kabinet_Merah_Putih_(September_2025).jpg",
+          "license": "Public domain",
+          "author": "Sekretariat Presiden Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "muhammad-iftitah-sulaiman-sury",
+      "name": "Iftitah",
+      "fullName": "Muhammad Iftitah Sulaiman Suryanagara",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/4a/Iftitah_Sulaiman_Suryanagara%2C_Menteri_Transmigrasi_Indonesia.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Iftitah_Sulaiman_Suryanagara,_Menteri_Transmigrasi_Indonesia.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Transmigrasi Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/75/Iftitah_Sulaiman_Suryanagara%2C_Menteri_Transmigrasi_Indonesia_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Iftitah_Sulaiman_Suryanagara,_Menteri_Transmigrasi_Indonesia_(cropped).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Transmigrasi Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024_(wide).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/28/Serah_Terima_Menteri_Transmigrasi_Iftitah_Sulaiman_Suryanagara_oleh_Plt._MenDes_PDTT_Muhadjir_Effendy_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Serah_Terima_Menteri_Transmigrasi_Iftitah_Sulaiman_Suryanagara_oleh_Plt._MenDes_PDTT_Muhadjir_Effendy_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Desa, Pembangunan Tertinggal dan Transmigrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
       "id": "muhammad-tito-karnavian",
       "name": "Tito Karnavian",
       "fullName": "Muhammad Tito Karnavian",
@@ -606,6 +2243,315 @@
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kapolda_Papua_Tito_Karnavian.jpg",
           "license": "Public domain",
           "author": "Polda Papua",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "nasaruddin-umar",
+      "name": "Nasaruddin",
+      "fullName": "Nasaruddin Umar",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/48/Menteri_Agama_RI_Nasaruddin_Umar.jpg/1280px-Menteri_Agama_RI_Nasaruddin_Umar.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Agama_RI_Nasaruddin_Umar.jpg",
+          "license": "Public domain",
+          "author": "Ministry of Religious Affairs (Indonesia)",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fa/Nasaruddin_Umar%2C_Imam_Besar_Masjid_Istiqlal_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nasaruddin_Umar,_Imam_Besar_Masjid_Istiqlal_(2024).jpg",
+          "license": "Public domain",
+          "author": "Badan Pengurus Masjid Istiqlal",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/77/Menteri_Agama_RI_Nasaruddin_Umar_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Agama_RI_Nasaruddin_Umar_(cropped).jpg",
+          "license": "Public domain",
+          "author": "Ministry of Religious Affairs (Indonesia)",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/69/Nasaruddin_Umar%2C_Menteri_Agama_Indonesia_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nasaruddin_Umar,_Menteri_Agama_Indonesia_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Agama Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1a/Attendees_of_the_International_Conference_on_Humanitarian_Islam_2024_14.jpg/1280px-Attendees_of_the_International_Conference_on_Humanitarian_Islam_2024_14.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Attendees_of_the_International_Conference_on_Humanitarian_Islam_2024_14.jpg",
+          "license": "CC0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/11/Nasaruddin_Umar%2C_Quraish_Shihab%2C_Husein_Ja%27far_Jan_2025_%285258%29.jpg/1280px-Nasaruddin_Umar%2C_Quraish_Shihab%2C_Husein_Ja%27far_Jan_2025_%285258%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nasaruddin_Umar,_Quraish_Shihab,_Husein_Ja%27far_Jan_2025_(5258).jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Thoriq1024",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "natalius-pigai",
+      "name": "Natalius Pigai",
+      "fullName": "Natalius Pigai",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d0/Natalius_Pigai_-_Minister_of_Human_Rights.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Natalius_Pigai_-_Minister_of_Human_Rights.png",
+          "license": "Public domain",
+          "author": "Indonesian Ministry of Human Rights",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024_(wide).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "nezar-patria",
+      "name": "Nezar Patria",
+      "fullName": "Nezar Patria",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Nezar_Patria_at_the_Anugerah_Media_Humas_2025_06.jpg/1280px-Nezar_Patria_at_the_Anugerah_Media_Humas_2025_06.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nezar_Patria_at_the_Anugerah_Media_Humas_2025_06.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/62/Nezar_Patria_-_Komisaris_Independen_PT._Pegadaian_%282022%29.jpg/1280px-Nezar_Patria_-_Komisaris_Independen_PT._Pegadaian_%282022%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nezar_Patria_-_Komisaris_Independen_PT._Pegadaian_(2022).jpg",
+          "license": "Public domain",
+          "author": "PT. Pegadaian",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/2a/Nezar_Patria.jpg/1280px-Nezar_Patria.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nezar_Patria.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Nurul Dani",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8a/Nezar_Patria_at_the_Anugerah_Media_Humas_2025_04.jpg/1280px-Nezar_Patria_at_the_Anugerah_Media_Humas_2025_04.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nezar_Patria_at_the_Anugerah_Media_Humas_2025_04.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0e/Nezar_Patria_at_the_Anugerah_Media_Humas_2025_02.jpg/1280px-Nezar_Patria_at_the_Anugerah_Media_Humas_2025_02.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nezar_Patria_at_the_Anugerah_Media_Humas_2025_02.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Nezar_Patria.png/1280px-Nezar_Patria.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nezar_Patria.png",
+          "license": "Public domain",
+          "author": "Kementerian Badan Usaha Milik Negara Republik Indonesia.",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "nusron-wahid",
+      "name": "Nusron",
+      "fullName": "Nusron Wahid",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Nusron_Wahid.jpg/1280px-Nusron_Wahid.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Nusron_Wahid.jpg",
+          "license": "Public domain",
+          "author": "DPR RI",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/0/03/Menteri_Agraria_dan_Tata_Ruang_Indonesia_Nusron_Wahid.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Agraria_dan_Tata_Ruang_Indonesia_Nusron_Wahid.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Agraria dan Tata Ruang/ Badan Pertanahan Nasional Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024_(wide).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
           "focus": {
             "x": 0.5,
             "y": 0.35
@@ -878,6 +2824,711 @@
       "enabled": true
     },
     {
+      "id": "purbaya-yudhi-sadewa",
+      "name": "Purbaya",
+      "fullName": "Purbaya Yudhi Sadewa",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/36/Purbaya_Yudhi_Sadewa%2C_Menteri_Keuangan_%282025%29.jpg/1280px-Purbaya_Yudhi_Sadewa%2C_Menteri_Keuangan_%282025%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Purbaya_Yudhi_Sadewa,_Menteri_Keuangan_(2025).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Keuangan Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/c/cc/Purbaya_Yudhi_Sadewa%2C_Menteri_Keuangan_%282026%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Purbaya_Yudhi_Sadewa,_Menteri_Keuangan_(2026).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Keuangan Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/25/Ketua_DK_LPS_St_Regis.jpg/1280px-Ketua_DK_LPS_St_Regis.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Ketua_DK_LPS_St_Regis.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Fahdi Kasmiri",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9c/Purbaya_Yudhi_KSSK.jpg/1280px-Purbaya_Yudhi_KSSK.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Purbaya_Yudhi_KSSK.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Fahdi Kasmiri",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/74/Purbaya_in_the_University_of_Indonesia_February_2026_001.jpg/1280px-Purbaya_in_the_University_of_Indonesia_February_2026_001.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Purbaya_in_the_University_of_Indonesia_February_2026_001.jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael Asido",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c7/Purbaya_in_the_University_of_Indonesia_February_2026_002.jpg/1280px-Purbaya_in_the_University_of_Indonesia_February_2026_002.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Purbaya_in_the_University_of_Indonesia_February_2026_002.jpg",
+          "license": "CC BY 4.0",
+          "author": "Jeromi Mikhael Asido",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "raja-juli-antoni",
+      "name": "Raja Juli",
+      "fullName": "Raja Juli Antoni",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/02/Rajajuliantoni.jpg/1280px-Rajajuliantoni.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Rajajuliantoni.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Efwijaya",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/aa/Menteri_Kehutanan_Raja_Juli_Antoni.png/1280px-Menteri_Kehutanan_Raja_Juli_Antoni.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Kehutanan_Raja_Juli_Antoni.png",
+          "license": "CC0",
+          "author": "Efwijaya",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c8/-DubesKamala_Bertemu_Menteri_Kehutanan_Indonesia_Raja_Juli_Antoni_%2854213578951%29.jpg/1280px--DubesKamala_Bertemu_Menteri_Kehutanan_Indonesia_Raja_Juli_Antoni_%2854213578951%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:-DubesKamala_Bertemu_Menteri_Kehutanan_Indonesia_Raja_Juli_Antoni_(54213578951).jpg",
+          "license": "Public domain",
+          "author": "U.S. Embassy Jakarta, Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/69/-DubesKamala_Bertemu_Menteri_Kehutanan_Indonesia_Raja_Juli_Antoni_%2854213578826%29.jpg/1280px--DubesKamala_Bertemu_Menteri_Kehutanan_Indonesia_Raja_Juli_Antoni_%2854213578826%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:-DubesKamala_Bertemu_Menteri_Kehutanan_Indonesia_Raja_Juli_Antoni_(54213578826).jpg",
+          "license": "Public domain",
+          "author": "U.S. Embassy Jakarta, Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "rini-widyantini",
+      "name": "Rini",
+      "fullName": "Rini Widyantini",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/8/80/Rini_Widyantini%2C_Menteri_PAN-RB_%282024%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Rini_Widyantini,_Menteri_PAN-RB_(2024).png",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/35/Menpan-RB_%26_Wamenpan-RB_serta_mantan_Menpan-RB_saat_serah_terima_jabatan_menteri_%282024%29.jpg/1280px-Menpan-RB_%26_Wamenpan-RB_serta_mantan_Menpan-RB_saat_serah_terima_jabatan_menteri_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menpan-RB_%26_Wamenpan-RB_serta_mantan_Menpan-RB_saat_serah_terima_jabatan_menteri_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara Repbulik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Menpan_RB_Rini_Widyantini_dan_Abdullah_Azwar_Anas_saat_serah_terima_jabatan_%282024%29.jpg/1280px-Menpan_RB_Rini_Widyantini_dan_Abdullah_Azwar_Anas_saat_serah_terima_jabatan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menpan_RB_Rini_Widyantini_dan_Abdullah_Azwar_Anas_saat_serah_terima_jabatan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara Repbulik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024_(wide).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "rosan-perkasa-roeslani",
+      "name": "Rosan",
+      "fullName": "Rosan Perkasa Roeslani",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ca/Rosan_Roeslani%2C_Wakil_Menteri_BUMN_%282023%29.jpg/1280px-Rosan_Roeslani%2C_Wakil_Menteri_BUMN_%282023%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Rosan_Roeslani,_Wakil_Menteri_BUMN_(2023).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Badan Usaha Milik Negara, Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/04/Menteri_Investasi_dan_Hilirisasi_Indonesia_Rosan_Perkasa_Roeslani.webp/1280px-Menteri_Investasi_dan_Hilirisasi_Indonesia_Rosan_Perkasa_Roeslani.webp?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Investasi_dan_Hilirisasi_Indonesia_Rosan_Perkasa_Roeslani.webp",
+          "license": "Public domain",
+          "author": "Kementerian Investasi dan Hilirisasi/ Badan Koordinasi Penanaman Modal Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1f/Rosan_Perkasa_Roeslani%2C_Menteri_Investasi_dan_Hilirisasi_%282024%29.webp/1280px-Rosan_Perkasa_Roeslani%2C_Menteri_Investasi_dan_Hilirisasi_%282024%29.webp?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Rosan_Perkasa_Roeslani,_Menteri_Investasi_dan_Hilirisasi_(2024).webp",
+          "license": "Public domain",
+          "author": "Kementerian Investasi dan Hilirisasi Republik Indonesia/ Badan Koordinasi Penanaman Modal",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/63/Rosan_Roeslani_%28cropped%29.jpg/1280px-Rosan_Roeslani_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Rosan_Roeslani_(cropped).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Luar Negeri",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/59/Rosan_Perkasa_Roeslani_portrait.png/1280px-Rosan_Perkasa_Roeslani_portrait.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Rosan_Perkasa_Roeslani_portrait.png",
+          "license": "Public domain",
+          "author": "Indonesian Ministry of Investment",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Pertemuan_Pimpinan_Kementerian_Investasi_dan_Hilirisasi_%282024%29.jpg/1280px-Pertemuan_Pimpinan_Kementerian_Investasi_dan_Hilirisasi_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pertemuan_Pimpinan_Kementerian_Investasi_dan_Hilirisasi_(2024).jpg",
+          "license": "Public domain",
+          "author": "Badan Koordinasi Penanaman Modal",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "saifullah-yusuf",
+      "name": "Gus Ipul",
+      "fullName": "Saifullah Yusuf",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Attendees_of_the_International_Conference_on_Humanitarian_Islam_2024_17.jpg/1280px-Attendees_of_the_International_Conference_on_Humanitarian_Islam_2024_17.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Attendees_of_the_International_Conference_on_Humanitarian_Islam_2024_17.jpg",
+          "license": "CC0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/e7/Wali_Kota_Pasuruan_Saifullah_Yusuf.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Wali_Kota_Pasuruan_Saifullah_Yusuf.png",
+          "license": "Public domain",
+          "author": "Government of Pasuruan city, East Java, Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/6/60/Presiden_Prabowo_Beri_Semangat_Warga_Sumbar_Terdampak_Bencana.webp/1280px-Presiden_Prabowo_Beri_Semangat_Warga_Sumbar_Terdampak_Bencana.webp?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Presiden_Prabowo_Beri_Semangat_Warga_Sumbar_Terdampak_Bencana.webp",
+          "license": "Public domain",
+          "author": "National Agency for Disaster Countermeasure of Republic of Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024_(wide).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "sakti-wahyu-trenggono",
+      "name": "Trenggono",
+      "fullName": "Sakti Wahyu Trenggono",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "ultra_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/1b/Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_dan_Perikanan.jpg/1280px-Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_dan_Perikanan.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sakti_Wahyu_Trenggono,_Menteri_Kelautan_dan_Perikanan.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Kelautan dan Perikanan Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fb/Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_dan_Perikanan_%28cropped%29.jpg/1280px-Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_dan_Perikanan_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sakti_Wahyu_Trenggono,_Menteri_Kelautan_dan_Perikanan_(cropped).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Kelautan dan Perikanan Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/fe/Foto_Resmi_Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_%26_Perikanan_%282022%29.jpg/1280px-Foto_Resmi_Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_%26_Perikanan_%282022%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Foto_Resmi_Sakti_Wahyu_Trenggono,_Menteri_Kelautan_%26_Perikanan_(2022).jpg",
+          "license": "Public domain",
+          "author": "Ministry of Marine and Fishery, Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/f/f6/Foto_Resmi_Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_%26_Perikanan_%282022%29_%28cropped%29.jpg/1280px-Foto_Resmi_Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_%26_Perikanan_%282022%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Foto_Resmi_Sakti_Wahyu_Trenggono,_Menteri_Kelautan_%26_Perikanan_(2022)_(cropped).jpg",
+          "license": "Public domain",
+          "author": "Ministry of Marine and Fishery, Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/28/Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_dan_Perikanan_%282024%29.png/1280px-Sakti_Wahyu_Trenggono%2C_Menteri_Kelautan_dan_Perikanan_%282024%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sakti_Wahyu_Trenggono,_Menteri_Kelautan_dan_Perikanan_(2024).png",
+          "license": "Public domain",
+          "author": "Ministry of Marine and Fishery of the Republic of Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/62/Wamenhan-Sakti-Wahyu-Trenggono.jpeg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Wamenhan-Sakti-Wahyu-Trenggono.jpeg",
+          "license": "Public domain",
+          "author": "Ministry of Defence of the Republic of Indonesia (Kementerian Pertahanan Republik Indonesia)",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "sanitiar-burhanuddin",
+      "name": "Burhanuddin",
+      "fullName": "Sanitiar Burhanuddin",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/2d/ST_Burhanudin%2C_Jaksa_Agung_%282024%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:ST_Burhanudin,_Jaksa_Agung_(2024).png",
+          "license": "Public domain",
+          "author": "Biro Pers, Media, Informasi Sekretariat Presiden Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d4/JAKSAAGUNG%2CSanitiar_Burhanuddin.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:JAKSAAGUNG,Sanitiar_Burhanuddin.jpg",
+          "license": "Public domain",
+          "author": "Kejaksaan Agung Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/e/ec/Pengukuhan_Guru_Besar_Universitas_Gadjah_Mada_Prof._Dr._Zainal_Arifin_Mochtar_02.webp?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pengukuhan_Guru_Besar_Universitas_Gadjah_Mada_Prof._Dr._Zainal_Arifin_Mochtar_02.webp",
+          "license": "Public domain",
+          "author": "High Prosecutor's Office of the Special Region of Yogyakarta, Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "satryo-brodjonegoro",
+      "name": "Satryo",
+      "fullName": "Satryo Brodjonegoro",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Attendees_of_the_International_Conference_on_Humanitarian_Islam_2024_17.jpg/1280px-Attendees_of_the_International_Conference_on_Humanitarian_Islam_2024_17.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Attendees_of_the_International_Conference_on_Humanitarian_Islam_2024_17.jpg",
+          "license": "CC0",
+          "author": "Jeromi Mikhael",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8f/-DubesKamala_Bertemu_Menteri_Pendidikan_Tinggi%2C_Ilmu_Pengetahuan%2C_dan_Teknologi%2C_Satryo_Soemantri_Brodjonegoro_%2854215575036%29.jpg/1280px--DubesKamala_Bertemu_Menteri_Pendidikan_Tinggi%2C_Ilmu_Pengetahuan%2C_dan_Teknologi%2C_Satryo_Soemantri_Brodjonegoro_%2854215575036%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:-DubesKamala_Bertemu_Menteri_Pendidikan_Tinggi,_Ilmu_Pengetahuan,_dan_Teknologi,_Satryo_Soemantri_Brodjonegoro_(54215575036).jpg",
+          "license": "Public domain",
+          "author": "U.S. Embassy Jakarta, Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/db/Menteri_Buni_Gunadi_Sadikin%2C_Satryo_Brodjonegoro%2C_Yassierli%2C_Iftitah_Sulaiman_Suryanagara%2C_Budi_Arie_dan_Yandri_Susanto_usai_foto_formasi_anggota_Kabinet_Merah_Putih_%282024%29.jpg/1280px-thumbnail.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Buni_Gunadi_Sadikin,_Satryo_Brodjonegoro,_Yassierli,_Iftitah_Sulaiman_Suryanagara,_Budi_Arie_dan_Yandri_Susanto_usai_foto_formasi_anggota_Kabinet_Merah_Putih_(2024).jpg",
+          "license": "Public domain",
+          "author": "BPMI Sekretariat Presiden; Muchlis Jr.",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/d/d5/Menteri_Pendidikan_Tinggi%2C_Sains%2C_dan_Teknologi_Republik_Indonesia_Satryo_Soemantri_Brodjonegoro.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Pendidikan_Tinggi,_Sains,_dan_Teknologi_Republik_Indonesia_Satryo_Soemantri_Brodjonegoro.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendidikan Tinggi, Sains, dan Teknologi Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/2/23/Satryo_Soemantri_Brodjonegoro%2C_Menteri_Pendidikan_Tinggi%2C_Sains_dan_Teknologi_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Satryo_Soemantri_Brodjonegoro,_Menteri_Pendidikan_Tinggi,_Sains_dan_Teknologi_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendidikan dan Kebudayaan",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "sri-mulyani-indrawati",
+      "name": "Sri Mulyani",
+      "fullName": "Sri Mulyani Indrawati",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/43/Fourth_Global_Review_of_Aid_for_Trade_1850_%289240711510%29.jpg/1280px-Fourth_Global_Review_of_Aid_for_Trade_1850_%289240711510%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Fourth_Global_Review_of_Aid_for_Trade_1850_(9240711510).jpg",
+          "license": "CC BY-SA 2.0",
+          "author": "World Trade Organization from Switzerland",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/cd/Indrawati%2C_Sri_Mulyani_%28IMF%29.jpg/1280px-Indrawati%2C_Sri_Mulyani_%28IMF%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Indrawati,_Sri_Mulyani_(IMF).jpg",
+          "license": "Public domain",
+          "author": "the International Monetary Fund",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/7b/Menteri_Keuangan_Republik_Indonesia_Sri_Mulyani_Indrawati.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Menteri_Keuangan_Republik_Indonesia_Sri_Mulyani_Indrawati.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Keuangan Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/7/79/Sri_Mulyani_Indrawati%2C_Menteri_Keuangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sri_Mulyani_Indrawati,_Menteri_Keuangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Keuangan Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/3/39/Finance_Ministry_Sri_Mulyani_Indrawati_2016.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Finance_Ministry_Sri_Mulyani_Indrawati_2016.jpg",
+          "license": "Public domain",
+          "author": "Finance Ministry, Republic of Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/6/6a/Sri_Mulyani_usai_dilantik_sebagai_Menteri_Keuangan_di_Kabinet_Merah_Putih_%282024%29.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sri_Mulyani_usai_dilantik_sebagai_Menteri_Keuangan_di_Kabinet_Merah_Putih_(2024).png",
+          "license": "Public domain",
+          "author": "Minister of Finance of Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
       "id": "suahasil-nazara",
       "name": "Suahasil",
       "fullName": "Suahasil Nazara",
@@ -1041,6 +3692,254 @@
           "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sugiono_and_Mahmoud_Abbas_at_the_2024_BRICS_Summit_-_02.jpg",
           "license": "Public domain",
           "author": "Ministry of Foreign Affairs of the Republic of Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "teuku-riefky-harsya",
+      "name": "Riefky",
+      "fullName": "Teuku Riefky Harsya",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d8/Sandiaga_Uno_dan_Teuku_Riefky_Harsya_saat_serah_terima_jabatan_menteri_%282024%29.jpg/1280px-Sandiaga_Uno_dan_Teuku_Riefky_Harsya_saat_serah_terima_jabatan_menteri_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sandiaga_Uno_dan_Teuku_Riefky_Harsya_saat_serah_terima_jabatan_menteri_(2024).jpg",
+          "license": "Public domain",
+          "author": "Menteri/ Kepala Badan Ekonomi Kreatif",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/05/Teuku_Riefky_Harsya_saat_serah_terima_jabatan_menteri_%282024%29.jpg/1280px-Teuku_Riefky_Harsya_saat_serah_terima_jabatan_menteri_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Teuku_Riefky_Harsya_saat_serah_terima_jabatan_menteri_(2024).jpg",
+          "license": "Public domain",
+          "author": "Menteri/ Kepala Badan Ekonomi Kreatif",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f0/Teuku_Riefky.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Teuku_Riefky.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": "Dudirmd",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/9/9d/Sandiaga_Uno_dan_Teuku_Riefky_Harsya_saat_serah_terima_jabatan_menteri_%282024%29_%28cropped%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Sandiaga_Uno_dan_Teuku_Riefky_Harsya_saat_serah_terima_jabatan_menteri_(2024)_(cropped).jpg",
+          "license": "Public domain",
+          "author": "Menteri/ Kepala Badan Ekonomi Kreatif",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/22/Teuku_Riefky_Harsya.jpg/1280px-Teuku_Riefky_Harsya.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Teuku_Riefky_Harsya.jpg",
+          "license": "CC BY-SA 4.0",
+          "author": null,
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "todotua-pasaribu",
+      "name": "Todotua",
+      "fullName": "Todotua Pasaribu",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/8d/Pertemuan_Pimpinan_Kementerian_Investasi_dan_Hilirisasi_%282024%29.jpg/1280px-Pertemuan_Pimpinan_Kementerian_Investasi_dan_Hilirisasi_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pertemuan_Pimpinan_Kementerian_Investasi_dan_Hilirisasi_(2024).jpg",
+          "license": "Public domain",
+          "author": "Badan Koordinasi Penanaman Modal",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/Todotua_Pasaribu%2C_Wakil_Menteri_Investasi_dan_Hilirisasi_%282024%29.webp/1280px-Todotua_Pasaribu%2C_Wakil_Menteri_Investasi_dan_Hilirisasi_%282024%29.webp?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Todotua_Pasaribu,_Wakil_Menteri_Investasi_dan_Hilirisasi_(2024).webp",
+          "license": "Public domain",
+          "author": "Kementerian Investasi dan Hilirisasi Republik Indonesia/ Badan Koordinasi Penanaman Modal",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/f9/Todotua_Pasaribu%2C_Wakil_Menteri_Investasi_dan_Hilirisasi_-_Wakil_Kepala_BKPM_%282024%29.webp?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Todotua_Pasaribu,_Wakil_Menteri_Investasi_dan_Hilirisasi_-_Wakil_Kepala_BKPM_(2024).webp",
+          "license": "Public domain",
+          "author": "Badan Koordinasi Penanaman Modal",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/4/47/Todotua_Pasaribu%2C_Wakil_Menteri_Investasi_dan_Hilirisasi_%282024%29_%28cropped%29.webp?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Todotua_Pasaribu,_Wakil_Menteri_Investasi_dan_Hilirisasi_(2024)_(cropped).webp",
+          "license": "Public domain",
+          "author": "Kementerian Investasi dan Hilirisasi Republik Indonesia/ Badan Koordinasi Penanaman Modal",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a0/Foto_Formasi_Wakil_Menteri_Kabinet_Merah_Putih_%282024%29.jpg/1280px-Foto_Formasi_Wakil_Menteri_Kabinet_Merah_Putih_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Foto_Formasi_Wakil_Menteri_Kabinet_Merah_Putih_(2024).jpg",
+          "license": "Public domain",
+          "author": "Biro Pers, Media dan Informasi Sekretariat Presiden Republik Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        }
+      ],
+      "sortOrder": 0,
+      "enabled": true
+    },
+    {
+      "id": "widiyanti-putri-wardhana",
+      "name": "Widiyanti",
+      "fullName": "Widiyanti Putri Wardhana",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "super_rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0c/Foto_Profil_WIdiyanti_Putri_Wardhana.jpg/1280px-Foto_Profil_WIdiyanti_Putri_Wardhana.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Foto_Profil_WIdiyanti_Putri_Wardhana.jpg",
+          "license": "CC0",
+          "author": "JuniorBulu",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 2,
+          "rarity": "rare",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/f/fb/Widiyanti_Putri%2C_Menteri_Pariwisata_%282025%29.webp?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Widiyanti_Putri,_Menteri_Pariwisata_(2025).webp",
+          "license": "Public domain",
+          "author": "Ministry of Tourism of the Republic of Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 3,
+          "rarity": "rare",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/3/3e/Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024.jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Negara dan Reformasi Birokrasi Indonesia",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 4,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/c/c6/Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg/1280px-Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_%282024%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Pimpinan_dan_Anggota_Kabinet_Merah_Putih_beserta_pasangan_(2024).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 5,
+          "rarity": "common",
+          "imageUrl": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/72/Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg/1280px-Kabinet_Merah_Putih_Prabowo-Gibran_2024_%28wide%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Kabinet_Merah_Putih_Prabowo-Gibran_2024_(wide).jpg",
+          "license": "Public domain",
+          "author": "Kementerian Pendayagunaan Aparatur Sipil Negara dan Reformasi Birokrasi",
+          "focus": {
+            "x": 0.5,
+            "y": 0.35
+          },
+          "enabled": true
+        },
+        {
+          "photoNo": 6,
+          "rarity": "common",
+          "imageUrl": "https://upload.wikimedia.org/wikipedia/commons/1/13/Widiyanti_Putri_Wardhana_welcomes_Ketut_Permata_Juliastrid_in_Jakarta.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+          "sourcePageUrl": "https://commons.wikimedia.org/wiki/File:Widiyanti_Putri_Wardhana_welcomes_Ketut_Permata_Juliastrid_in_Jakarta.jpg",
+          "license": "Public domain",
+          "author": "The Ministry of Tourism",
           "focus": {
             "x": 0.5,
             "y": 0.35

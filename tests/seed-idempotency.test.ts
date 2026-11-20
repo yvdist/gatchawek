@@ -100,7 +100,7 @@ describe("seed idempotency", () => {
     );
     const files2 = (await readdir(path.join(fixture, "public", "cards"))).sort();
 
-    expect(counts1).toEqual({ pools: 2, groups: 5, members: 40, cards: 129, groups_live: 2, members_live: 32, cards_live: 108 });
+    expect(counts1).toEqual({ pools: 2, groups: 5, members: 76, cards: 129, groups_live: 2, members_live: 68, cards_live: 108 });
     expect(counts2).toEqual(counts1);
     expect(lock2).toBe(lock1);
     expect(files2).toEqual(files1);
