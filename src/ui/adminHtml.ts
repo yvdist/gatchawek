@@ -49,28 +49,38 @@ export function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
+const ADMIN_CSS = `:root{color-scheme:dark;--bg:#0b0e14;--surface:#12161f;--surface-2:#181e2a;--border:#232b3a;--text:#e8ecf3;--muted:#9aa4b5;--accent:#3b82f6;--accent-ink:#0b1220;--success:#22c55e;--warning:#f59e0b;--error:#ef4444;--radius:.75rem;--r-common:#9ca3af;--r-rare:#a855f7;--r-super:#f59e0b;--r-ultra:#ec4899;--r-holo:#ffd700;--r-secret:#22d3ee}*,*::before,*::after{box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}h1,h2,h3{letter-spacing:-.02em}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.topbar{background:var(--surface);border-bottom:1px solid var(--border)}.topbar-inner{max-width:1120px;margin:0 auto;padding:.7rem 20px;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.brand{display:inline-flex;align-items:center;gap:.45rem;font-weight:700;color:var(--text);margin-right:.5rem}.brand svg{width:16px;height:16px}.navlink{display:inline-block;padding:.4rem .8rem;border-radius:999px;color:var(--muted);text-decoration:none;font-size:.9rem}.navlink:hover{color:var(--text);background:rgba(59,130,246,.08)}.navlink.is-active{background:rgba(59,130,246,.14);color:#fff}.topbar .sp{flex:1}.wrap{max-width:1120px;margin:0 auto;padding:24px 20px 64px}.foot{color:var(--muted);font-size:12px;max-width:1120px;margin:0 auto;padding:0 20px 32px}.pagehead{margin:0 0 1.1rem}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.pagehead h1{font-size:clamp(24px,3vw,32px);margin:.25rem 0 .5rem}.lede{color:var(--muted);max-width:65ch;margin:.25rem 0 0}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem}.card h2,.card h3{margin-top:0}.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}table{width:100%;border-collapse:collapse;margin-bottom:0}th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);position:sticky;top:0;background:var(--surface);text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--border)}td{padding:.55rem .7rem;border-bottom:1px solid var(--border);vertical-align:middle}tr:last-child td{border-bottom:none}table img{width:48px;height:48px;border-radius:.5rem;object-fit:cover}.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .55rem;border-radius:999px;font-size:.78rem;border:1px solid var(--border);background:var(--surface-2);color:var(--text);white-space:nowrap}.badge i{width:8px;height:8px;border-radius:50%;background:var(--r-common);display:inline-block}.b-empty{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4)}.b-remote{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.4)}.b-static{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4)}.b-off{background:var(--surface-2);color:var(--muted)}.r-common i{background:var(--r-common)}.r-rare i{background:var(--r-rare)}.r-super_rare i{background:var(--r-super)}.r-ultra_rare i{background:var(--r-ultra)}.r-holo i{background:var(--r-holo)}.r-secret i{background:var(--r-secret)}.thumb-broken{border:2px solid var(--error)}.btn{display:inline-block;background:var(--accent);color:#fff;border:1px solid transparent;border-radius:.6rem;padding:.55rem 1rem;font-weight:600;text-decoration:none;cursor:pointer;transition:transform .12s ease,background .12s ease}.btn:hover{background:#2f6fed;color:#fff;transform:translateY(-1px)}.btn:active{transform:translateY(0)}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}.btn-ghost{display:inline-block;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:.6rem;padding:.55rem 1rem;text-decoration:none;cursor:pointer}.btn-ghost:hover{border-color:var(--accent);color:#fff}.btn-danger-outline{display:inline-block;background:transparent;color:var(--error);border:1px solid var(--error);border-radius:.6rem;padding:.55rem 1rem;cursor:pointer}.alert{padding:.6rem .8rem;border-radius:.6rem;border:1px solid var(--border);background:var(--surface-2)}.alert.is-ok{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.1)}.alert.is-err{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.1)}.alert.is-info{border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.1)}.field{display:grid;gap:.3rem;margin-bottom:.8rem}.field label{font-size:13px;color:var(--muted)}input[type=text],input[type=search],input[type=password],input[type=url],select{background:var(--surface-2);border:1px solid var(--border);border-radius:.6rem;padding:.55rem .7rem;color:var(--text);max-width:100%}input:focus,select:focus{border-color:var(--accent)}.import-table input,.import-table select{margin-bottom:0;min-width:130px}.tabs{display:inline-flex;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px;flex-wrap:wrap}.tabs a{padding:.35rem .85rem;border-radius:999px;color:var(--muted);text-decoration:none;font-size:.88rem}.tabs a.is-active{background:var(--accent);color:#fff}.toolbar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}.toolbar form[role=search]{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:0}.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin-bottom:1rem}.stat{display:flex;flex-direction:column;gap:.15rem}.stat-label{font-size:13px;color:var(--muted)}.stat-num{font-size:30px;font-weight:700;line-height:1.1}.stat-link{font-size:.88rem}.backlink{display:inline-block;margin-bottom:1rem;color:var(--muted);text-decoration:none}.backlink:hover{color:var(--text)}label.btn{cursor:pointer}.detail{display:grid;grid-template-columns:340px 1fr;gap:1rem;margin-bottom:1rem}.preview img{max-width:100%;border-radius:.5rem;border:1px solid var(--border)}.kv{display:grid;grid-template-columns:auto 1fr;gap:.35rem .9rem;margin:0}.kv dt{font-size:13px;color:var(--muted)}.kv dd{margin:0}.guide ol{margin:.4rem 0 .6rem;padding-left:1.2rem;display:grid;gap:.4rem}.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem}.chips code{font-size:.8rem}.dropzone{border:1.5px dashed #33405a;border-radius:var(--radius);padding:2rem 1rem;text-align:center;cursor:pointer;transition:background .15s ease,border-color .15s ease;margin-bottom:1rem;background:var(--surface-2)}.dropzone.is-dragover{border-color:var(--accent);background:rgba(59,130,246,.08)}.dropzone svg{width:28px;height:28px;color:var(--muted)}.file-hidden{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}.hint{font-size:.82rem;color:var(--muted)}.import-thumb{width:64px;height:64px;object-fit:cover;border-radius:.35rem}.status-ok{color:var(--success)}.status-err{color:var(--error)}.status-wait{color:var(--warning)}.actionbar{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:.7rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.loginwrap{min-height:100vh;display:grid;place-items:center;padding:1rem}.login{width:min(26rem,92vw)}.login .btn{width:100%}@media (max-width:860px){.statgrid{grid-template-columns:repeat(2,1fr)}.detail{grid-template-columns:1fr}}@media (max-width:640px){.col-owned{display:none}}@media (max-width:520px){.statgrid{grid-template-columns:1fr}}@media (prefers-reduced-motion:reduce){*{transition:none!important}}`;
+
 function shell(title: string, active: AdminPage, body: string): string {
-  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} · admin</title><link rel="stylesheet" href="${BASE}"><style>main{max-width:1100px;margin:0 auto;padding:1rem}nav{display:flex;gap:1rem;align-items:center;margin-bottom:1rem;flex-wrap:wrap}nav .sp{flex:1}table img{width:96px;height:96px;object-fit:cover}.badge{display:inline-block;padding:.1rem .5rem;border-radius:999px;font-size:.8rem}.b-empty{background:#fee2e2}.b-remote{background:#fef3c7}.b-static{background:#dcfce7}.b-off{background:#e5e7eb}.thumb-broken{border:2px solid #ef4444}.kindpick{display:inline-block;margin:.1rem}.dropzone{border:2px dashed #3b82f6;border-radius:.75rem;padding:1.75rem 1rem;text-align:center;cursor:pointer;transition:background .15s ease,border-color .15s ease;margin-bottom:1rem}.dropzone.is-dragover{background:rgba(59,130,246,.08);border-color:#2563eb}.import-thumb{width:64px;height:64px;object-fit:cover;border-radius:.35rem}.tpl-box{padding:.75rem 1rem;border-radius:.5rem;border:1px solid #d1d5db;margin-bottom:1rem}.import-table input,.import-table select{margin-bottom:0;min-width:130px}.status-ok{color:#15803d}.status-err{color:#b91c1c}.status-wait{color:#b45309}</style></head><body><main><nav><strong>🛠️ admin</strong><a href="/admin"${active === "dashboard" ? ' aria-current="page"' : ""}>dashboard</a><a href="/admin/cards"${active === "cards" || active === "card" ? ' aria-current="page"' : ""}>kartu</a><a href="/admin/inject"${active === "inject" ? ' aria-current="page"' : ""}>inject</a><a href="/admin/import"${active === "import" ? ' aria-current="page"' : ""}>import</a><span class="sp"></span><form method="post" action="/admin/logout"><button type="submit" class="secondary outline">logout</button></form></nav>${body}</main></body></html>`;
+  const link = (href: string, label: string, on: boolean): string =>
+    `<a class="navlink${on ? " is-active" : ""}" href="${href}"${on ? ' aria-current="page"' : ""}>${label}</a>`;
+  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} · admin</title><link rel="stylesheet" href="${BASE}"><style>${ADMIN_CSS}</style></head><body><nav class="topbar"><div class="topbar-inner"><span class="brand"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M10.7 2.3a2.6 2.6 0 0 0-3.4 3.4L2.6 10.4l3 3 4.7-4.7a2.6 2.6 0 0 0 3.4-3.4l-2 2-1.4-1.4 2-2.6z"/></svg>Admin</span>${link("/admin", "dashboard", active === "dashboard")}${link("/admin/cards", "kartu", active === "cards" || active === "card")}${link("/admin/inject", "inject", active === "inject")}${link("/admin/import", "import", active === "import")}<span class="sp"></span><form method="post" action="/admin/logout"><button type="submit" class="btn-ghost">logout</button></form></div></nav><main class="wrap">${body}</main><footer class="foot">Admin panel · internal</footer></body></html>`;
 }
 
 export function loginPage(error: string | null): string {
-  const err =
-    error === null ? "" : `<p role="alert"><mark>${escapeHtml(error)}</mark></p>`;
-  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>login · admin</title><link rel="stylesheet" href="${BASE}"></head><body><main class="container" style="max-width:28rem"><h1>🔐 admin login</h1>${err}<form method="post" action="/admin/login"><label>password<input type="password" name="password" required autocomplete="current-password"></label><button type="submit">masuk</button></form></main></body></html>`;
+  const err = error === null ? "" : `<p class="alert is-err" role="alert">${escapeHtml(error)}</p>`;
+  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>login · admin</title><link rel="stylesheet" href="${BASE}"><style>${ADMIN_CSS}</style></head><body><main class="loginwrap"><div class="card login"><span class="brand">Admin</span><div class="pagehead"><h1>Masuk</h1><p class="lede">Panel internal — butuh password owner.</p></div>${err}<form method="post" action="/admin/login"><div class="field"><label for="loginPw">password</label><input id="loginPw" type="password" name="password" required autocomplete="current-password"></div><button class="btn" type="submit">Masuk</button></form></div></main></body></html>`;
 }
 
 export function dashboardPage(counts: AdminCounts): string {
+  const stat = (label: string, value: number, href: string | null, linkLabel: string): string =>
+    `<article class="card stat"><span class="stat-label">${label}</span><span class="stat-num">${value}</span>${href === null ? "" : `<a class="stat-link" href="${href}">${linkLabel}</a>`}</article>`;
   return shell(
     "dashboard",
     "dashboard",
-    `<h1>dashboard</h1><div class="grid"><article><header>total kartu</header><h2>${counts.total}</h2></article><article><header>image kosong</header><h2>${counts.empty}</h2><a href="/admin/cards?kind=empty">lihat →</a></article><article><header>image remote/CDN</header><h2>${counts.remote}</h2><a href="/admin/cards?kind=remote">lihat →</a></article><article><header>inject pending</header><h2>${counts.pending}</h2><a href="/admin/inject?status=pending">review →</a></article></div><p><a role="button" href="/admin/import">📥 Import Kartu (Drag &amp; Drop) →</a></p>`,
+    `<div class="pagehead"><span class="eyebrow">Admin · Dashboard</span><h1>Dashboard</h1><p class="lede">Ringkasan katalog kartu dan antrean inject.</p></div><div class="statgrid">${stat("total kartu", counts.total, null, "")}${stat("image kosong", counts.empty, "/admin/cards?kind=empty", "Lihat →")}${stat("image remote/CDN", counts.remote, "/admin/cards?kind=remote", "Lihat →")}${stat("inject pending", counts.pending, "/admin/inject?status=pending", "Review →")}</div><p><a class="btn" href="/admin/import">Import kartu baru →</a></p>`,
   );
 }
 
 function kindBadge(kind: string): string {
-  const cls =
-    kind === "empty" ? "b-empty" : kind === "remote" ? "b-remote" : "b-static";
+  const cls = kind === "empty" ? "b-empty" : kind === "remote" ? "b-remote" : "b-static";
   return `<span class="badge ${cls}">${escapeHtml(kind)}</span>`;
+}
+function rarityBadge(key: string): string {
+  const known = (RARITY_KEYS as readonly string[]).includes(key);
+  const cls = known ? `r-${key}` : "r-common";
+  const k = known ? (key as (typeof RARITY_KEYS)[number]) : "common";
+  return `<span class="badge ${cls}"><i></i>${escapeHtml(`${RARITY_STARS[k]} ${RARITY_LABEL[k]}`)}</span>`;
 }
 
 const KINDS: AdminCardKindFilter[] = ["all", "empty", "remote", "static"];
@@ -84,7 +94,7 @@ export function cardsPage(args: {
 }): string {
   const tabs = KINDS.map(
     (k) =>
-      `<a role="button" class="kindpick${k === args.kind ? "" : " secondary outline"}" href="/admin/cards?kind=${k}${args.q === "" ? "" : `&amp;q=${encodeURIComponent(args.q)}`}">${k}</a>`,
+      `<a class="${k === args.kind ? "is-active" : ""}" href="/admin/cards?kind=${k}${args.q === "" ? "" : `&amp;q=${encodeURIComponent(args.q)}`}">${k}</a>`,
   ).join("");
   const rows = args.rows
     .map((r) => {
@@ -92,13 +102,13 @@ export function cardsPage(args: {
         r.imageKind === "empty"
           ? `<span class="badge b-empty">tanpa image</span>`
           : `<img src="${escapeHtml(localImageSrc(args.base, r.imageFile))}" alt="" loading="lazy" onerror="this.classList.add('thumb-broken');var b=this.nextElementSibling;if(b)b.hidden=false;"><span class="badge b-off" hidden>gagal dimuat</span>`;
-      return `<tr><td>${thumb}</td><td><a href="/admin/cards/${escapeHtml(r.id)}">${escapeHtml(r.id)}</a></td><td>${escapeHtml(r.memberName)}</td><td>${escapeHtml(r.poolName)} · ${escapeHtml(r.groupBadge)}</td><td>${escapeHtml(r.rarity)}</td><td>${kindBadge(r.imageKind)}</td><td>×${r.quantityOwned}</td><td>${r.enabled ? "aktif" : `<span class="badge b-off">mati</span>`}</td></tr>`;
+      return `<tr><td>${thumb}</td><td><a href="/admin/cards/${escapeHtml(r.id)}">${escapeHtml(r.id)}</a></td><td>${escapeHtml(r.memberName)}</td><td>${escapeHtml(r.poolName)} · ${escapeHtml(r.groupBadge)}</td><td>${rarityBadge(r.rarity)}</td><td>${kindBadge(r.imageKind)}</td><td class="col-owned">×${r.quantityOwned}</td><td>${r.enabled ? "aktif" : `<span class="badge b-off">mati</span>`}</td></tr>`;
     })
     .join("");
   return shell(
     "kartu",
     "cards",
-    `<h1>kartu (${args.total})</h1><div>${tabs}</div><form method="get" action="/admin/cards" role="search"><input type="hidden" name="kind" value="${escapeHtml(args.kind)}"><input type="search" name="q" value="${escapeHtml(args.q)}" placeholder="cari nama / id kartu"><button type="submit">cari</button></form><table><thead><tr><th>thumb</th><th>id</th><th>member</th><th>pool · grup</th><th>rarity</th><th>kind</th><th>owned</th><th>status</th></tr></thead><tbody>${rows === "" ? `<tr><td colspan="8">kosong.</td></tr>` : rows}</tbody></table>`,
+    `<div class="pagehead"><span class="eyebrow">Admin · Kartu</span><h1>Kartu (${args.total})</h1><p class="lede">Cari dan kelola katalog kartu.</p></div><div class="toolbar"><nav class="tabs" aria-label="Filter kind">${tabs}</nav><form method="get" action="/admin/cards" role="search"><input type="hidden" name="kind" value="${escapeHtml(args.kind)}"><input type="search" name="q" value="${escapeHtml(args.q)}" placeholder="cari nama / id kartu"><button class="btn-ghost" type="submit">Cari</button></form></div><div class="tablewrap"><table><thead><tr><th>thumb</th><th>id</th><th>member</th><th>pool · grup</th><th>rarity</th><th>kind</th><th class="col-owned">owned</th><th>status</th></tr></thead><tbody>${rows === "" ? `<tr><td colspan="8">kosong.</td></tr>` : rows}</tbody></table></div>`,
   );
 }
 
@@ -112,19 +122,19 @@ export function cardDetailPage(args: {
   const img =
     c.imageKind === "empty"
       ? `<p><span class="badge b-empty">tanpa image</span></p>`
-      : `<img src="${escapeHtml(localImageSrc(args.base, c.imageFile))}" alt="" style="max-width:320px" onerror="this.classList.add('thumb-broken');var b=document.getElementById('imgwarn');if(b)b.hidden=false;"><p id="imgwarn" hidden><span class="badge b-off">⚠️ gagal dimuat — file static hilang atau URL mati</span></p>`;
+      : `<img src="${escapeHtml(localImageSrc(args.base, c.imageFile))}" alt="" onerror="this.classList.add('thumb-broken');var b=document.getElementById('imgwarn');if(b)b.hidden=false;"><p id="imgwarn" hidden><span class="badge b-off">gagal dimuat — file static hilang atau URL mati</span></p>`;
   const rawBanner =
     c.imageKind === "remote"
-      ? `<p><span class="badge b-remote">⚠️ image raw/CDN — rebuild pipeline (fetch-images → build-cards → seed → deploy) agar permanen</span></p>`
+      ? `<p><span class="badge b-remote">image raw/CDN — rebuild pipeline (fetch-images → build-cards → seed → deploy) agar permanen</span></p>`
       : "";
   const msg =
     args.message === null
       ? ""
-      : `<p role="alert"><mark>${escapeHtml(args.message)}</mark></p>`;
+      : `<p class="alert ${args.ok ? "is-ok" : "is-err"}" role="alert">${escapeHtml(args.message)}</p>`;
   return shell(
     c.id,
     "card",
-    `<h1>${escapeHtml(c.id)}</h1>${msg}${img}${rawBanner}<ul><li>member: ${escapeHtml(c.memberName)}${c.fullName === null ? "" : ` (${escapeHtml(c.fullName)})`}</li><li>pool: ${escapeHtml(c.poolName)} · grup: ${escapeHtml(c.groupBadge)}</li><li>rarity: ${escapeHtml(c.rarity)} · foto ${c.photoNo}/${c.photoTotal}${c.photoLabel === null ? "" : ` · ${escapeHtml(c.photoLabel)}`}</li><li>serial: ${c.serial} · owned ×${c.quantityOwned} · holo: ${c.holoEnabled ? "ya" : "tidak"}</li><li>sumber: ${c.sourcePageUrl === null ? "—" : escapeHtml(c.sourcePageUrl)}</li><li>kind: ${kindBadge(c.imageKind)} · status: ${c.enabled ? "aktif" : "mati"}</li><li>image_file: <code>${escapeHtml(c.imageFile)}</code></li></ul><h2>ganti image</h2><form method="post" action="/admin/cards/${escapeHtml(c.id)}/image" enctype="multipart/form-data"><label>upload file (≤8 MB)<input type="file" name="file" accept="image/*" required></label><button type="submit">upload via discord</button></form><form method="post" action="/admin/cards/${escapeHtml(c.id)}/image"><label>atau set URL manual (https)<input type="url" name="url" placeholder="https://…" required></label><button type="submit">set URL</button></form><h2>status</h2><form method="post" action="/admin/cards/${escapeHtml(c.id)}/enabled"><input type="hidden" name="enabled" value="${c.enabled ? "0" : "1"}"><button type="submit">${c.enabled ? "nonaktifkan" : "aktifkan"}</button></form><p><a href="/admin/cards">← kembali</a></p>`,
+    `<a class="backlink" href="/admin/cards">← Kembali ke daftar</a><div class="pagehead"><span class="eyebrow">Admin · Kartu</span><h1>${escapeHtml(c.id)}</h1></div>${msg}<div class="detail"><div class="card preview">${img}${rawBanner}<p><code>${escapeHtml(c.imageFile)}</code></p></div><div class="card meta"><dl class="kv"><dt>member</dt><dd>${escapeHtml(c.memberName)}${c.fullName === null ? "" : ` (${escapeHtml(c.fullName)})`}</dd><dt>pool · grup</dt><dd>${escapeHtml(c.poolName)} · ${escapeHtml(c.groupBadge)}</dd><dt>rarity</dt><dd>${rarityBadge(c.rarity)}</dd><dt>foto</dt><dd>${c.photoNo}/${c.photoTotal}${c.photoLabel === null ? "" : ` · ${escapeHtml(c.photoLabel)}`}</dd><dt>serial</dt><dd>${c.serial}</dd><dt>owned</dt><dd>×${c.quantityOwned}</dd><dt>holo</dt><dd>${c.holoEnabled ? "ya" : "tidak"}</dd><dt>sumber</dt><dd>${c.sourcePageUrl === null ? "—" : escapeHtml(c.sourcePageUrl)}</dd><dt>kind</dt><dd>${kindBadge(c.imageKind)}</dd><dt>status</dt><dd>${c.enabled ? "aktif" : "mati"}</dd></dl></div></div><div class="card"><h2>Ganti image</h2><form method="post" action="/admin/cards/${escapeHtml(c.id)}/image" enctype="multipart/form-data"><div class="field"><label for="imgFile">upload file (≤8 MB)</label><input id="imgFile" type="file" name="file" accept="image/*" required></div><button class="btn" type="submit">upload via discord</button></form><form method="post" action="/admin/cards/${escapeHtml(c.id)}/image"><div class="field"><label for="imgUrl">atau set URL manual (https)</label><input id="imgUrl" type="url" name="url" placeholder="https://…" required></div><button class="btn" type="submit">set URL</button></form><h2>Status</h2><form method="post" action="/admin/cards/${escapeHtml(c.id)}/enabled"><input type="hidden" name="enabled" value="${c.enabled ? "0" : "1"}"><button class="btn-ghost" type="submit">${c.enabled ? "nonaktifkan" : "aktifkan"}</button></form></div>`,
   );
 }
 
@@ -137,10 +147,9 @@ export function injectPage(args: {
   ok: string | null;
 }): string {
   const tabs = STATUSES.map(
-    (s) =>
-      `<a role="button" class="kindpick${s === args.status ? "" : " secondary outline"}" href="/admin/inject?status=${s}">${s}</a>`,
+    (s) => `<a class="${s === args.status ? "is-active" : ""}" href="/admin/inject?status=${s}">${s}</a>`,
   ).join("");
-  const ok = args.ok === null ? "" : `<p><mark>${escapeHtml(args.ok)}</mark></p>`;
+  const ok = args.ok === null ? "" : `<p class="alert is-ok" role="alert">${escapeHtml(args.ok)}</p>`;
   const rows = args.rows
     .map((r) => {
       const preview =
@@ -149,7 +158,7 @@ export function injectPage(args: {
           : `<a href="${escapeHtml(r.messageUrl)}"><img src="${escapeHtml(r.imageUrl)}" alt="" loading="lazy" onerror="this.classList.add('thumb-broken');var b=this.nextElementSibling;if(b)b.hidden=false;"><span class="badge b-off" hidden>gagal dimuat</span></a>`;
       const action =
         r.status === "pending"
-          ? `<form method="post" action="/admin/inject/${escapeHtml(r.messageId)}/approve" onsubmit="return confirm('Approve ${escapeHtml(r.nama ?? r.messageId)}?')"><button type="submit">approve</button></form><form method="post" action="/admin/inject/${escapeHtml(r.messageId)}/reject" onsubmit="return confirm('Reject ${escapeHtml(r.messageId)}?')"><button type="submit" class="secondary outline">reject</button></form>`
+          ? `<form method="post" action="/admin/inject/${escapeHtml(r.messageId)}/approve" onsubmit="return confirm('Approve ${escapeHtml(r.nama ?? r.messageId)}?')"><button class="btn" type="submit">approve</button></form><form method="post" action="/admin/inject/${escapeHtml(r.messageId)}/reject" onsubmit="return confirm('Reject ${escapeHtml(r.messageId)}?')"><button type="submit" class="btn-danger-outline">reject</button></form>`
           : escapeHtml(r.status);
       return `<tr><td>${preview}</td><td>${escapeHtml(r.nama ?? "—")}<br><small>${escapeHtml(r.messageId)}</small></td><td>${escapeHtml(r.pool ?? "—")} · ${escapeHtml(r.grup ?? "—")}</td><td>${escapeHtml(r.rarity ?? "—")}</td><td>${r.errors === null || r.errors === "" ? "—" : escapeHtml(r.errors)}</td><td><a href="${escapeHtml(r.messageUrl)}">pesan</a></td><td>${action}</td></tr>`;
     })
@@ -157,7 +166,7 @@ export function injectPage(args: {
   return shell(
     "inject",
     "inject",
-    `<h1>inject ${escapeHtml(args.status)} (${args.total})</h1><div>${tabs}</div>${ok}<table><thead><tr><th>preview</th><th>nama</th><th>pool · grup</th><th>rarity</th><th>errors</th><th>link</th><th>aksi</th></tr></thead><tbody>${rows === "" ? `<tr><td colspan="7">kosong.</td></tr>` : rows}</tbody></table><p>Approve/reject via web memakai logika yang sama dengan tombol Discord.</p>`,
+    `<div class="pagehead"><span class="eyebrow">Admin · Inject</span><h1>Inject ${escapeHtml(args.status)} (${args.total})</h1></div><div class="toolbar"><nav class="tabs" aria-label="Filter status">${tabs}</nav></div>${ok}<div class="tablewrap"><table><thead><tr><th>preview</th><th>nama</th><th>pool · grup</th><th>rarity</th><th>errors</th><th>link</th><th>aksi</th></tr></thead><tbody>${rows === "" ? `<tr><td colspan="7">kosong.</td></tr>` : rows}</tbody></table></div><p class="lede">Approve/reject via web memakai logika yang sama dengan tombol Discord.</p>`,
   );
 }
 
@@ -290,7 +299,7 @@ function buildImportScript(): string {
       var tdAct=document.createElement("td");
       var rm=document.createElement("button");
       rm.type="button";
-      rm.className="secondary outline";
+      rm.className="btn-ghost";
       rm.textContent="Hapus";
       rm.addEventListener("click",function(){
         if(item.objectUrl)URL.revokeObjectURL(item.objectUrl);
@@ -421,16 +430,16 @@ export function importPage(args: {
 }): string {
   const errBanner =
     args.error !== undefined && args.error !== null && args.error !== ""
-      ? `<p role="alert"><mark>${escapeHtml(args.error)}</mark></p>`
+      ? `<p class="alert is-err" role="alert">${escapeHtml(args.error)}</p>`
       : "";
   const resultsBlock =
     args.results !== undefined && args.results.length > 0
-      ? `<article><header>Hasil Import (${String(args.results.length)})</header><ul>${args.results
+      ? `<div class="card"><h2>Hasil Import (${String(args.results.length)})</h2><ul>${args.results
           .map(
             (r) =>
               `<li>${r.ok ? "✅" : "❌"} <strong>${escapeHtml(r.filename)}</strong> — ${escapeHtml(r.message)}</li>`,
           )
-          .join("")}</ul></article>`
+          .join("")}</ul></div>`
       : "";
   const poolOptions = args.poolGroups
     .map(
@@ -440,8 +449,8 @@ export function importPage(args: {
     .join("");
   const noPoolsWarn =
     args.poolGroups.length === 0
-      ? `<p role="alert"><mark>Belum ada pool/grup aktif di database.</mark></p>`
+      ? `<p class="alert is-err" role="alert">Belum ada pool/grup aktif di database.</p>`
       : "";
-  const body = `<h1>📥 Import Kartu (Drag &amp; Drop)</h1>${errBanner}${resultsBlock}${noPoolsWarn}<section class="tpl-box"><strong>Template Nama File:</strong> <code>(rarity) - nama grup - nama kartu.ext</code><br><small>Contoh: <code>(secret) - Jomok - Refi Kaget.jpg</code> → Rarity: <strong>★★★★★★ Secret</strong>, Grup: <strong>Jomok</strong>, Nama Kartu: <strong>Refi Kaget</strong> (Auto Title Case). Grup opsional: <code>(holo) - refi kaget.jpg</code> ikut target dropdown.</small><br><small>Kode Rarity: <code>(common)</code>/<code>(c)</code>/<code>(1)</code> · <code>(rare)</code>/<code>(r)</code>/<code>(2)</code> · <code>(super rare)</code>/<code>(sr)</code>/<code>(3)</code> · <code>(ultra rare)</code>/<code>(ur)</code>/<code>(4)</code> · <code>(holo)</code>/<code>(h)</code>/<code>(5)</code> · <code>(secret)</code>/<code>(s)</code>/<code>(6)</code></small></section><form id="importForm" method="post" action="/admin/import" enctype="multipart/form-data"><label>Target Pool · Grup<select id="poolGroup" name="poolGroup" required>${poolOptions}</select></label><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"><p><strong>Drag &amp; drop gambar kartu ke sini</strong> atau pilih file di bawah</p><small>Format: JPG, PNG, WebP (maks 8 MB/file)</small><div style="margin-top:.75rem"><input type="file" id="fileInput" name="files" accept="image/*" multiple></div></div><div id="previewWrap" hidden><table class="import-table"><thead><tr><th>preview</th><th>file</th><th>nama kartu</th><th>rarity</th><th>label (opsional)</th><th>status</th><th></th></tr></thead><tbody id="previewBody"></tbody></table><div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap"><button type="submit" id="submitBtn"${args.poolGroups.length === 0 ? " disabled" : ""}>🚀 Import ke Katalog</button><button type="button" id="clearBtn" class="secondary outline">Bersihkan Daftar</button><span id="summaryText"></span></div></div></form>${buildImportScript()}`;
+  const body = `<div class="pagehead"><span class="eyebrow">Admin · Import</span><h1>Import kartu</h1><p class="lede">Seret gambar, periksa hasil parse nama file, lalu import ke katalog.</p></div>${errBanner}${resultsBlock}${noPoolsWarn}<section class="card guide"><h2>Panduan nama file</h2><ol><li><strong>Beri nama file</strong> dengan pola <code>(rarity) - nama grup - nama kartu.ext</code></li><li><strong>Contoh:</strong> <code>(secret) - Jomok - Refi Kaget.jpg</code> → Rarity: <strong>★★★★★★ Secret</strong>, Grup: <strong>Jomok</strong>, Nama Kartu: <strong>Refi Kaget</strong> (Auto Title Case).</li><li><strong>Grup opsional:</strong> <code>(holo) - refi kaget.jpg</code> ikut target dropdown di bawah, dengan rarity <strong>★★★★★ Holo</strong>. Kode <code>(secret)</code> setara secret.</li></ol><div class="chips"><code>common (c/1)</code><code>rare (r/2)</code><code>super rare (sr/3)</code><code>ultra rare (ur/4)</code><code>holo (h/5)</code><code>secret (s/6)</code></div></section><form id="importForm" method="post" action="/admin/import" enctype="multipart/form-data"><div class="field"><label for="poolGroup">Target pool · grup</label><select id="poolGroup" name="poolGroup" required>${poolOptions}</select></div><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg><p><strong>Seret &amp; letakkan gambar di sini</strong></p><p>atau</p><p><label class="btn" for="fileInput">Pilih file</label></p><p class="hint">JPG, PNG, WebP · maks 8 MB/file</p><input type="file" id="fileInput" class="file-hidden" name="files" accept="image/*" multiple></div><div id="previewWrap" hidden><div class="tablewrap"><table class="import-table"><thead><tr><th>preview</th><th>file</th><th>nama kartu</th><th>rarity</th><th>label (opsional)</th><th>status</th><th></th></tr></thead><tbody id="previewBody"></tbody></table></div><div class="actionbar"><button type="submit" id="submitBtn"${args.poolGroups.length === 0 ? " disabled" : ""} class="btn">Import ke Katalog</button><button type="button" id="clearBtn" class="btn-ghost">Bersihkan Daftar</button><span id="summaryText" class="hint"></span></div></div></form>${buildImportScript()}`;
   return shell("import", "import", body);
 }

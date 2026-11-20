@@ -227,4 +227,57 @@ describe("importPage", () => {
     expect(html).toContain("Belum ada pool/grup aktif");
     expect(html).toContain('id="submitBtn" disabled');
   });
+
+  it("renders the shared dark shell with active nav and theme tokens", () => {
+    const html = importPage({ poolGroups });
+    expect(html).toContain('class="topbar"');
+    expect(html).toContain('aria-current="page"');
+    expect(html).toContain("--bg:");
+  });
+
+  it("renders rarity as a dot badge variant", () => {
+    const html = cardsPage({
+      rows: [
+        {
+          id: "r-01",
+          memberName: "M",
+          groupBadge: "G",
+          poolName: "P",
+          photoNo: 1,
+          rarity: "secret",
+          imageFile: "a.webp",
+          imageKind: "static",
+          enabled: true,
+          quantityOwned: 0,
+        },
+      ],
+      total: 1,
+      kind: "all",
+      q: "",
+      base: "example.test",
+    });
+    expect(html).toContain('class="badge r-secret"');
+  });
+
+  it("keeps the dropzone contract with label, file input, and aria", () => {
+    const html = importPage({ poolGroups });
+    expect(html).toContain('id="dropzone"');
+    expect(html).toContain('aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"');
+    expect(html).toContain('for="fileInput"');
+    expect(html).toContain('id="fileInput"');
+  });
+
+  it("wraps data tables in a scroll container", () => {
+    const forCards = cardsPage({
+      rows: [],
+      total: 0,
+      kind: "all",
+      q: "",
+      base: "example.test",
+    });
+    expect(forCards).toContain('class="tablewrap"');
+    const forInject = injectPage({ rows: [], total: 0, status: "pending", ok: null });
+    expect(forInject).toContain('class="tablewrap"');
+    expect(importPage({ poolGroups })).toContain('class="tablewrap"');
+  });
 });
