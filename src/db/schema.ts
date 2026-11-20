@@ -228,3 +228,41 @@ export const pulls = sqliteTable(
   },
   (t) => [index("pulls_user_idx").on(t.userId, t.pulledAt)],
 );
+
+export const battles = sqliteTable(
+  "battles",
+  {
+    id: text("id").primaryKey(),
+    challengerId: text("challenger_id")
+      .notNull()
+      .references(() => users.id),
+    targetId: text("target_id")
+      .notNull()
+      .references(() => users.id),
+    challengerCardId: text("challenger_card_id")
+      .notNull()
+      .references(() => cards.id),
+    targetCardId: text("target_card_id").references(() => cards.id),
+    mode: text("mode", { enum: ["casual", "wager"] }).notNull(),
+    status: text("status", {
+      enum: ["pending", "resolved", "declined", "cancelled", "failed"],
+    }).notNull(),
+    winnerId: text("winner_id"),
+    challengerScore: integer("challenger_score"),
+    targetScore: integer("target_score"),
+    challengerCrit: integer("challenger_crit", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    targetCrit: integer("target_crit", { mode: "boolean" })
+      .notNull()
+      .default(false),
+    settleToken: text("settle_token"),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    resolvedAt: integer("resolved_at"),
+  },
+  (t) => [
+    index("battles_challenger_idx").on(t.challengerId, t.status),
+    index("battles_target_idx").on(t.targetId, t.status),
+  ],
+);

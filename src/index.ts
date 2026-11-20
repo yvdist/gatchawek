@@ -22,6 +22,10 @@ import { handlePamerAutocomplete } from "./commands/pamer/handler.js";
 import { ephemeralResponse } from "./discord/rest.js";
 import { handleInjectClick } from "./commands/inject-review/handler.js";
 import { handleBulkClick } from "./commands/bulk-review/handler.js";
+import {
+  handleBattleAutocomplete,
+  handleBattleComponent,
+} from "./commands/battle/handler.js";
 import { handleScheduled } from "./scheduled.js";
 import type { Env } from "./env.js";
 import { registerAdminRoutes } from "./admin/routes.js";
@@ -119,6 +123,13 @@ app.post("/interactions", async (c) => {
         ),
       );
     }
+    if (ns === "battle") {
+      return c.json(
+        await handleBattleComponent(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
     return c.json(ephemeralResponse("Tombol kedaluwarsa."));
   }
   if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
@@ -147,6 +158,14 @@ app.post("/interactions", async (c) => {
       return c.json(
         await handlePamerAutocomplete(
           autocomplete as unknown as Parameters<typeof handlePamerAutocomplete>[0],
+          c.env,
+        ),
+      );
+    }
+    if (autocomplete.data.name === "battle") {
+      return c.json(
+        await handleBattleAutocomplete(
+          autocomplete as unknown as Parameters<typeof handleBattleAutocomplete>[0],
           c.env,
         ),
       );

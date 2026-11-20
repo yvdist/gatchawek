@@ -29,6 +29,13 @@
       "when": 1795159295444,
       "tag": "0003_nice_eddie_brock",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1795182327029,
+      "tag": "0004_battle_arena",
+      "breakpoints": true
     }
   ]
 }
