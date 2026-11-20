@@ -13,6 +13,7 @@
     "validate": "tsx scripts/validate-manifest.ts",
     "fetch-images": "tsx scripts/fetch-images.ts",
     "build:cards": "tsx scripts/build-cards.ts",
+    "render-inject": "tsx scripts/render-inject.ts",
     "seed": "tsx scripts/seed.ts",
     "seed:remote": "tsx scripts/seed.ts --remote",
     "seed:staging": "tsx scripts/seed.ts --env staging",
