@@ -34,26 +34,32 @@ async function runSeed(): Promise<string> {
   );
   return stdout;
 }
-async function tableCounts(): Promise<Record<string, number>> {
-  const rows: unknown[] = await wranglerD1(
-    `--local --command "SELECT 'pools' t, COUNT(*) n FROM pools UNION ALL SELECT 'groups', COUNT(*) FROM groups UNION ALL SELECT 'members', COUNT(*) FROM members UNION ALL SELECT 'cards', COUNT(*) FROM cards"`,
-  );
-  const counts: Record<string, number> = {};
-  for (const row of rows) {
-    if (
-      typeof row !== "object" ||
-      row === null ||
-      !("t" in row) ||
-      !("n" in row) ||
-      typeof row.t !== "string" ||
-      typeof row.n !== "number"
-    ) {
-      throw new Error("unexpected D1 row shape");
-    }
-    counts[row.t] = row.n;
-  }
-  return counts;
-}
+ async function tableCounts(): Promise<Record<string, number>> {
+   const counts: Record<string, number> = {};
+   const queries: Record<string, string> = {
+     pools: "SELECT COUNT(*) n FROM pools",
+     groups: "SELECT COUNT(*) n FROM groups",
+     members: "SELECT COUNT(*) n FROM members",
+     cards: "SELECT COUNT(*) n FROM cards",
+     groups_live: "SELECT COUNT(*) n FROM groups WHERE enabled=1",
+     members_live: "SELECT COUNT(*) n FROM members WHERE enabled=1",
+     cards_live: "SELECT COUNT(*) n FROM cards WHERE enabled=1",
+   };
+   for (const [key, command] of Object.entries(queries)) {
+     const rows: unknown[] = await wranglerD1(`--local --command "${command}"`);
+     const [row]: unknown[] = rows;
+     if (
+       typeof row !== "object" ||
+       row === null ||
+       !("n" in row) ||
+       typeof row.n !== "number"
+     ) {
+       throw new Error("unexpected D1 row shape");
+     }
+     counts[key] = row.n;
+   }
+   return counts;
+ }
 
 beforeAll(async () => {
   fixture = await mkdtemp(path.join(tmpdir(), "gatchawek-seed-"));
@@ -94,11 +100,11 @@ describe("seed idempotency", () => {
     );
     const files2 = (await readdir(path.join(fixture, "public", "cards"))).sort();
 
-    expect(counts1).toEqual({ pools: 2, groups: 4, members: 25, cards: 129 });
+    expect(counts1).toEqual({ pools: 2, groups: 4, members: 25, cards: 129, groups_live: 3, members_live: 23, cards_live: 123 });
     expect(counts2).toEqual(counts1);
     expect(lock2).toBe(lock1);
     expect(files2).toEqual(files1);
-    expect(files1).toHaveLength(129);
+    expect(files1).toHaveLength(123);
   }, 300_000);
 
   it("removing a photo disables the card and prunes its file", async () => {
@@ -107,7 +113,7 @@ describe("seed idempotency", () => {
       "data",
       "groups",
       "meme",
-      "meme-klasik.json",
+      "jomok.json",
     );
     const parsed: unknown = JSON.parse(await readFile(manifestPath, "utf8"));
     if (
@@ -127,7 +133,7 @@ describe("seed idempotency", () => {
     ) {
       throw new Error("fixture manifest has unexpected shape");
     }
-    expect(firstMember.photos).toHaveLength(3);
+    expect(firstMember.photos).toHaveLength(6);
     const photos: unknown[] = firstMember.photos;
     const thirdPhoto: unknown = photos[2];
     if (typeof thirdPhoto !== "object" || thirdPhoto === null) {
@@ -140,7 +146,7 @@ describe("seed idempotency", () => {
     await runSeed();
 
     const rows: unknown[] = await wranglerD1(
-      `--local --command "SELECT id, enabled FROM cards WHERE id='katak-bijak-03'"`,
+      `--local --command "SELECT id, enabled FROM cards WHERE id='jomok-mix-01-03'"`,
     );
     expect(rows).toHaveLength(1);
     const [row]: unknown[] = rows;
@@ -156,7 +162,7 @@ describe("seed idempotency", () => {
 
     const { readdir } = await import("node:fs/promises");
     const files = await readdir(path.join(fixture, "public", "cards"));
-    expect(files.filter((f) => f.startsWith("katak-bijak-03."))).toHaveLength(0);
+    expect(files.filter((f) => f.startsWith("jomok-mix-01-03."))).toHaveLength(0);
   }, 300_000);
 
   it("every built frame is 600x900 and under 150KB", async () => {
