@@ -21,6 +21,8 @@ import { injectReviewDefinition } from "./inject-review/definition.js";
 import { handleInjectReview } from "./inject-review/handler.js";
 import { cariDefinition } from "./cari/definition.js";
 import { handleCari } from "./cari/handler.js";
+import { pamerDefinition } from "./pamer/definition.js";
+import { handlePamer } from "./pamer/handler.js";
 import { topDefinition } from "./top/definition.js";
 import { handleTop } from "./top/handler.js";
 
@@ -42,6 +44,7 @@ export const commandDefinitions = [
   tradeDefinition,
   injectReviewDefinition,
   cariDefinition,
+  pamerDefinition,
   topDefinition,
 ];
 
@@ -55,6 +58,7 @@ const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
   ["trade", handleTrade],
   ["inject-review", handleInjectReview],
   ["cari", handleCari],
+  ["pamer", handlePamer],
   ["top", handleTop],
 ];
 

@@ -18,6 +18,7 @@ import {
   handleTradeClick,
 } from "./commands/trade/handler.js";
 import { handleCariAutocomplete } from "./commands/cari/handler.js";
+import { handlePamerAutocomplete } from "./commands/pamer/handler.js";
 import { ephemeralResponse } from "./discord/rest.js";
 import { handleInjectClick } from "./commands/inject-review/handler.js";
 import { handleScheduled } from "./scheduled.js";
@@ -114,6 +115,14 @@ app.post("/interactions", async (c) => {
       return c.json(
         await handleCariAutocomplete(
           autocomplete as unknown as Parameters<typeof handleCariAutocomplete>[0],
+          c.env,
+        ),
+      );
+    }
+    if (autocomplete.data.name === "pamer") {
+      return c.json(
+        await handlePamerAutocomplete(
+          autocomplete as unknown as Parameters<typeof handlePamerAutocomplete>[0],
           c.env,
         ),
       );
