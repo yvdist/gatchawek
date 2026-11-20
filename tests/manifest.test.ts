@@ -35,7 +35,7 @@ interface PhotoDraft {
 interface GroupDraft {
   schemaVersion: number;
   pool: string;
-  group: { id: string; name: string; badge: string };
+  group: { id: string; name: string; badge: string; allowSinglePhoto?: boolean };
   members: {
     id: string;
     name: string;
@@ -138,6 +138,34 @@ describe("manifest validation", () => {
     await expect(loadManifests(root)).rejects.toThrow(
       /duplicate member id "tokoh-satu"/,
     );
+  });
+
+  it("rejects a single-photo member without the community flag", async () => {
+    const root = await makeRoot();
+    const broken = goodGroup();
+    const firstMember = broken.members[0];
+    expect(firstMember).toBeDefined();
+    if (firstMember !== undefined) firstMember.photos.splice(1);
+    await writeManifests(root, GOOD_POOLS, [
+      { dir: "pejabat", file: "grup-satu.json", body: broken },
+    ]);
+    await expect(loadManifests(root)).rejects.toThrow(
+      /member must have at least 3 photos/,
+    );
+  });
+
+  it("accepts a single-photo member with allowSinglePhoto", async () => {
+    const root = await makeRoot();
+    const community = goodGroup();
+    community.group.allowSinglePhoto = true;
+    const firstMember = community.members[0];
+    expect(firstMember).toBeDefined();
+    if (firstMember !== undefined) firstMember.photos.splice(1);
+    await writeManifests(root, GOOD_POOLS, [
+      { dir: "pejabat", file: "komunitas-x.json", body: community },
+    ]);
+    const loaded = await loadManifests(root);
+    expect(loaded.groups).toHaveLength(1);
   });
 
   it("accepts the dummy dataset and summarizes 4 groups", async () => {

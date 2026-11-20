@@ -17,7 +17,9 @@
     "seed:remote": "tsx scripts/seed.ts --remote",
     "seed:staging": "tsx scripts/seed.ts --env staging",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "wrangler d1 migrations apply DB --local"
+    "db:migrate": "wrangler d1 migrations apply DB --local",
+    "ingest": "tsx scripts/ingest.ts",
+    "approve": "tsx scripts/approve.ts"
   },
   "keywords": [],
   "author": "",

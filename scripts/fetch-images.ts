@@ -51,7 +51,7 @@ async function writeSolidPng(
   await writeFile(outPath, png);
 }
 
-async function fetchRemoteImage(
+export async function fetchRemoteImage(
   cardId: string,
   imageUrl: string,
   rawDir: string,

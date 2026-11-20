@@ -54,6 +54,19 @@ terpisah. Di Fase 1+, staging memakai D1 terpisah.
 6. `pnpm register` — daftarkan ulang guild commands (definisi dari `src/commands/*/definition.ts`).
 7. `pnpm deploy` — deploy Worker.
 
+### Inject komunitas (channel Discord)
+
+1. Buat channel khusus (mis. `#inject-kartu`); pastikan bot punya **View Channel** +
+   **Read Message History** di channel itu. Isi `.env`: `INGEST_CHANNEL_ID=<id channel>`.
+2. Kontributor posting satu pesan per kartu sesuai template (`[nama]`, `[grup]`, `[rarity]`
+   wajib; `[label]`, `[sumber]` opsional) + tepat 1 lampiran gambar.
+3. `pnpm run ingest` — tarik pesan baru, tulis `data/submissions/pending/*.json`.
+4. Review pending, lalu `pnpm run approve <messageId> [--pool pejabat] [--skip-fetch]` —
+   unduh gambar (gate 500×700 sama seperti `fetch-images`), upsert ke
+   `data/groups/<pool>/komunitas-*.json` (`allowSinglePhoto: true`).
+   Bila unduhan gagal: taruh file manual di `assets/raw/<cardId>.<ext>`, ulangi dengan `--skip-fetch`.
+5. Lanjut pipeline biasa: `pnpm validate && pnpm fetch-images && pnpm seed && pnpm register && pnpm deploy`.
+
 ### Takedown grup
 
 1. Set `"enabled": false` (atau hapus entri grup) di manifest.

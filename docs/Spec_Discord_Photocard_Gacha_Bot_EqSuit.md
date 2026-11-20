@@ -131,6 +131,31 @@ Aturan validasi (Zod di `shared/manifest.schema.ts`):
 - `enabled` opsional, default true. `false` = takedown.
 - Distribusi rarity per grup yang jauh dari 50/30/15/5 hanya **peringatan**, bukan error.
 
+### 4.2.1 Inject komunitas (`community-inject`)
+
+Teman-teman bisa inject kartu manual lewat channel Discord khusus: satu pesan = satu kartu,
+lampiran gambar pesan = foto kartu. Template pesan:
+
+```text
+[nama] Aynid Morbulet
+[grup] kabinet-merah-putih
+[rarity] rare
+[label] opsional, maks 60 char
+[sumber] https://commons.wikimedia.org/wiki/File:...
+```
+
+- `nama`/`grup`/`rarity` wajib (key case-insensitive); `rarity` salah satu dari empat key.
+- `sumber` opsional; default permalink pesan `https://discord.com/channels/<guild>/<channel>/<message>`.
+- Wajib tepat 1 lampiran gambar; selain itu submission invalid dengan alasan jelas.
+- Alur operator: `pnpm run ingest` (poll REST `GET /channels/{id}/messages`, tulis
+  `data/submissions/pending/*.json`, cursor di `data/ingest-state.json`) →
+  review → `pnpm run approve <messageId> [--pool <pool>] [--skip-fetch]` (upsert ke
+  `data/groups/<pool>/komunitas-*.json`) → pipeline lama (`validate` → `fetch-images` →
+  `seed` → `register` → `deploy`).
+- Grup komunitas lahir dari `approve` dengan `allowSinglePhoto: true`: pengecualian
+  satu-satunya atas aturan minimal 3 foto; grup kurasi tetap wajib ≥3 foto.
+  Tanpa migrasi D1, tanpa perubahan Worker.
+
 ### 4.3 Serial
 
 Seed memberi kartu baru `serial = max(serial pool) + 1` dan mencatatnya di `data/serials.lock.json`. Serial tidak pernah diubah atau dipakai ulang, meski kartu di-takedown.
