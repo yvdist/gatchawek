@@ -272,6 +272,41 @@ export interface ImportAdminCardInput {
   now: number;
 }
 
+export interface EnsureImportGroupInput {
+  poolId: string;
+  groupId: string;
+  name: string;
+  badge: string;
+}
+
+/**
+ * Auto-create a filename-derived group inside the dropdown pool. Computes
+ * `sort_order` as max+1 in the pool and inserts with `ON CONFLICT DO NOTHING`
+ * so a repeated call (same batch, retried request) is a safe no-op.
+ */
+export async function ensureImportGroup(
+  db: Db,
+  input: EnsureImportGroupInput,
+): Promise<void> {
+  const [row] = await db
+    .select({ m: sql<number | null>`max(sort_order)` })
+    .from(groups)
+    .where(eq(groups.poolId, input.poolId));
+  const sortOrder = (row?.m ?? -1) + 1;
+  await db
+    .insert(groups)
+    .values({
+      id: input.groupId,
+      poolId: input.poolId,
+      name: input.name,
+      badge: input.badge,
+      sortOrder,
+      memberCount: 0,
+      enabled: true,
+    })
+    .onConflictDoNothing();
+}
+
 export type ImportAdminCardOutcome =
   | {
       status: "ok";
