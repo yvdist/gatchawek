@@ -91,6 +91,8 @@ export function cardsPage(args: {
   kind: AdminCardKindFilter;
   q: string;
   base: string;
+  renderMessage?: string | null;
+  renderOk?: boolean;
 }): string {
   const tabs = KINDS.map(
     (k) =>
@@ -102,13 +104,30 @@ export function cardsPage(args: {
         r.imageKind === "empty"
           ? `<span class="badge b-empty">tanpa image</span>`
           : `<img src="${escapeHtml(localImageSrc(args.base, r.imageFile))}" alt="" loading="lazy" onerror="this.classList.add('thumb-broken');var b=this.nextElementSibling;if(b)b.hidden=false;"><span class="badge b-off" hidden>gagal dimuat</span>`;
-      return `<tr><td>${thumb}</td><td><a href="/admin/cards/${escapeHtml(r.id)}">${escapeHtml(r.id)}</a></td><td>${escapeHtml(r.memberName)}</td><td>${escapeHtml(r.poolName)} · ${escapeHtml(r.groupBadge)}</td><td>${rarityBadge(r.rarity)}</td><td>${kindBadge(r.imageKind)}</td><td class="col-owned">×${r.quantityOwned}</td><td>${r.enabled ? "aktif" : `<span class="badge b-off">mati</span>`}</td></tr>`;
+      const pick =
+        r.imageKind === "remote" && r.enabled
+          ? `<input type="checkbox" name="ids" value="${escapeHtml(r.id)}" aria-label="pilih ${escapeHtml(r.id)}">`
+          : "";
+      return `<tr><td>${pick}</td><td>${thumb}</td><td><a href="/admin/cards/${escapeHtml(r.id)}">${escapeHtml(r.id)}</a></td><td>${escapeHtml(r.memberName)}</td><td>${escapeHtml(r.poolName)} · ${escapeHtml(r.groupBadge)}</td><td>${rarityBadge(r.rarity)}</td><td>${kindBadge(r.imageKind)}</td><td class="col-owned">×${r.quantityOwned}</td><td>${r.enabled ? "aktif" : `<span class="badge b-off">mati</span>`}</td></tr>`;
     })
     .join("");
+  const banner =
+    args.renderMessage !== undefined &&
+    args.renderMessage !== null &&
+    args.renderMessage !== ""
+      ? `<p class="alert ${args.renderOk === true ? "is-ok" : args.renderOk === false ? "is-err" : "is-info"}" role="alert">${escapeHtml(args.renderMessage)}</p>`
+      : "";
+  const inRemoteTab = args.kind === "remote";
+  const bulkOpen = inRemoteTab
+    ? `<form id="renderForm" method="post" action="/admin/cards/render-remote">`
+    : "";
+  const bulkClose = inRemoteTab
+    ? `<div class="actionbar"><label class="hint"><input type="checkbox" id="pickAll"> semua</label><button type="submit" id="renderBtn" class="btn" disabled>Minta render (0)</button><span class="hint">Render bingkai di cloud (cron 15 mnt / tombol). Butuh GitHub PAT untuk tombol.</span></div></form><script>(function(){var btn=document.getElementById("renderBtn");var all=document.getElementById("pickAll");if(!btn)return;function boxes(){return Array.prototype.slice.call(document.querySelectorAll('input[name="ids"]'));}function sync(){var bs=boxes();var n=bs.filter(function(b){return b.checked;}).length;btn.disabled=n===0;btn.textContent="Minta render ("+n+")";if(all)all.checked=n>0&&bs.every(function(b){return b.checked;});}if(all)all.addEventListener("change",function(){boxes().forEach(function(b){b.checked=all.checked;});sync();});document.addEventListener("change",function(e){if(e.target&&e.target.name==="ids")sync();});sync();})();</script>`
+    : "";
   return shell(
     "kartu",
     "cards",
-    `<div class="pagehead"><span class="eyebrow">Admin · Kartu</span><h1>Kartu (${args.total})</h1><p class="lede">Cari dan kelola katalog kartu.</p></div><div class="toolbar"><nav class="tabs" aria-label="Filter kind">${tabs}</nav><form method="get" action="/admin/cards" role="search"><input type="hidden" name="kind" value="${escapeHtml(args.kind)}"><input type="search" name="q" value="${escapeHtml(args.q)}" placeholder="cari nama / id kartu"><button class="btn-ghost" type="submit">Cari</button></form></div><div class="tablewrap"><table><thead><tr><th>thumb</th><th>id</th><th>member</th><th>pool · grup</th><th>rarity</th><th>kind</th><th class="col-owned">owned</th><th>status</th></tr></thead><tbody>${rows === "" ? `<tr><td colspan="8">kosong.</td></tr>` : rows}</tbody></table></div>`,
+    `<div class="pagehead"><span class="eyebrow">Admin · Kartu</span><h1>Kartu (${args.total})</h1><p class="lede">Cari dan kelola katalog kartu.</p></div>${banner}<div class="toolbar"><nav class="tabs" aria-label="Filter kind">${tabs}</nav><form method="get" action="/admin/cards" role="search"><input type="hidden" name="kind" value="${escapeHtml(args.kind)}"><input type="search" name="q" value="${escapeHtml(args.q)}" placeholder="cari nama / id kartu"><button class="btn-ghost" type="submit">Cari</button></form></div>${bulkOpen}<div class="tablewrap"><table><thead><tr><th></th><th>thumb</th><th>id</th><th>member</th><th>pool · grup</th><th>rarity</th><th>kind</th><th class="col-owned">owned</th><th>status</th></tr></thead><tbody>${rows === "" ? `<tr><td colspan="9">kosong.</td></tr>` : rows}</tbody></table></div>${bulkClose}`,
   );
 }
 
