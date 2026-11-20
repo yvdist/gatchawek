@@ -179,10 +179,23 @@
     "teddy-indra-wijaya-01": 319,
     "wihaji-01": 320,
     "yandri-susanto-01": 321,
-    "yassierli-01": 322
+    "yassierli-01": 322,
+    "abigail-rizal-01": 1,
+    "cute-salman-01": 2,
+    "hp-baok-01": 3,
+    "isal-kemesraan-01": 4,
+    "isal-perek-01": 5,
+    "isal-tidak-peduli-01": 6,
+    "jidan-nyangcut-01": 7,
+    "refi-turu-01": 8,
+    "salman-cipatat-01": 9,
+    "sangu-liwet-01": 10,
+    "sepongkan-sikit-le-01": 11,
+    "yudist-tidur-01": 12
   },
   "pools": {
     "meme": 114,
-    "pejabat": 322
+    "pejabat": 322,
+    "ahli-ngebul": 12
   }
 }
