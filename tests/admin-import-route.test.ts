@@ -9,7 +9,7 @@ import { ADMIN_SESSION_COOKIE, signSession } from "../src/admin/auth.js";
 import { registerAdminRoutes } from "../src/admin/routes.js";
 import { createDb } from "../src/db/client.js";
 import { getAdminCard } from "../src/db/queries/admin.js";
-import { cards, groups, injectQueue, pools } from "../src/db/schema.js";
+import { cards, groups, injectQueue, members, pools } from "../src/db/schema.js";
 import type { Env } from "../src/env.js";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -49,6 +49,8 @@ beforeAll(async () => {
     INJECT_APPROVER_IDS: "boss",
     ADMIN_PASSWORD: "secret",
     ADMIN_SECRET: "hmac-secret",
+    GITHUB_ACTIONS_PAT: "test-pat",
+    GITHUB_REPO: "o/r",
   };
   const db = createDb(env);
   await db.insert(pools).values({
@@ -488,5 +490,111 @@ describe("admin /admin/import routes", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  it("dispatches a render run for selected remote cards and skips others", async () => {
+    const db = createDb(env);
+    await db.insert(members).values({
+      id: "render-kid",
+      poolId: "ahli-ngebul",
+      groupId: "default",
+      name: "Render Kid",
+      nameLower: "render kid",
+      fullName: null,
+      photoTotal: 1,
+      sortOrder: 0,
+      enabled: true,
+    });
+    await db.insert(members).values({
+      id: "static-kid",
+      poolId: "ahli-ngebul",
+      groupId: "default",
+      name: "Static Kid",
+      nameLower: "static kid",
+      fullName: null,
+      photoTotal: 1,
+      sortOrder: 0,
+      enabled: true,
+    });
+    await db.insert(cards).values([
+      {
+        id: "render-kid-01",
+        poolId: "ahli-ngebul",
+        groupId: "default",
+        memberId: "render-kid",
+        serial: 900,
+        photoNo: 1,
+        rarity: "rare",
+        photoLabel: null,
+        imageFile: "https://cdn.example/render.jpg",
+        sourcePageUrl: null,
+        enabled: true,
+        holoEnabled: false,
+      },
+      {
+        id: "static-kid-01",
+        poolId: "ahli-ngebul",
+        groupId: "default",
+        memberId: "static-kid",
+        serial: 901,
+        photoNo: 1,
+        rarity: "rare",
+        photoLabel: null,
+        imageFile: "static-kid-01.abcdef12.webp",
+        sourcePageUrl: null,
+        enabled: true,
+        holoEnabled: false,
+      },
+    ]);
+    const calls: Array<{ url: string; body: string }> = [];
+    const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ url: String(url), body: String(init?.body ?? "") });
+      return new Response(null, { status: 204 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.append("ids", "render-kid-01");
+      fd.append("ids", "static-kid-01");
+      fd.append("ids", "nope-01");
+      const res = await app.request(
+        "/admin/cards/render-remote",
+        {
+          method: "POST",
+          headers: { Cookie: authCookie },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(302);
+      expect(calls).toHaveLength(1);
+      expect(calls[0]?.url).toBe("https://api.github.com/repos/o/r/dispatches");
+      const payload = JSON.parse(calls[0]?.body ?? "{}") as {
+        event_type: string;
+        client_payload: { ids: string };
+      };
+      expect(payload.event_type).toBe("render-remote");
+      expect(payload.client_payload.ids).toBe("render-kid-01");
+      const loc = res.headers.get("location") ?? "";
+      expect(loc).toContain("kind=remote");
+      expect(loc).toContain("ok=1");
+      expect(decodeURIComponent(loc)).toContain("2 dilewati");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("rejects render requests without a selection", async () => {
+    const res = await app.request(
+      "/admin/cards/render-remote",
+      {
+        method: "POST",
+        headers: { Cookie: authCookie },
+        body: new FormData(),
+      },
+      env,
+    );
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location") ?? "").toContain("ok=0");
   });
 });

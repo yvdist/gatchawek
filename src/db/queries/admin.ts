@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, like, sql, type SQL } from "drizzle-orm";
 import {
   cards,
   groups,
@@ -495,4 +495,33 @@ export async function importAdminCard(
     };
   }
   return { status: "conflict" };
+}
+
+export interface RenderableCard {
+  id: string;
+  imageFile: string;
+}
+
+/**
+ * Cards eligible for cloud render: remote (http URL) + enabled. Unknown,
+ * static, empty, or disabled ids are silently dropped (caller reports them
+ * as skipped). Capped at 50 ids per call.
+ */
+export async function listRenderableCards(
+  db: Db,
+  ids: readonly string[],
+): Promise<RenderableCard[]> {
+  const clean = [...new Set(ids.map((id) => id.trim()).filter((id) => id !== ""))].slice(0, 50);
+  if (clean.length === 0) return [];
+  const rows = await db
+    .select({ id: cards.id, imageFile: cards.imageFile })
+    .from(cards)
+    .where(
+      and(
+        inArray(cards.id, clean),
+        like(cards.imageFile, "http%"),
+        eq(cards.enabled, true),
+      ),
+    );
+  return rows;
 }

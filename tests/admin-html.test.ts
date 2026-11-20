@@ -280,4 +280,53 @@ describe("importPage", () => {
     expect(forInject).toContain('class="tablewrap"');
     expect(importPage({ poolGroups })).toContain('class="tablewrap"');
   });
+
+  it("shows bulk render controls only on the remote tab", () => {
+    const row = {
+      id: "r-01",
+      memberName: "M",
+      groupBadge: "G",
+      poolName: "P",
+      photoNo: 1,
+      rarity: "rare" as const,
+      imageFile: "https://cdn.example/x.jpg",
+      imageKind: "remote" as const,
+      enabled: true,
+      quantityOwned: 0,
+    };
+    const remote = cardsPage({
+      rows: [row],
+      total: 1,
+      kind: "remote",
+      q: "",
+      base: "example.test",
+    });
+    expect(remote).toContain('action="/admin/cards/render-remote"');
+    expect(remote).toContain('name="ids" value="r-01"');
+    expect(remote).toContain('id="renderBtn"');
+    expect(remote).toContain("Minta render (0)");
+    const all = cardsPage({
+      rows: [{ ...row, imageKind: "static", imageFile: "a.webp" }],
+      total: 1,
+      kind: "all",
+      q: "",
+      base: "example.test",
+    });
+    expect(all).not.toContain("/admin/cards/render-remote");
+    expect(all).not.toContain('name="ids"');
+  });
+
+  it("shows the render result banner when provided", () => {
+    const html = cardsPage({
+      rows: [],
+      total: 0,
+      kind: "remote",
+      q: "",
+      base: "example.test",
+      renderMessage: "Render 2 kartu diminta.",
+      renderOk: true,
+    });
+    expect(html).toContain("Render 2 kartu diminta.");
+    expect(html).toContain("is-ok");
+  });
 });

@@ -1,0 +1,39 @@
+name: Render remote cards
+
+on:
+  schedule:
+    # Every 15 minutes: render raw remote images into framed webp on R2.
+    - cron: "*/15 * * * *"
+  repository_dispatch:
+    types: [render-remote]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: render-remote
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.21.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec wrangler d1 execute DB --remote --command "SELECT COUNT(*) AS n FROM cards WHERE image_file LIKE 'http%' AND enabled = 1"
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: pnpm render-inject --remote --gap-ms=5000 ${{ github.event.client_payload.ids != '' && format('--only={0}', github.event.client_payload.ids) || '' }}
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
