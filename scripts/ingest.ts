@@ -166,38 +166,78 @@ export async function ingest(
         channelId: env.channelId,
         messageId: message.id,
       });
-      const payload = {
-        messageId: message.id,
-        channelId: env.channelId,
-        guildId,
-        authorId: message.author?.id,
-        submittedAt: message.timestamp,
-        messageUrl: `https://discord.com/channels/${guildId}/${env.channelId}/${message.id}`,
-        ...(parsed.ok
-          ? { submission: parsed.value }
-          : { errors: parsed.errors, content: message.content }),
-      };
-      const dir = parsed.ok ? env.pendingDir : env.rejectedDir;
-      const outPath = path.join(dir, `${message.id}.json`);
-      try {
-        await readFile(outPath, "utf8");
-        skipped += 1;
-      } catch {
-        const record: Record<string, unknown> = { ...payload };
-        if (!parsed.ok && !noReply) {
-          const ok = await replyToMessage(
-            env.token,
-            env.channelId,
-            message.id,
-            formatRejectionReply(parsed.errors),
-            fetchFn,
-          );
-          if (ok) replied += 1;
-          record.replied = ok;
+      const messageUrl = `https://discord.com/channels/${guildId}/${env.channelId}/${message.id}`;
+      if (!parsed.ok) {
+        const payload = {
+          messageId: message.id,
+          channelId: env.channelId,
+          guildId,
+          authorId: message.author?.id,
+          submittedAt: message.timestamp,
+          messageUrl,
+          errors: parsed.errors,
+          content: message.content,
+        };
+        const outPath = path.join(env.rejectedDir, `${message.id}.json`);
+        try {
+          await readFile(outPath, "utf8");
+          skipped += 1;
+        } catch {
+          const record: Record<string, unknown> = { ...payload };
+          if (!noReply) {
+            const ok = await replyToMessage(
+              env.token,
+              env.channelId,
+              message.id,
+              formatRejectionReply(parsed.errors),
+              fetchFn,
+            );
+            if (ok) replied += 1;
+            record.replied = ok;
+          }
+          await writeFile(outPath, `${JSON.stringify(record, null, 2)}\n`);
+          invalid += 1;
         }
-        await writeFile(outPath, `${JSON.stringify(record, null, 2)}\n`);
-        if (parsed.ok) valid += 1;
-        else invalid += 1;
+      } else if (parsed.value.imageUrls.length === 1) {
+        const payload = {
+          messageId: message.id,
+          channelId: env.channelId,
+          guildId,
+          authorId: message.author?.id,
+          submittedAt: message.timestamp,
+          messageUrl,
+          submission: parsed.value,
+        };
+        const outPath = path.join(env.pendingDir, `${message.id}.json`);
+        try {
+          await readFile(outPath, "utf8");
+          skipped += 1;
+        } catch {
+          await writeFile(outPath, `${JSON.stringify(payload, null, 2)}\n`);
+          valid += 1;
+        }
+      } else {
+        // One pending file per photo; suffixed messageIds stay idempotent.
+        for (let i = 0; i < parsed.value.imageUrls.length; i += 1) {
+          const partId = `${message.id}-p${String(i + 1)}`;
+          const payload = {
+            messageId: partId,
+            channelId: env.channelId,
+            guildId,
+            authorId: message.author?.id,
+            submittedAt: message.timestamp,
+            messageUrl,
+            submission: { ...parsed.value, imageUrl: parsed.value.imageUrls[i] },
+          };
+          const outPath = path.join(env.pendingDir, `${partId}.json`);
+          try {
+            await readFile(outPath, "utf8");
+            skipped += 1;
+          } catch {
+            await writeFile(outPath, `${JSON.stringify(payload, null, 2)}\n`);
+            valid += 1;
+          }
+        }
       }
     }
     cursor = message.id > (cursor ?? "") ? message.id : cursor;

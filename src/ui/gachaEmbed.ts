@@ -15,6 +15,9 @@ import {
 import type { PoolStatusRow } from "../db/queries/gacha.js";
 
 export function cardImageUrl(base: string, imageFile: string): string {
+  if (imageFile.startsWith("https://") || imageFile.startsWith("http://")) {
+    return imageFile;
+  }
   return `https://${base}/cards/${imageFile}`;
 }
 

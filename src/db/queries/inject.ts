@@ -166,8 +166,13 @@ export async function approveQueued(
       .update(members)
       .set({
         photoTotal: sql`${members.photoTotal} + 1`,
+        enabled: true,
       })
       .where(eq(members.id, q.memberId)),
+    db
+      .update(cards)
+      .set({ enabled: true })
+      .where(eq(cards.id, cardId)),
     db
       .update(injectQueue)
       .set({ status: "approved", reviewedBy: reviewerId, reviewedAt: now })

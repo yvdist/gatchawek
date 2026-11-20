@@ -143,23 +143,38 @@ describe("parseSubmission", () => {
     });
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.errors.some((e) => e.includes("1 image attachment"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("1-10 image attachments"))).toBe(true);
   });
 
-  it("rejects zero and multiple image attachments", () => {
+  it("accepts up to 10 images and exposes every URL", () => {
+    const attachments = [1, 2, 3].map((n) => ({
+      ...IMG,
+      url: `https://cdn.discordapp.net/attachments/1/2/foto${String(n)}.png`,
+    }));
+    const result = parseSubmission({ content: VALID, attachments, ...BASE });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.imageUrls).toEqual(attachments.map((a) => a.url));
+    expect(result.value.imageUrl).toBe(attachments[0]?.url);
+  });
+
+  it("rejects zero and eleven image attachments", () => {
     const empty = parseSubmission({ content: VALID, attachments: [], ...BASE });
     expect(empty.ok).toBe(false);
     if (!empty.ok) {
       expect(empty.errors.some((e) => e.includes("found 0"))).toBe(true);
     }
-    const two = parseSubmission({
+    const many = parseSubmission({
       content: VALID,
-      attachments: [IMG, { ...IMG, url: "https://cdn.discordapp.net/x.png" }],
+      attachments: Array.from({ length: 11 }, (_, n) => ({
+        ...IMG,
+        url: `https://cdn.discordapp.net/attachments/1/2/f${String(n)}.png`,
+      })),
       ...BASE,
     });
-    expect(two.ok).toBe(false);
-    if (!two.ok) {
-      expect(two.errors.some((e) => e.includes("found 2"))).toBe(true);
+    expect(many.ok).toBe(false);
+    if (!many.ok) {
+      expect(many.errors.some((e) => e.includes("found 11"))).toBe(true);
     }
   });
 

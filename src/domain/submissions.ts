@@ -41,7 +41,10 @@ export interface ParsedSubmission {
   rarity: RarityKey;
   label: string | null;
   sumber: string;
+  /** First photo; kept so scripts/approve.ts and old review paths work. */
   imageUrl: string;
+  /** All photos in attachment order; one card per entry. */
+  imageUrls: string[];
   messageUrl: string;
 }
 
@@ -60,6 +63,7 @@ export const SUBMISSION_TEMPLATE = [
   "[rarity] rare",
   "[label] (opsional, maks 60 karakter)",
   "[sumber] (opsional, link https)",
+  "(lampirkan 1-10 gambar: tiap gambar jadi 1 kartu foto #1..#N member yang sama)",
 ].join("\n");
 
 /**
@@ -72,7 +76,7 @@ export function formatRejectionReply(errors: readonly string[]): string {
     "❌ Kartu tidak bisa diproses:",
     reasons,
     "",
-    "Template yang benar (copy-paste, timpa yang dalam kurung, upload tepat 1 gambar):",
+    "Template yang benar (copy-paste, timpa yang dalam kurung, lampirkan 1-10 gambar):",
     "```",
     SUBMISSION_TEMPLATE,
     "```",
@@ -185,19 +189,22 @@ export function parseSubmission(
   const images = input.attachments.filter((a) =>
     (a.contentType ?? "").startsWith("image/"),
   );
-  if (images.length !== 1) {
+  if (images.length < 1 || images.length > 10) {
     errors.push(
-      `expected exactly 1 image attachment, found ${String(images.length)}`,
+      `expected 1-10 image attachments, found ${String(images.length)}`,
     );
   }
-  const image = images[0];
-  if (image !== undefined && !image.url.startsWith("https://")) {
-    errors.push("image attachment url must be an https URL");
+  for (const image of images) {
+    if (!image.url.startsWith("https://")) {
+      errors.push("image attachment url must be an https URL");
+      break;
+    }
   }
-
+  const image = images[0];
   if (errors.length > 0 || rarity === null || image === undefined || pool === null || grup === null) {
     return { ok: false, errors };
   }
+  const imageUrls = images.map((a) => a.url);
   return {
     ok: true,
     value: {
@@ -209,6 +216,7 @@ export function parseSubmission(
       label,
       sumber,
       imageUrl: image.url,
+      imageUrls,
       messageUrl,
     },
   };

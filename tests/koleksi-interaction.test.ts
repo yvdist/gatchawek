@@ -486,7 +486,7 @@ describe("handleKoleksi scope edge cases", () => {
   it("replies unknown-group for a missing grup", async () => {
     const out = await runKoleksi("u1", { pool: "pejabat", grup: "no-such-group" });
     expect(out.flags).toBe(64);
-    expect(out.content).toContain("Grup tak dikenal");
+    expect(out.content).toContain("sudah tidak ada / berubah");
   });
 
   it("replies empty when the user owns nothing in scope", async () => {

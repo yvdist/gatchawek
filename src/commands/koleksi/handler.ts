@@ -62,12 +62,7 @@ async function followupKoleksiPage(
   isPublic: boolean,
 ): Promise<void> {
   const db = createDb(env);
-  console.error("[koleksi-debug] start", JSON.stringify({ userId, filters, page }));
-  const outcome = await getKoleksiPage(db, userId, filters, page).catch((e) => {
-    console.error("[koleksi-debug] query threw:", String(e));
-    throw e;
-  });
-  console.error("[koleksi-debug] outcome:", outcome.status);
+  const outcome = await getKoleksiPage(db, userId, filters, page);
   switch (outcome.status) {
     case "unknown-pool":
       await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
@@ -77,7 +72,7 @@ async function followupKoleksiPage(
       return;
     case "unknown-group":
       await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
-        content: "Grup tak dikenal di pool ini.",
+        content: "Grup itu sudah tidak ada / berubah. Buka /koleksi lagi dan pilih grup dari daftar terbaru.",
         flags: 64,
       });
       return;
@@ -157,9 +152,7 @@ export function handleKoleksi(
           0,
           isPublic,
         );
-      } catch (err) {
-        // TEMP-DEBUG: dilacak via wrangler tail, dihapus setelah root cause ketemu.
-        console.error("[koleksi-debug] followup failed:", String(err));
+      } catch {
         try {
           await patchOriginal(
             interaction.application_id,

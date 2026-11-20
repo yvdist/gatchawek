@@ -102,41 +102,27 @@ export async function handleScheduled(env: Env): Promise<void> {
       channelId: env.INGEST_CHANNEL_ID,
       messageId: message.id,
     });
-    const inserted = await enqueueMessage(db, {
-      messageId: message.id,
-      channelId: env.INGEST_CHANNEL_ID,
-      guildId,
-      authorId: message.author?.id ?? null,
-      submittedAt: Date.parse(message.timestamp),
-      messageUrl: `https://discord.com/channels/${guildId}/${env.INGEST_CHANNEL_ID}/${message.id}`,
-      ...(parsed.ok
-        ? {
-            nama: parsed.value.nama,
-            memberId: parsed.value.memberId,
-            pool: parsed.value.pool,
-            grup: parsed.value.grup,
-            rarity: parsed.value.rarity,
-            label: parsed.value.label,
-            sumber: parsed.value.sumber,
-            imageUrl: parsed.value.imageUrl,
-          }
-        : {
-            nama: null,
-            memberId: null,
-            pool: null,
-            grup: null,
-            rarity: null,
-            label: null,
-            sumber: null,
-            imageUrl: null,
-            status: "rejected" as const,
-            errors: parsed.errors.join("\n"),
-          }),
-    });
-    if (!inserted) continue;
-    if (parsed.ok) {
-      valid += 1;
-    } else {
+    const messageUrl = `https://discord.com/channels/${guildId}/${env.INGEST_CHANNEL_ID}/${message.id}`;
+    if (!parsed.ok) {
+      const inserted = await enqueueMessage(db, {
+        messageId: message.id,
+        channelId: env.INGEST_CHANNEL_ID,
+        guildId,
+        authorId: message.author?.id ?? null,
+        submittedAt: Date.parse(message.timestamp),
+        messageUrl,
+        nama: null,
+        memberId: null,
+        pool: null,
+        grup: null,
+        rarity: null,
+        label: null,
+        sumber: null,
+        imageUrl: null,
+        status: "rejected" as const,
+        errors: parsed.errors.join("\n"),
+      });
+      if (!inserted) continue;
       invalid += 1;
       const ok = await replyInvalid(
         env.DISCORD_BOT_TOKEN,
@@ -145,7 +131,52 @@ export async function handleScheduled(env: Env): Promise<void> {
         parsed.errors,
       );
       if (ok) replied += 1;
+      continue;
     }
+    if (parsed.value.imageUrls.length === 1) {
+      const inserted = await enqueueMessage(db, {
+        messageId: message.id,
+        channelId: env.INGEST_CHANNEL_ID,
+        guildId,
+        authorId: message.author?.id ?? null,
+        submittedAt: Date.parse(message.timestamp),
+        messageUrl,
+        nama: parsed.value.nama,
+        memberId: parsed.value.memberId,
+        pool: parsed.value.pool,
+        grup: parsed.value.grup,
+        rarity: parsed.value.rarity,
+        label: parsed.value.label,
+        sumber: parsed.value.sumber,
+        imageUrl: parsed.value.imageUrl,
+      });
+      if (!inserted) continue;
+      valid += 1;
+      continue;
+    }
+    // One queue row per photo; suffixed message_ids stay idempotent.
+    let photoValid = 0;
+    for (let i = 0; i < parsed.value.imageUrls.length; i += 1) {
+      const inserted = await enqueueMessage(db, {
+        messageId: `${message.id}-p${String(i + 1)}`,
+        channelId: env.INGEST_CHANNEL_ID,
+        guildId,
+        authorId: message.author?.id ?? null,
+        submittedAt: Date.parse(message.timestamp),
+        messageUrl,
+        nama: parsed.value.nama,
+        memberId: parsed.value.memberId,
+        pool: parsed.value.pool,
+        grup: parsed.value.grup,
+        rarity: parsed.value.rarity,
+        label: parsed.value.label,
+        sumber: parsed.value.sumber,
+        imageUrl: parsed.value.imageUrls[i] ?? parsed.value.imageUrl,
+      });
+      if (inserted) photoValid += 1;
+    }
+    if (photoValid === 0) continue;
+    valid += photoValid;
   }
   console.log(
     `ingest: ${String(valid)} valid, ${String(invalid)} invalid, ${String(replied)} replied`,

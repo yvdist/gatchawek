@@ -104,6 +104,12 @@ describe("gachaEmbed", () => {
     );
   });
 
+  it("passes through absolute image URLs untouched", () => {
+    expect(cardImageUrl("example.test", "https://cdn.discordapp.com/x.png")).toBe(
+      "https://cdn.discordapp.com/x.png",
+    );
+  });
+
   it("renders status rows and reset texts", () => {
     const embed = buildStatusEmbed(
       [

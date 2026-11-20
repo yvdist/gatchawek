@@ -63,6 +63,25 @@ describe("seed takedown", () => {
     expect(sql).toContain("UPDATE members SET enabled=0");
   });
 
+  it("exempts phone-approved queue rows from every takedown sweep", () => {
+    const sql = renderSeedSql(
+      loaded([groupA]),
+      new Map([["anna-01", "anna-01.abc12345.webp"]]),
+      {
+        cards: { "anna-01": 1 },
+        pools: { pejabat: 1 },
+      },
+    );
+    expect(sql).toContain(
+      "id NOT IN (SELECT DISTINCT grup FROM inject_queue WHERE status='approved'",
+    );
+    expect(sql).toContain(
+      "member_id NOT IN (SELECT DISTINCT member_id FROM inject_queue WHERE status='approved'",
+    );
+    expect(sql).toContain("UPDATE members SET enabled=1 WHERE id IN (SELECT DISTINCT member_id");
+    expect(sql).toContain("UPDATE cards SET enabled=1 WHERE member_id IN (SELECT DISTINCT member_id");
+  });
+
   it("keeps live rows enabled via upsert re-enable", () => {
     const sql = renderSeedSql(
       loaded([groupA]),

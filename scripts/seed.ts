@@ -147,35 +147,54 @@ export function renderSeedSql(
     }
   }
   // Groups/members gone from the manifest (takedown): disable, never delete.
-  // Cards are disabled separately below; orphaned groups stay hidden from
-  // the catalog and koleksi scopes.
+  // Rows created by phone approval (/inject-review) are never in a manifest,
+  // so every sweep below exempts them: without this, each seed:remote
+  // silently hides every community-injected card (e.g. rapih-amat-01).
   const liveGroupIds = new Set<string>();
   const liveMemberIds = new Set<string>();
   for (const { manifest } of loaded.groups) {
     liveGroupIds.add(manifest.group.id);
     for (const member of manifest.members) liveMemberIds.add(member.id);
   }
+  const liveGroupList = [...liveGroupIds].map(sqlText).join(",");
+  const liveMemberList = [...liveMemberIds].map(sqlText).join(",");
   if (liveGroupIds.size > 0) {
-    const list = [...liveGroupIds].map(sqlText).join(",");
-    lines.push(`UPDATE groups SET enabled=0 WHERE id NOT IN (${list});`);
+    lines.push(
+      `UPDATE groups SET enabled=0 WHERE id NOT IN (${liveGroupList}) AND id NOT IN (SELECT DISTINCT grup FROM inject_queue WHERE status='approved' AND grup IS NOT NULL);`,
+    );
   } else {
-    lines.push(`UPDATE groups SET enabled=0;`);
+    lines.push(
+      `UPDATE groups SET enabled=0 WHERE id NOT IN (SELECT DISTINCT grup FROM inject_queue WHERE status='approved' AND grup IS NOT NULL);`,
+    );
   }
   if (liveMemberIds.size > 0) {
-    const list = [...liveMemberIds].map(sqlText).join(",");
-    lines.push(`UPDATE members SET enabled=0 WHERE id NOT IN (${list});`);
+    lines.push(
+      `UPDATE members SET enabled=0 WHERE id NOT IN (${liveMemberList}) AND id NOT IN (SELECT DISTINCT member_id FROM inject_queue WHERE status='approved' AND member_id IS NOT NULL);`,
+    );
   } else {
-    lines.push(`UPDATE members SET enabled=0;`);
+    lines.push(
+      `UPDATE members SET enabled=0 WHERE id NOT IN (SELECT DISTINCT member_id FROM inject_queue WHERE status='approved' AND member_id IS NOT NULL);`,
+    );
   }
   // Cards gone from the manifest (takedown): disable, never delete.
+  // Phone-approved row ids look like `${memberId}-01`: derive them from the
+  // approved queue rows so seed never needs the approval-time card id.
   if (liveCardIds.size > 0) {
     const list = [...liveCardIds].map(sqlText).join(",");
     lines.push(
-      `UPDATE cards SET enabled=0 WHERE id NOT IN (${list});`,
+      `UPDATE cards SET enabled=0 WHERE id NOT IN (${list}) AND member_id NOT IN (SELECT DISTINCT member_id FROM inject_queue WHERE status='approved' AND member_id IS NOT NULL);`,
     );
   } else {
-    lines.push(`UPDATE cards SET enabled=0;`);
+    lines.push(
+      `UPDATE cards SET enabled=0 WHERE member_id NOT IN (SELECT DISTINCT member_id FROM inject_queue WHERE status='approved' AND member_id IS NOT NULL);`,
+    );
   }
+  // Re-enable anything the phone flow approved: a past seed may have hidden
+  // it before this exemption existed, and future sweeps must stay no-ops.
+  lines.push(
+    `UPDATE members SET enabled=1 WHERE id IN (SELECT DISTINCT member_id FROM inject_queue WHERE status='approved' AND member_id IS NOT NULL);`,
+    `UPDATE cards SET enabled=1 WHERE member_id IN (SELECT DISTINCT member_id FROM inject_queue WHERE status='approved' AND member_id IS NOT NULL);`,
+  );
   for (const [poolId, count] of poolMemberCount) {
     lines.push(
       `UPDATE pools SET member_count=${count} WHERE id=${sqlText(poolId)};`,
