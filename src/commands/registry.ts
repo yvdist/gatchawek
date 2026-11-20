@@ -29,6 +29,8 @@ import { topDefinition } from "./top/definition.js";
 import { handleTop } from "./top/handler.js";
 import { battleDefinition } from "./battle/definition.js";
 import { handleBattle } from "./battle/handler.js";
+import { listDefinition } from "./list/definition.js";
+import { handleList } from "./list/handler.js";
 
 export type WaitUntil = (promise: Promise<unknown>) => void;
 
@@ -52,6 +54,7 @@ export const commandDefinitions = [
   pamerDefinition,
   topDefinition,
   battleDefinition,
+  listDefinition,
 ];
 
 const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
@@ -68,6 +71,7 @@ const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
   ["pamer", handlePamer],
   ["top", handleTop],
   ["battle", handleBattle],
+  ["list", handleList],
 ];
 
 export const commandHandlers: Map<string, CommandHandler | CommandHandlerWithWait> =

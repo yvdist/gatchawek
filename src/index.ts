@@ -26,6 +26,10 @@ import {
   handleBattleAutocomplete,
   handleBattleComponent,
 } from "./commands/battle/handler.js";
+import {
+  handleListAutocomplete,
+  handleListPage,
+} from "./commands/list/handler.js";
 import { handleScheduled } from "./scheduled.js";
 import type { Env } from "./env.js";
 import { registerAdminRoutes } from "./admin/routes.js";
@@ -130,6 +134,13 @@ app.post("/interactions", async (c) => {
         ),
       );
     }
+    if (ns === "list" && action === "p") {
+      return c.json(
+        await handleListPage(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
     return c.json(ephemeralResponse("Tombol kedaluwarsa."));
   }
   if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
@@ -166,6 +177,14 @@ app.post("/interactions", async (c) => {
       return c.json(
         await handleBattleAutocomplete(
           autocomplete as unknown as Parameters<typeof handleBattleAutocomplete>[0],
+          c.env,
+        ),
+      );
+    }
+    if (autocomplete.data.name === "list") {
+      return c.json(
+        await handleListAutocomplete(
+          autocomplete as unknown as Parameters<typeof handleListAutocomplete>[0],
           c.env,
         ),
       );
