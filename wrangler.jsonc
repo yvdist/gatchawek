@@ -11,6 +11,12 @@
       "migrations_dir": "migrations"
     }
   ],
+  "r2_buckets": [
+    {
+      "binding": "CARDS",
+      "bucket_name": "gatchawek-cards"
+    }
+  ],
   "vars": {
     "PUBLIC_BASE_URL": "gatchawek.yudistiraeka-pratama012.workers.dev",
     "INGEST_CHANNEL_ID": "1573206124168216637",
@@ -28,11 +34,13 @@
           "database_id": "f2c7a563-6b23-47dc-9758-c63f844d5d6c",
           "migrations_dir": "migrations"
         }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "CARDS",
+          "bucket_name": "gatchawek-cards-staging"
+        }
       ]
     }
-  },
-  "assets": {
-    "directory": "./public",
-    "not_found_handling": "none"
   }
 }
