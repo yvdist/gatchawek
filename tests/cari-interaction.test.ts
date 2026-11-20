@@ -141,6 +141,7 @@ beforeAll(async () => {
     { id: "anna-01", poolId: "pejabat", groupId: "g1", memberId: "anna", serial: 1, photoNo: 1, rarity: "common", imageFile: "a1.webp", enabled: true },
     { id: "anna-02", poolId: "pejabat", groupId: "g1", memberId: "anna", serial: 2, photoNo: 2, rarity: "super_rare", holoEnabled: true, imageFile: "a2.webp", enabled: true },
     { id: "budi-01", poolId: "pejabat", groupId: "g1", memberId: "budi", serial: 3, photoNo: 1, rarity: "rare", imageFile: "b1.webp", enabled: true },
+    { id: "budi-02", poolId: "pejabat", groupId: "g1", memberId: "budi", serial: 5, photoNo: 2, rarity: "common", photoLabel: "Ryan Unjuk Kebolehan", imageFile: "b2.webp", enabled: true },
     { id: "katak-01", poolId: "pejabat", groupId: "g1", memberId: "katak", serial: 4, photoNo: 1, rarity: "common", imageFile: "k1.webp", enabled: true },
   ]);
   await db.insert(users).values([
@@ -271,5 +272,42 @@ describe("/cari", () => {
       return;
     const names = (res.data.choices ?? []).map((c) => c.name);
     expect(names.some((n) => n.includes("Katak"))).toBe(true);
+  });
+
+  it("finds members by photo label and ranks the labeled card first", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({}), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      handleCari(cariSlash("u1", { nama: "ryan" }), env, waitUntil);
+      await tasks[0];
+      const [, init] = fetchMock.mock.calls[0] as unknown as [
+        string,
+        { body: string },
+      ];
+      const body = JSON.parse(init.body) as {
+        embeds: { title: string; description: string }[];
+      };
+      expect(body.embeds[0]?.description).toContain("Budi");
+      expect(body.embeds[0]?.description).toContain("Ryan Unjuk Kebolehan");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("autocompletes photo labels with owner member as value", async () => {
+    const res = await handleCariAutocomplete(cariAutocomplete("ryan"), env);
+    expect(res.type).toBe(
+      InteractionResponseType.ApplicationCommandAutocompleteResult,
+    );
+    if (
+      res.type !== InteractionResponseType.ApplicationCommandAutocompleteResult
+    )
+      return;
+    const choices = res.data.choices ?? [];
+    const match = choices.find((c) => c.name.includes("Ryan Unjuk Kebolehan"));
+    expect(match).toBeDefined();
+    expect(match?.name).toContain("Budi");
+    expect(match?.value).toBe("Budi");
   });
 });

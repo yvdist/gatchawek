@@ -7,7 +7,7 @@ import {
 } from "discord-api-types/v10";
 import { and, asc, eq, like, sql } from "drizzle-orm";
 import { createDb } from "../../db/client.js";
-import { groups, members, pools } from "../../db/schema.js";
+import { cards, groups, members, pools } from "../../db/schema.js";
 import { searchMembers } from "../../db/queries/cari.js";
 import {
   buildCariEmbed,
@@ -116,33 +116,62 @@ export async function handleCariAutocomplete(
     if (opt.name === "nama" && typeof opt.value === "string") typed = opt.value;
   }
   try {
-    const db = createDb(env);
-    const sanitized = typed.replace(/[%_\\]/g, "").toLowerCase();
-    const rows = await db
-      .select({
-        name: members.name,
-        groupName: groups.name,
-        poolName: pools.name,
-      })
-      .from(members)
-      .innerJoin(groups, eq(members.groupId, groups.id))
-      .innerJoin(pools, eq(members.poolId, pools.id))
-      .where(
-        and(
-          eq(members.enabled, true),
-          sanitized === "" ? sql`1 = 1` : like(members.nameLower, `%${sanitized}%`),
-        ),
-      )
-      .orderBy(asc(members.nameLower))
-      .limit(25);
+     const db = createDb(env);
+     const sanitized = typed.replace(/[%_\\]/g, "").toLowerCase();
+     const rows = await db
+       .select({
+         name: members.name,
+         groupName: groups.name,
+         poolName: pools.name,
+       })
+       .from(members)
+       .innerJoin(groups, eq(members.groupId, groups.id))
+       .innerJoin(pools, eq(members.poolId, pools.id))
+       .where(
+         and(
+           eq(members.enabled, true),
+           sanitized === "" ? sql`1 = 1` : like(members.nameLower, `%${sanitized}%`),
+         ),
+       )
+       .orderBy(asc(members.nameLower))
+       .limit(25);
+     // Label matches: per-photo names never present in members.nameLower.
+     const labelRows =
+       sanitized === ""
+         ? []
+         : await db
+             .select({
+               memberName: members.name,
+               groupName: groups.name,
+               photoLabel: cards.photoLabel,
+             })
+             .from(cards)
+             .innerJoin(members, eq(cards.memberId, members.id))
+             .innerJoin(groups, eq(members.groupId, groups.id))
+             .where(
+               and(
+                 eq(cards.enabled, true),
+                 eq(members.enabled, true),
+                 like(sql`lower(${cards.photoLabel})`, `%${sanitized}%`),
+               ),
+             )
+             .orderBy(asc(members.nameLower), asc(cards.photoNo))
+             .limit(25);
+     const choices = rows.map((r) => ({
+       name: `${r.name} (${r.groupName})`.slice(0, 100),
+       value: r.name,
+     }));
+     const seen = new Set(choices.map((c) => c.name));
+     for (const l of labelRows) {
+       if (l.photoLabel === null) continue;
+       const name = `${l.photoLabel} — ${l.memberName} (${l.groupName})`.slice(0, 100);
+       if (seen.has(name) || choices.length >= 25) continue;
+       seen.add(name);
+       choices.push({ name, value: l.memberName });
+     }
     return {
       type: InteractionResponseType.ApplicationCommandAutocompleteResult,
-      data: {
-        choices: rows.map((r) => ({
-          name: `${r.name} (${r.groupName})`.slice(0, 100),
-          value: r.name,
-        })),
-      },
+      data: { choices },
     };
   } catch {
     return {
@@ -150,4 +179,4 @@ export async function handleCariAutocomplete(
       data: { choices: [] },
     };
   }
-}
+ }

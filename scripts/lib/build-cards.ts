@@ -117,9 +117,9 @@ export async function buildCardImage(input: CardInput): Promise<Buffer> {
   const iw = CARD_W - inner * 2;
   const ih = CARD_H - inner * 2;
   ctx.save();
-  roundRectPath(ctx, CARD_W, CARD_H, RADIUS);
-  ctx.clip();
   ctx.translate(inner, inner);
+  roundRectPath(ctx, iw, ih, RADIUS - BORDER);
+  ctx.clip();
 
   // Photo cover-crop 2:3 centered on focus point.
   const photo = await loadImage(input.rawPath);
@@ -187,6 +187,12 @@ export async function buildCardImage(input: CardInput): Promise<Buffer> {
   const serialText = `No. ${input.serial}`;
   const serialW = ctx.measureText(serialText).width;
   ctx.fillText(serialText, iw - pad - serialW, ih - 52);
+  // Concentric ring over the clip seam: the photo can no longer bleed out,
+  // stroke recenters the border on the inner boundary.
+  ctx.lineWidth = BORDER;
+  ctx.strokeStyle = gradientFor(ctx, stops);
+  roundRectPath(ctx, iw, ih, RADIUS - BORDER);
+  ctx.stroke();
 
   ctx.restore();
 

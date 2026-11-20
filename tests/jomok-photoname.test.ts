@@ -38,8 +38,11 @@ describe("jomok per-photo names", () => {
     for (const input of jomok) {
       expect(input.photoLabel).toBeTypeOf("string");
     }
-    const dummy = inputs.find((i) => !i.cardId.startsWith("jomok-mix-"));
-    expect(dummy?.photoLabel).toBeNull();
+    const nonJomok = inputs.filter((i) => !i.cardId.startsWith("jomok-mix-"));
+    expect(nonJomok.length).toBeGreaterThan(0);
+    for (const input of nonJomok) {
+      expect(input.photoLabel).toBeNull();
+    }
   });
 
   it("seed SQL writes photo_label on insert and upsert", async () => {
