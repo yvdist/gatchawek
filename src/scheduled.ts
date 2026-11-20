@@ -1,9 +1,6 @@
 import { sql } from "drizzle-orm";
 import { createDb } from "./db/client.js";
-import {
-  enqueueMessage,
-  markRepliedInvalid,
-} from "./db/queries/inject.js";
+import { enqueueMessage } from "./db/queries/inject.js";
 import { injectQueue } from "./db/schema.js";
 import { formatRejectionReply, parseSubmission } from "./domain/submissions.js";
 import type { Env } from "./env.js";
@@ -132,6 +129,7 @@ export async function handleScheduled(env: Env): Promise<void> {
             label: null,
             sumber: null,
             imageUrl: null,
+            status: "rejected" as const,
             errors: parsed.errors.join("\n"),
           }),
     });
@@ -146,10 +144,7 @@ export async function handleScheduled(env: Env): Promise<void> {
         message.id,
         parsed.errors,
       );
-      if (ok) {
-        replied += 1;
-        await markRepliedInvalid(db, message.id);
-      }
+      if (ok) replied += 1;
     }
   }
   console.log(

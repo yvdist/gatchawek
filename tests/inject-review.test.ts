@@ -188,6 +188,30 @@ describe("inject queue", () => {
     expect(first?.messageId).toBe("m1");
     expect(await countPending(db)).toBe(2);
   });
+  it("invalid rows enqueue as rejected, never pending", async () => {
+    const db = createDb(env);
+    const inserted = await enqueueMessage(db, {
+      messageId: "mx",
+      channelId: "c-inject",
+      guildId: "g",
+      authorId: null,
+      submittedAt: 500,
+      messageUrl: "https://discord.com/channels/g/c-inject/mx",
+      nama: null,
+      memberId: null,
+      pool: null,
+      grup: null,
+      rarity: null,
+      label: null,
+      sumber: null,
+      imageUrl: null,
+      status: "rejected",
+      errors: "missing required field [pool]",
+    });
+    expect(inserted).toBe(true);
+    expect(await countPending(db)).toBe(2);
+  });
+
 
   it("approve inserts member + card with next serial/photoNo atomically", async () => {
     const db = createDb(env);

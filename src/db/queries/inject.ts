@@ -73,21 +73,6 @@ export async function countPending(db: Db): Promise<number> {
   return row?.n ?? 0;
 }
 
-export async function markRepliedInvalid(
-  db: Db,
-  messageId: string,
-): Promise<void> {
-  await db
-    .update(injectQueue)
-    .set({ status: "rejected", errors: "auto-replied invalid" })
-    .where(
-      and(
-        eq(injectQueue.messageId, messageId),
-        eq(injectQueue.status, "pending"),
-      ),
-    );
-}
-
 export type ApproveOutcome =
   | { status: "ok"; cardId: string; photoNo: number; serial: number }
   | { status: "not-pending" }
