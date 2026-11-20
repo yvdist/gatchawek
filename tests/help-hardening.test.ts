@@ -15,7 +15,6 @@ function buildEmbed() {
   return buildHelpEmbed({
     userId: "123",
     catalog: emptyCatalog,
-    baseUrl: "example.com",
     commands: commandDefinitions,
   });
 }
@@ -55,5 +54,13 @@ describe("help hardening (phase 5)", () => {
     for (const literal of ["pejabat", "kabinet", "meovv"]) {
       expect(source).not.toContain(literal);
     }
+  });
+
+  it("tidak membocorkan URL internal (workers.dev) di embed", () => {
+    const embed = buildEmbed();
+    const text = `${String(embed.title ?? "")}\n${String(embed.description ?? "")}\n${String(embed.footer?.text ?? "")}`;
+    expect(text).not.toMatch(/https?:\/\//);
+    expect(text).not.toContain("workers.dev");
+    expect(embed.footer).toBeUndefined();
   });
 });

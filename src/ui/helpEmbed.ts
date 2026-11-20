@@ -10,7 +10,6 @@ import type { HelpCatalog } from "../db/queries/koleksi.js";
 export interface HelpEmbedArgs {
   userId: string;
   catalog: HelpCatalog;
-  baseUrl: string;
   commands: readonly { name: string; description: string }[];
 }
 
@@ -71,6 +70,5 @@ export function buildHelpEmbed(args: HelpEmbedArgs): APIEmbed {
   return {
     title: "📖 Bantuan Photocard Bot",
     description,
-    footer: { text: `Gambar: https://${args.baseUrl}/cards/…` },
   };
 }

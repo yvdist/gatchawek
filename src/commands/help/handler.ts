@@ -28,7 +28,6 @@ export async function handleHelp(
           buildHelpEmbed({
             userId,
             catalog,
-            baseUrl: env.PUBLIC_BASE_URL,
             commands: commandDefinitions,
           }),
         ],
