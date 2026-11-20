@@ -238,7 +238,7 @@ describe("admin /admin/import routes", () => {
     }
   });
 
-  it("routes a cross-pool group name to the other pool and continues past unknown groups", async () => {
+  it("routes a cross-pool group name to the other pool and auto-creates unknown groups", async () => {
     let discordCalls = 0;
     const fetchMock = vi.fn(async () => {
       discordCalls += 1;
@@ -292,20 +292,199 @@ describe("admin /admin/import routes", () => {
         ok: boolean;
         results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
       };
-      expect(body.ok).toBe(false);
+      expect(body.ok).toBe(true);
       expect(body.results).toHaveLength(3);
       expect(body.results[0]).toMatchObject({ ok: true, cardId: "cross-kid-01" });
-      expect(body.results[1]).toMatchObject({ ok: false });
-      expect(body.results[1]?.message).toContain('Grup "Atlantis" tidak dikenal.');
+      expect(body.results[1]).toMatchObject({ ok: true, cardId: "lost-kid-01" });
+      expect(body.results[1]?.message).toContain("grup baru Atlantis");
       expect(body.results[2]).toMatchObject({ ok: true, cardId: "batch-kid-01" });
 
       const db = createDb(env);
       const [cross] = await db.select().from(cards).where(eq(cards.id, "cross-kid-01")).limit(1);
       expect(cross?.poolId).toBe("pejabat");
       expect(cross?.groupId).toBe("kabinet");
+      const [lost] = await db.select().from(cards).where(eq(cards.id, "lost-kid-01")).limit(1);
+      expect(lost?.poolId).toBe("ahli-ngebul");
+      expect(lost?.groupId).toBe("atlantis");
+      const [atlantis] = await db.select().from(groups).where(eq(groups.id, "atlantis")).limit(1);
+      expect(atlantis).toMatchObject({ poolId: "ahli-ngebul", name: "Atlantis", enabled: true });
       const [batch] = await db.select().from(cards).where(eq(cards.id, "batch-kid-01")).limit(1);
       expect(batch?.poolId).toBe("ahli-ngebul");
       expect(batch?.groupId).toBe("default");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("creates a new group once when two files share it", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          id: "m-ramean",
+          channel_id: "c-ingest",
+          attachments: [
+            { url: "https://cdn.discordapp.com/attachments/1/2/ramean.jpg" },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.append(
+        "files",
+        new File(
+          [new Uint8Array([11])],
+          "(super_rare) - Ramean - Salman Habibi.jpg",
+          { type: "image/jpeg" },
+        ),
+      );
+      fd.append(
+        "files",
+        new File(
+          [new Uint8Array([12])],
+          "(secret) - Ramean - Jidan Kedua.jpg",
+          { type: "image/jpeg" },
+        ),
+      );
+      const res = await app.request(
+        "/admin/import",
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie,
+            Accept: "application/json",
+          },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        ok: boolean;
+        results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
+      };
+      expect(body.ok).toBe(true);
+      expect(body.results).toHaveLength(2);
+      expect(body.results[0]).toMatchObject({ ok: true });
+      expect(body.results[0]?.message).toContain("grup baru Ramean");
+      expect(body.results[1]).toMatchObject({ ok: true });
+      expect(body.results[1]?.message).not.toContain("grup baru");
+
+      const db = createDb(env);
+      const ramean = await db.select().from(groups).where(eq(groups.id, "ramean"));
+      expect(ramean).toHaveLength(1);
+      expect(ramean[0]).toMatchObject({
+        poolId: "ahli-ngebul",
+        name: "Ramean",
+        badge: "RAMEAN",
+        memberCount: 2,
+      });
+      const [first] = await db
+        .select()
+        .from(cards)
+        .where(eq(cards.id, "salman-habibi-01"))
+        .limit(1);
+      expect(first?.groupId).toBe("ramean");
+      const [second] = await db
+        .select()
+        .from(cards)
+        .where(eq(cards.id, "jidan-kedua-01"))
+        .limit(1);
+      expect(second?.groupId).toBe("ramean");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("rejects a symbol-only group segment as ambiguous", async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new Error("upload must not run for rejected files");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.set(
+        "files",
+        new File([new Uint8Array([13])], "(rare) - @#$% - Simbol Kid.jpg", {
+          type: "image/jpeg",
+        }),
+      );
+      const res = await app.request(
+        "/admin/import",
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie,
+            Accept: "application/json",
+          },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        ok: boolean;
+        results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
+      };
+      expect(body.ok).toBe(false);
+      expect(body.results).toHaveLength(1);
+      expect(body.results[0]).toMatchObject({ ok: false });
+      expect(body.results[0]?.message).toContain("ambigu");
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("rejects a slug collision with a different group name", async () => {
+    const db = createDb(env);
+    await db.insert(groups).values({
+      id: "tabrakan",
+      poolId: "ahli-ngebul",
+      name: "Tabrakan X",
+      badge: "TBRX",
+      memberCount: 0,
+      enabled: true,
+    });
+    const fetchMock = vi.fn(async () => {
+      throw new Error("upload must not run for rejected files");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.set(
+        "files",
+        new File([new Uint8Array([14])], "(rare) - Tabrakan! - Tabrakan Kid.jpg", {
+          type: "image/jpeg",
+        }),
+      );
+      const res = await app.request(
+        "/admin/import",
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie,
+            Accept: "application/json",
+          },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        ok: boolean;
+        results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
+      };
+      expect(body.ok).toBe(false);
+      expect(body.results).toHaveLength(1);
+      expect(body.results[0]).toMatchObject({ ok: false });
+      expect(body.results[0]?.message).toContain("ambigu");
+      expect(fetchMock).not.toHaveBeenCalled();
     } finally {
       vi.unstubAllGlobals();
     }
