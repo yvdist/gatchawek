@@ -9,6 +9,7 @@ import {
 } from "./auth.js";
 import { createDb } from "../db/client.js";
 import {
+  ensureImportGroup,
   getAdminCard,
   getAdminCounts,
   importAdminCard,
@@ -25,6 +26,7 @@ import {
   parseCardFilename,
   parseRarityAlias,
 } from "../domain/cardImport.js";
+import { planGroupForImport } from "../domain/importGroups.js";
 import type { Env } from "../env.js";
 import {
   cardDetailPage,
@@ -109,38 +111,6 @@ async function uploadImageToDiscord(
       ? `https://discord.com/channels/${env.INGEST_GUILD_ID}/${channelId}/${messageId}`
       : cdn;
   return { ok: true, url: cdn, messageId, messageUrl };
-}
-
-/**
- * Resolve a per-file group segment against known pool groups. Prefers the
- * dropdown pool; allows cross-pool matches when the name is unique there.
- * Returns the matched `{ poolId, groupId }` or the reason it cannot resolve.
- */
-function resolveImportGroup(
-  poolGroups: { poolId: string; groupId: string; groupName: string }[],
-  rawGroup: string | null,
-  preferredPoolId: string,
-): { poolId: string; groupId: string } | "unknown" | "ambiguous" {
-  const norm = (raw: string): string =>
-    raw.trim().toLowerCase().replace(/\s+/g, " ");
-  if (rawGroup === null) return "unknown";
-  const want = norm(rawGroup);
-  if (want === "") return "unknown";
-  const matches = poolGroups.filter(
-    (pg) => norm(pg.groupName) === want || norm(pg.groupId) === want,
-  );
-  if (matches.length === 0) return "unknown";
-  const inPool = matches.filter((pg) => pg.poolId === preferredPoolId);
-  if (inPool.length === 1) {
-    const hit = inPool[0] as { poolId: string; groupId: string };
-    return { poolId: hit.poolId, groupId: hit.groupId };
-  }
-  if (inPool.length > 1) return "ambiguous";
-  if (matches.length === 1) {
-    const hit = matches[0] as { poolId: string; groupId: string };
-    return { poolId: hit.poolId, groupId: hit.groupId };
-  }
-  return "ambiguous";
 }
 
 // Single-user owner panel: cookie is HttpOnly + SameSite=Lax + Secure with
@@ -396,6 +366,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       .map((v) => (typeof v === "string" ? v : ""));
 
     const results: ImportBatchItemResult[] = [];
+    const createdInBatch = new Set<string>();
     const baseNow = Date.now();
     for (let i = 0; i < rawFiles.length; i += 1) {
       const file = rawFiles[i];
@@ -433,25 +404,57 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       }
       let destPoolId = target.poolId;
       let destGroupId = target.groupId;
+      let createdGroupName: string | null = null;
       if (parsed.rawGroup !== null) {
-        const resolved = resolveImportGroup(
-          poolGroups,
+        const planned = planGroupForImport(
           parsed.rawGroup,
+          poolGroups,
           target.poolId,
         );
-        if (resolved === "unknown" || resolved === "ambiguous") {
+        if (planned === "ambiguous") {
           results.push({
             filename: file.name,
             ok: false,
-            message:
-              resolved === "ambiguous"
-                ? `Grup "${parsed.rawGroup}" ambigu, pilih lebih spesifik.`
-                : `Grup "${parsed.rawGroup}" tidak dikenal.`,
+            message: `Grup "${parsed.rawGroup}" ambigu, pilih lebih spesifik.`,
           });
           continue;
         }
-        destPoolId = resolved.poolId;
-        destGroupId = resolved.groupId;
+        if (planned === "use-dropdown") {
+          // Legacy 2-segment form: keep the dropdown target.
+        } else if ("create" in planned) {
+          const clash = poolGroups.find(
+            (pg) =>
+              pg.poolId === planned.create.poolId &&
+              pg.groupId === planned.create.groupId,
+          );
+          if (clash !== undefined) {
+            results.push({
+              filename: file.name,
+              ok: false,
+              message: `Grup "${parsed.rawGroup}" ambigu, pilih lebih spesifik.`,
+            });
+            continue;
+          }
+          const createdKey = `${planned.create.poolId}:${planned.create.groupId}`;
+          if (!createdInBatch.has(createdKey)) {
+            await ensureImportGroup(db, planned.create);
+            poolGroups.push({
+              poolId: planned.create.poolId,
+              poolName: target.poolName,
+              poolEmoji: target.poolEmoji,
+              groupId: planned.create.groupId,
+              groupName: planned.create.name,
+              groupBadge: planned.create.badge,
+            });
+            createdInBatch.add(createdKey);
+          }
+          destPoolId = planned.create.poolId;
+          destGroupId = planned.create.groupId;
+          createdGroupName = planned.create.name;
+        } else if ("use" in planned) {
+          destPoolId = planned.use.poolId;
+          destGroupId = planned.use.groupId;
+        }
       }
       const uploaded = await uploadImageToDiscord(
         c.env,
@@ -482,7 +485,10 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         results.push({
           filename: file.name,
           ok: true,
-          message: `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)})`,
+          message:
+            createdGroupName === null
+              ? `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)})`
+              : `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)}) · grup baru ${createdGroupName}`,
           cardId: outcome.cardId,
           serial: outcome.serial,
         });
