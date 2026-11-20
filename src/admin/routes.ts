@@ -16,6 +16,7 @@ import {
   listAdminCards,
   listAdminPoolGroups,
   listAdminQueue,
+  listRenderableCards,
   setAdminCardEnabled,
   setAdminCardImage,
   type AdminCardKindFilter,
@@ -183,7 +184,65 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       offset: 0,
     });
     return c.html(
-      cardsPage({ rows, total, kind, q, base: c.env.PUBLIC_BASE_URL }),
+      cardsPage({ rows, total, kind, q, base: c.env.PUBLIC_BASE_URL, renderMessage: (c.req.query("msg") ?? "") === "" ? null : (c.req.query("msg") ?? ""), renderOk: (c.req.query("ok") ?? "") === "1" }),
+    );
+  });
+
+  admin.post("/cards/render-remote", async (c) => {
+    const fail = (message: string): Response =>
+      c.redirect(
+        `/admin/cards?kind=remote&ok=0&msg=${encodeURIComponent(message)}`,
+      );
+    const pat = c.env.GITHUB_ACTIONS_PAT;
+    if (pat === undefined || pat === "") {
+      return fail(
+        "Render manual belum dikonfigurasi (GitHub PAT kosong). Cron 15 menit tetap berjalan.",
+      );
+    }
+    let formData: FormData;
+    try {
+      formData = await c.req.formData();
+    } catch {
+      return fail("Form tidak terbaca.");
+    }
+    const rawIds = formData
+      .getAll("ids")
+      .map((v) => (typeof v === "string" ? v.trim() : ""))
+      .filter((v) => v !== "");
+    if (rawIds.length === 0) return fail("Pilih minimal 1 kartu remote.");
+    if (rawIds.length > 50) return fail("Maksimal 50 kartu per render.");
+    const renderable = await listRenderableCards(createDb(c.env), rawIds);
+    if (renderable.length === 0) {
+      return fail("Tidak ada kartu remote valid dari pilihan.");
+    }
+    const skipped = rawIds.length - renderable.length;
+    const repo =
+      c.env.GITHUB_REPO === undefined || c.env.GITHUB_REPO === ""
+        ? "yvdist/gatchawek"
+        : c.env.GITHUB_REPO;
+    const res = await fetch(
+      `https://api.github.com/repos/${repo}/dispatches`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${pat}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event_type: "render-remote",
+          client_payload: {
+            ids: renderable.map((r) => r.id).join(","),
+          },
+        }),
+      },
+    );
+    if (!res.ok) {
+      return fail(`GitHub dispatch gagal (${String(res.status)}). Coba lagi.`);
+    }
+    const skipNote = skipped > 0 ? ` (${String(skipped)} dilewati)` : "";
+    return c.redirect(
+      `/admin/cards?kind=remote&ok=1&msg=${encodeURIComponent(`Render ${String(renderable.length)} kartu diminta${skipNote}. Cek lagi ~15 menit.`)}`,
     );
   });
 
