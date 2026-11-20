@@ -2,7 +2,7 @@ import { sql } from "drizzle-orm";
 import { createDb } from "./db/client.js";
 import { enqueueMessage } from "./db/queries/inject.js";
 import { injectQueue } from "./db/schema.js";
-import { formatRejectionReply, parseSubmission } from "./domain/submissions.js";
+import { formatBulkRejectionReply, formatRejectionReply, parseBulkSubmission, parseSubmission } from "./domain/submissions.js";
 import type { Env } from "./env.js";
 
 const API_BASE = "https://discord.com/api/v10";
@@ -20,6 +20,20 @@ interface DiscordMessage {
   webhook_id?: string;
   author?: { id: string; bot?: boolean };
   attachments: DiscordAttachment[];
+}
+
+/** Bulk marker: message carries shared defaults + one .json attachment. */
+function isBulkMessage(content: string, attachments: DiscordAttachment[]): boolean {
+  return (
+    /^\s*\[bulk-json\]/im.test(content) &&
+    attachments.some((a) => a.filename.toLowerCase().endsWith(".json"))
+  );
+}
+
+async function downloadText(url: string, token: string): Promise<string> {
+  const res = await fetch(url, { headers: { Authorization: `Bot ${token}` } });
+  if (!res.ok) throw new Error(`Discord CDN ${String(res.status)} for ${url}`);
+  return await res.text();
 }
 
 async function listMessages(
@@ -43,6 +57,7 @@ async function replyInvalid(
   channelId: string,
   messageId: string,
   errors: string[],
+  bulk = false,
 ): Promise<boolean> {
   try {
     const res = await fetch(`${API_BASE}/channels/${channelId}/messages`, {
@@ -52,7 +67,7 @@ async function replyInvalid(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        content: formatRejectionReply(errors),
+        content: bulk ? formatBulkRejectionReply(errors) : formatRejectionReply(errors),
         message_reference: { message_id: messageId },
         allowed_mentions: { parse: [] },
       }),
@@ -91,6 +106,88 @@ export async function handleScheduled(env: Env): Promise<void> {
     a.id < b.id ? -1 : a.id > b.id ? 1 : 0,
   )) {
     if (message.author?.bot === true || message.webhook_id !== undefined) continue;
+    const messageUrl = `https://discord.com/channels/${guildId}/${env.INGEST_CHANNEL_ID}/${message.id}`;
+    if (isBulkMessage(message.content, message.attachments)) {
+      const jsonFile = message.attachments.find((a) =>
+        a.filename.toLowerCase().endsWith(".json"),
+      );
+      let jsonText = "";
+      try {
+        if (jsonFile !== undefined) {
+          jsonText = await downloadText(jsonFile.url, env.DISCORD_BOT_TOKEN);
+        }
+      } catch (err: unknown) {
+        console.warn(`ingest: bulk download failed: ${(err as Error).message}`);
+      }
+      const bulk = parseBulkSubmission({
+        content: message.content,
+        attachments: message.attachments.map((a) => ({
+          url: a.url,
+          filename: a.filename,
+          contentType: a.content_type ?? null,
+        })),
+        guildId,
+        channelId: env.INGEST_CHANNEL_ID,
+        messageId: message.id,
+        jsonText,
+      });
+      if (!bulk.ok) {
+        const inserted = await enqueueMessage(db, {
+          messageId: message.id,
+          channelId: env.INGEST_CHANNEL_ID,
+          guildId,
+          authorId: message.author?.id ?? null,
+          submittedAt: Date.parse(message.timestamp),
+          messageUrl,
+          nama: null,
+          memberId: null,
+          pool: null,
+          grup: null,
+          rarity: null,
+          label: null,
+          sumber: null,
+          imageUrl: null,
+          status: "rejected" as const,
+          errors: bulk.errors.join("\n"),
+        });
+        if (!inserted) continue;
+        invalid += 1;
+        const okReply = await replyInvalid(
+          env.DISCORD_BOT_TOKEN,
+          env.INGEST_CHANNEL_ID,
+          message.id,
+          bulk.errors,
+          true,
+        );
+        if (okReply) replied += 1;
+        continue;
+      }
+      let bulkValid = 0;
+      for (let i = 0; i < bulk.value.cards.length; i += 1) {
+        const card = bulk.value.cards[i];
+        if (card === undefined) continue;
+        const inserted = await enqueueMessage(db, {
+          messageId: `${message.id}-b${String(i + 1)}`,
+          channelId: env.INGEST_CHANNEL_ID,
+          guildId,
+          authorId: message.author?.id ?? null,
+          submittedAt: Date.parse(message.timestamp),
+          messageUrl,
+          nama: card.nama,
+          memberId: card.memberId,
+          pool: card.pool,
+          grup: card.grup,
+          rarity: card.rarity,
+          label: card.label,
+          sumber: card.sumber,
+          imageUrl: card.imageUrl,
+        });
+        if (inserted) bulkValid += 1;
+      }
+      if (bulkValid === 0) continue;
+      valid += bulkValid;
+      continue;
+    }
     const parsed = parseSubmission({
       content: message.content,
       attachments: message.attachments.map((a) => ({
@@ -102,7 +199,6 @@ export async function handleScheduled(env: Env): Promise<void> {
       channelId: env.INGEST_CHANNEL_ID,
       messageId: message.id,
     });
-    const messageUrl = `https://discord.com/channels/${guildId}/${env.INGEST_CHANNEL_ID}/${message.id}`;
     if (!parsed.ok) {
       const inserted = await enqueueMessage(db, {
         messageId: message.id,
@@ -133,50 +229,24 @@ export async function handleScheduled(env: Env): Promise<void> {
       if (ok) replied += 1;
       continue;
     }
-    if (parsed.value.imageUrls.length === 1) {
-      const inserted = await enqueueMessage(db, {
-        messageId: message.id,
-        channelId: env.INGEST_CHANNEL_ID,
-        guildId,
-        authorId: message.author?.id ?? null,
-        submittedAt: Date.parse(message.timestamp),
-        messageUrl,
-        nama: parsed.value.nama,
-        memberId: parsed.value.memberId,
-        pool: parsed.value.pool,
-        grup: parsed.value.grup,
-        rarity: parsed.value.rarity,
-        label: parsed.value.label,
-        sumber: parsed.value.sumber,
-        imageUrl: parsed.value.imageUrl,
-      });
-      if (!inserted) continue;
-      valid += 1;
-      continue;
-    }
-    // One queue row per photo; suffixed message_ids stay idempotent.
-    let photoValid = 0;
-    for (let i = 0; i < parsed.value.imageUrls.length; i += 1) {
-      const inserted = await enqueueMessage(db, {
-        messageId: `${message.id}-p${String(i + 1)}`,
-        channelId: env.INGEST_CHANNEL_ID,
-        guildId,
-        authorId: message.author?.id ?? null,
-        submittedAt: Date.parse(message.timestamp),
-        messageUrl,
-        nama: parsed.value.nama,
-        memberId: parsed.value.memberId,
-        pool: parsed.value.pool,
-        grup: parsed.value.grup,
-        rarity: parsed.value.rarity,
-        label: parsed.value.label,
-        sumber: parsed.value.sumber,
-        imageUrl: parsed.value.imageUrls[i] ?? parsed.value.imageUrl,
-      });
-      if (inserted) photoValid += 1;
-    }
-    if (photoValid === 0) continue;
-    valid += photoValid;
+    const inserted = await enqueueMessage(db, {
+      messageId: message.id,
+      channelId: env.INGEST_CHANNEL_ID,
+      guildId,
+      authorId: message.author?.id ?? null,
+      submittedAt: Date.parse(message.timestamp),
+      messageUrl,
+      nama: parsed.value.nama,
+      memberId: parsed.value.memberId,
+      pool: parsed.value.pool,
+      grup: parsed.value.grup,
+      rarity: parsed.value.rarity,
+      label: parsed.value.label,
+      sumber: parsed.value.sumber,
+      imageUrl: parsed.value.imageUrl,
+    });
+    if (!inserted) continue;
+    valid += 1;
   }
   console.log(
     `ingest: ${String(valid)} valid, ${String(invalid)} invalid, ${String(replied)} replied`,

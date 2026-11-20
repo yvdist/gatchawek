@@ -116,32 +116,6 @@ describe("ingest", () => {
     // 1 list call + 1 auto-reply POST for the invalid message.
     expect(fetchFn).toHaveBeenCalledTimes(2);
   });
-  it("writes one pending file per photo with stable suffixes", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "gatchawek-ingest-"));
-    roots.push(root);
-    const pendingDir = path.join(root, "data", "submissions", "pending");
-    const rejectedDir = path.join(root, "data", "submissions", "rejected");
-    const stateFile = path.join(root, "data", "ingest-state.json");
-    const photos = [1, 2, 3].map((n) => ({
-      ...IMG,
-      id: `a${String(n)}`,
-      url: `https://cdn.discordapp.net/attachments/1/2/foto${String(n)}.png`,
-    }));
-    const result = await ingest(root, {
-      env: { token: "T", channelId: "222", stateFile, pendingDir, rejectedDir },
-      fetchFn: mockFetch([message({ id: "40", content: VALID_CONTENT, attachments: photos })]),
-    });
-    expect(result.valid).toBe(3);
-    expect(await readdir(pendingDir)).toEqual(["40-p1.json", "40-p2.json", "40-p3.json"]);
-    const first = (await readJson(root, "data", "submissions", "pending", "40-p1.json")) as {
-      messageId: string;
-      submission: { imageUrl: string; imageUrls: string[] };
-    };
-    expect(first.messageId).toBe("40-p1");
-    expect(first.submission.imageUrl).toBe(photos[0]?.url);
-    expect(first.submission.imageUrls).toHaveLength(3);
-  });
-
    it("is idempotent across runs and resumes from the cursor", async () => {
     const root = await mkdtemp(path.join(tmpdir(), "gatchawek-ingest-"));
     roots.push(root);
@@ -258,5 +232,101 @@ describe("ingest", () => {
     expect(
       (await readJson(root, "data", "submissions", "rejected", "31.json") as { replied: boolean }).replied,
     ).toBe(false);
+  });
+
+  it("writes one pending file per bulk JSON row", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "gatchawek-ingest-"));
+    roots.push(root);
+    const pendingDir = path.join(root, "data", "submissions", "pending");
+    const rejectedDir = path.join(root, "data", "submissions", "rejected");
+    const stateFile = path.join(root, "data", "ingest-state.json");
+    const env = { token: "T", channelId: "222", stateFile, pendingDir, rejectedDir };
+    const rows = [
+      { nama: "Aynid Morbulet", imageUrl: "https://example.test/a.jpg" },
+      { nama: "Katak Bijak", imageUrl: "https://example.test/b.jpg", label: "lucu" },
+    ];
+    const jsonAttachment = {
+      id: "j1",
+      url: "https://cdn.discordapp.net/attachments/1/2/bulk.json",
+      filename: "bulk.json",
+      content_type: "application/json",
+      size: 200,
+      proxy_url: "https://media.discordapp.net/attachments/1/2/bulk.json",
+      width: 0,
+      height: 0,
+    };
+    const bulkContent = `[bulk-json]
+[pool] pejabat
+[grup] kabinet-merah-putih
+[rarity] rare`;
+    const fetchFn = (async (input: unknown, init?: { method?: string }) => {
+      const url = String(input);
+      if (init?.method === "POST") return new Response(JSON.stringify({ id: "r" }), { status: 200 });
+      if (url.endsWith("bulk.json")) {
+        return new Response(JSON.stringify(rows), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }
+      return new Response(
+        JSON.stringify([message({ id: "50", content: bulkContent, attachments: [jsonAttachment] })]),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+    const result = await ingest(root, { env, fetchFn });
+    expect(result.valid).toBe(2);
+    expect(await readdir(pendingDir)).toEqual(["50-b1.json", "50-b2.json"]);
+    const second = (await readJson(root, "data", "submissions", "pending", "50-b2.json")) as {
+      messageId: string;
+      submission: { nama: string; label: string | null; pool: string };
+    };
+    expect(second.messageId).toBe("50-b2");
+    expect(second.submission.nama).toBe("Katak Bijak");
+    expect(second.submission.label).toBe("lucu");
+    expect(second.submission.pool).toBe("pejabat");
+  });
+
+  it("rejects bulk with bad JSON once with the bulk template", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "gatchawek-ingest-"));
+    roots.push(root);
+    const pendingDir = path.join(root, "data", "submissions", "pending");
+    const rejectedDir = path.join(root, "data", "submissions", "rejected");
+    const stateFile = path.join(root, "data", "ingest-state.json");
+    const env = { token: "T", channelId: "222", stateFile, pendingDir, rejectedDir };
+    const posts: { body: Record<string, unknown> }[] = [];
+    const fetchFn = (async (input: unknown, init?: { method?: string; body?: string }) => {
+      const url = String(input);
+      if (init?.method === "POST") {
+        posts.push({ body: JSON.parse(String(init.body)) as Record<string, unknown> });
+        return new Response(JSON.stringify({ id: "r" }), { status: 200 });
+      }
+      if (url.endsWith("bulk.json")) return new Response("not json{", { status: 200 });
+      return new Response(
+        JSON.stringify([
+          message({
+            id: "51",
+            content: "[bulk-json]\n[pool] pejabat\n[grup] kabinet-merah-putih\n[rarity] rare",
+            attachments: [
+              {
+                id: "j1",
+                url: "https://cdn.discordapp.net/attachments/1/2/bulk.json",
+                filename: "bulk.json",
+                content_type: "application/json",
+                size: 10,
+                proxy_url: "",
+                width: 0,
+                height: 0,
+              },
+            ],
+          }),
+        ]),
+        { status: 200 },
+      );
+    }) as typeof fetch;
+    const result = await ingest(root, { env, fetchFn });
+    expect(result.invalid).toBe(1);
+    expect(result.replied).toBe(1);
+    expect(posts).toHaveLength(1);
+    expect(String((posts[0]?.body as Record<string, unknown>)["content"])).toContain("[bulk-json]");
   });
 });

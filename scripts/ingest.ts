@@ -2,7 +2,12 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import type { APIMessage } from "discord-api-types/v10";
-import { formatRejectionReply, parseSubmission } from "./lib/submissions.js";
+import {
+  formatBulkRejectionReply,
+  formatRejectionReply,
+  parseBulkSubmission,
+  parseSubmission,
+} from "./lib/submissions.js";
 
 // Load repo .env automatically so `pnpm ingest` works without manual export.
 // No-op on old Node or when CI injects env directly (existing vars win).
@@ -154,6 +159,93 @@ export async function ingest(
   )) {
     if (message.author?.bot === true || message.webhook_id !== undefined) {
       skipped += 1;
+    } else if (
+      /^\s*\[bulk-json\]/im.test(message.content) &&
+      message.attachments.some((a) => a.filename.toLowerCase().endsWith(".json"))
+    ) {
+      const jsonFile = message.attachments.find((a) =>
+        a.filename.toLowerCase().endsWith(".json"),
+      );
+      let jsonText = "";
+      if (jsonFile !== undefined) {
+        try {
+          const res = await fetchFn(jsonFile.url, {
+            headers: { Authorization: `Bot ${env.token}` },
+          });
+          if (res.ok) jsonText = await res.text();
+          else console.warn(`warning: bulk download failed HTTP ${String(res.status)} (stays invalid, retried next run)`);
+        } catch (err: unknown) {
+          console.warn(`warning: bulk download failed: ${(err as Error).message} (stays invalid, retried next run)`);
+        }
+      }
+      const messageUrl = `https://discord.com/channels/${guildId}/${env.channelId}/${message.id}`;
+      const bulk = parseBulkSubmission({
+        content: message.content,
+        attachments: message.attachments.map((a) => ({
+          url: a.url,
+          filename: a.filename,
+          contentType: a.content_type ?? null,
+        })),
+        guildId,
+        channelId: env.channelId,
+        messageId: message.id,
+        jsonText,
+      });
+      if (!bulk.ok) {
+        const payload = {
+          messageId: message.id,
+          channelId: env.channelId,
+          guildId,
+          authorId: message.author?.id,
+          submittedAt: message.timestamp,
+          messageUrl,
+          errors: bulk.errors,
+          content: message.content,
+        };
+        const outPath = path.join(env.rejectedDir, `${message.id}.json`);
+        try {
+          await readFile(outPath, "utf8");
+          skipped += 1;
+        } catch {
+          const record: Record<string, unknown> = { ...payload };
+          if (!noReply) {
+            const ok = await replyToMessage(
+              env.token,
+              env.channelId,
+              message.id,
+              formatBulkRejectionReply(bulk.errors),
+              fetchFn,
+            );
+            if (ok) replied += 1;
+            record.replied = ok;
+          }
+          await writeFile(outPath, `${JSON.stringify(record, null, 2)}\n`);
+          invalid += 1;
+        }
+      } else {
+        for (let i = 0; i < bulk.value.cards.length; i += 1) {
+          const card = bulk.value.cards[i];
+          if (card === undefined) continue;
+          const partId = `${message.id}-b${String(i + 1)}`;
+          const payload = {
+            messageId: partId,
+            channelId: env.channelId,
+            guildId,
+            authorId: message.author?.id,
+            submittedAt: message.timestamp,
+            messageUrl,
+            submission: card,
+          };
+          const outPath = path.join(env.pendingDir, `${partId}.json`);
+          try {
+            await readFile(outPath, "utf8");
+            skipped += 1;
+          } catch {
+            await writeFile(outPath, `${JSON.stringify(payload, null, 2)}\n`);
+            valid += 1;
+          }
+        }
+      }
     } else {
       const parsed = parseSubmission({
         content: message.content,
@@ -198,7 +290,7 @@ export async function ingest(
           await writeFile(outPath, `${JSON.stringify(record, null, 2)}\n`);
           invalid += 1;
         }
-      } else if (parsed.value.imageUrls.length === 1) {
+      } else {
         const payload = {
           messageId: message.id,
           channelId: env.channelId,
@@ -215,28 +307,6 @@ export async function ingest(
         } catch {
           await writeFile(outPath, `${JSON.stringify(payload, null, 2)}\n`);
           valid += 1;
-        }
-      } else {
-        // One pending file per photo; suffixed messageIds stay idempotent.
-        for (let i = 0; i < parsed.value.imageUrls.length; i += 1) {
-          const partId = `${message.id}-p${String(i + 1)}`;
-          const payload = {
-            messageId: partId,
-            channelId: env.channelId,
-            guildId,
-            authorId: message.author?.id,
-            submittedAt: message.timestamp,
-            messageUrl,
-            submission: { ...parsed.value, imageUrl: parsed.value.imageUrls[i] },
-          };
-          const outPath = path.join(env.pendingDir, `${partId}.json`);
-          try {
-            await readFile(outPath, "utf8");
-            skipped += 1;
-          } catch {
-            await writeFile(outPath, `${JSON.stringify(payload, null, 2)}\n`);
-            valid += 1;
-          }
         }
       }
     }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseSubmission } from "../scripts/lib/submissions.js";
+import { parseBulkSubmission, parseSubmission } from "../scripts/lib/submissions.js";
 
 const IMG = {
   url: "https://cdn.discordapp.net/attachments/1/2/foto.png",
@@ -143,38 +143,23 @@ describe("parseSubmission", () => {
     });
     expect(result.ok).toBe(false);
     if (result.ok) return;
-    expect(result.errors.some((e) => e.includes("1-10 image attachments"))).toBe(true);
+    expect(result.errors.some((e) => e.includes("1 image attachment"))).toBe(true);
   });
 
-  it("accepts up to 10 images and exposes every URL", () => {
-    const attachments = [1, 2, 3].map((n) => ({
-      ...IMG,
-      url: `https://cdn.discordapp.net/attachments/1/2/foto${String(n)}.png`,
-    }));
-    const result = parseSubmission({ content: VALID, attachments, ...BASE });
-    expect(result.ok).toBe(true);
-    if (!result.ok) return;
-    expect(result.value.imageUrls).toEqual(attachments.map((a) => a.url));
-    expect(result.value.imageUrl).toBe(attachments[0]?.url);
-  });
-
-  it("rejects zero and eleven image attachments", () => {
+  it("rejects zero and multiple image attachments", () => {
     const empty = parseSubmission({ content: VALID, attachments: [], ...BASE });
     expect(empty.ok).toBe(false);
     if (!empty.ok) {
       expect(empty.errors.some((e) => e.includes("found 0"))).toBe(true);
     }
-    const many = parseSubmission({
+    const two = parseSubmission({
       content: VALID,
-      attachments: Array.from({ length: 11 }, (_, n) => ({
-        ...IMG,
-        url: `https://cdn.discordapp.net/attachments/1/2/f${String(n)}.png`,
-      })),
+      attachments: [IMG, { ...IMG, url: "https://cdn.discordapp.net/x.png" }],
       ...BASE,
     });
-    expect(many.ok).toBe(false);
-    if (!many.ok) {
-      expect(many.errors.some((e) => e.includes("found 11"))).toBe(true);
+    expect(two.ok).toBe(false);
+    if (!two.ok) {
+      expect(two.errors.some((e) => e.includes("found 2"))).toBe(true);
     }
   });
 
@@ -191,4 +176,91 @@ describe("parseSubmission", () => {
     expect(result.errors.some((e) => e.includes("[label]"))).toBe(true);
     expect(result.errors.some((e) => e.includes("[sumber]"))).toBe(true);
   });
+
+describe("parseBulkSubmission", () => {
+  const JSON_FILE = {
+    url: "https://cdn.discordapp.net/attachments/1/2/bulk.json",
+    filename: "bulk.json",
+    contentType: "application/json",
+  };
+  const HEADER = `[bulk-json]
+[pool] pejabat
+[grup] kabinet-merah-putih
+[rarity] rare`;
+
+  it("parses one card per JSON row with shared defaults", () => {
+    const jsonText = JSON.stringify([
+      { nama: "Aynid Morbulet", imageUrl: "https://example.test/a.jpg" },
+      { nama: "Katak Bijak", imageUrl: "https://example.test/b.jpg", label: "lucu" },
+    ]);
+    const result = parseBulkSubmission({
+      content: HEADER,
+      attachments: [JSON_FILE],
+      jsonText,
+      ...BASE,
+    });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.cards).toHaveLength(2);
+    expect(result.value.cards[0]).toMatchObject({
+      nama: "Aynid Morbulet",
+      memberId: "aynid-morbulet",
+      pool: "pejabat",
+      grup: "kabinet-merah-putih",
+      rarity: "rare",
+      label: null,
+      imageUrl: "https://example.test/a.jpg",
+    });
+    expect(result.value.cards[1]?.label).toBe("lucu");
+  });
+
+  it("rejects invalid JSON, non-array, and bad rows", () => {
+    const bad = parseBulkSubmission({
+      content: HEADER,
+      attachments: [JSON_FILE],
+      jsonText: "not json{",
+      ...BASE,
+    });
+    expect(bad.ok).toBe(false);
+    const nonArray = parseBulkSubmission({
+      content: HEADER,
+      attachments: [JSON_FILE],
+      jsonText: JSON.stringify({ nama: "x" }),
+      ...BASE,
+    });
+    expect(nonArray.ok).toBe(false);
+    const badRow = parseBulkSubmission({
+      content: HEADER,
+      attachments: [JSON_FILE],
+      jsonText: JSON.stringify([{ nama: "", imageUrl: "http://x/y.jpg" }]),
+      ...BASE,
+    });
+    expect(badRow.ok).toBe(false);
+    if (!badRow.ok) {
+      expect(badRow.errors.some((e) => e.includes("row 1"))).toBe(true);
+    }
+  });
+
+  it("rejects missing template fields and over-limit card counts", () => {
+    const noPool = parseBulkSubmission({
+      content: "[bulk-json]\n[grup] kabinet-merah-putih\n[rarity] rare",
+      attachments: [JSON_FILE],
+      jsonText: JSON.stringify([{ nama: "A", imageUrl: "https://example.test/a.jpg" }]),
+      ...BASE,
+    });
+    expect(noPool.ok).toBe(false);
+    const tooMany = parseBulkSubmission({
+      content: HEADER,
+      attachments: [JSON_FILE],
+      jsonText: JSON.stringify(
+        Array.from({ length: 51 }, (_, n) => ({
+          nama: `M ${String(n)}`,
+          imageUrl: "https://example.test/a.jpg",
+        })),
+      ),
+      ...BASE,
+    });
+    expect(tooMany.ok).toBe(false);
+  });
+});
 });
