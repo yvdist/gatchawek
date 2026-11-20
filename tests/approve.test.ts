@@ -1,4 +1,4 @@
-import { mkdtemp, mkdir, readdir, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
@@ -11,22 +11,48 @@ afterEach(async () => {
 });
 
 const POOLS = [
-  {
-    id: "pejabat",
-    name: "Pejabat",
-    emoji: "🏛️",
-    staminaMax: 10,
-    regenIntervalSec: 1500,
-    resetCooldownSec: 10800,
-    sortOrder: 0,
-  },
+  { id: "pejabat", name: "Pejabat", emoji: "🏛️", staminaMax: 10, regenIntervalSec: 1500, resetCooldownSec: 10800, sortOrder: 0 },
+  { id: "meme", name: "Jomok", emoji: "🐸", staminaMax: 10, regenIntervalSec: 1500, resetCooldownSec: 10800, sortOrder: 1 },
 ];
 
-async function makeRoot(): Promise<string> {
+function photo(photoNo: number): Record<string, unknown> {
+  return {
+    photoNo,
+    rarity: "common",
+    imageUrl: "https://example.com/wiki/foto",
+    sourcePageUrl: "https://example.com/wiki/foto",
+    license: null,
+    author: null,
+  };
+}
+
+function curatedGroup(pool: string, id: string, members: { id: string; name: string; count: number }[]): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    pool,
+    group: { id, name: id, badge: "KURASI" },
+    members: members.map((m) => ({
+      id: m.id,
+      name: m.name,
+      photos: Array.from({ length: m.count }, (_, i) => photo(i + 1)),
+    })),
+  };
+}
+
+async function makeRoot(extraMembers: { id: string; name: string; count: number }[] = []): Promise<string> {
   const root = await mkdtemp(path.join(tmpdir(), "gatchawek-approve-"));
   roots.push(root);
   await mkdir(path.join(root, "data", "groups", "pejabat"), { recursive: true });
   await writeFile(path.join(root, "data", "pools.json"), JSON.stringify(POOLS));
+  await writeFile(
+    path.join(root, "data", "groups", "pejabat", "kabinet-merah-putih.json"),
+    JSON.stringify(
+      curatedGroup("pejabat", "kabinet-merah-putih", [
+        { id: "aynid-morbulet", name: "Aynid Morbulet", count: 3 },
+        ...extraMembers,
+      ]),
+    ),
+  );
   await mkdir(path.join(root, "data", "submissions", "pending"), { recursive: true });
   return root;
 }
@@ -44,6 +70,7 @@ function pendingMessage(
     submission: {
       nama: "Aynid Morbulet",
       memberId: "aynid-morbulet",
+      pool: "pejabat",
       grup: "kabinet-merah-putih",
       rarity: "rare",
       label: null,
@@ -68,83 +95,120 @@ async function placeManualRaw(root: string, cardId: string): Promise<void> {
 }
 
 describe("approve", () => {
-  it("merges two same-name submissions into one member with photoNo 1,2", async () => {
+  it("appends sequential photoNos to an existing curated member", async () => {
     const root = await makeRoot();
     await writePending(root, "100");
-    await placeManualRaw(root, "aynid-morbulet-01");
+    await placeManualRaw(root, "aynid-morbulet-04");
     const first = await approve(root, { messageId: "100", skipFetch: true });
     expect(first.memberId).toBe("aynid-morbulet");
-    expect(first.photoNo).toBe(1);
+    expect(first.photoNo).toBe(4);
+    expect(first.groupFile).toBe(path.join("data", "groups", "pejabat", "kabinet-merah-putih.json"));
 
     await writePending(root, "101");
-    await placeManualRaw(root, "aynid-morbulet-02");
+    await placeManualRaw(root, "aynid-morbulet-05");
     const second = await approve(root, { messageId: "101", skipFetch: true });
-    expect(second.memberId).toBe("aynid-morbulet");
-    expect(second.photoNo).toBe(2);
-    expect(second.groupFile).toBe(first.groupFile);
+    expect(second.photoNo).toBe(5);
 
     const loaded = await loadManifests(root);
     expect(loaded.groups).toHaveLength(1);
-    const member = loaded.groups[0]?.manifest.members[0];
-    expect(member?.photos).toHaveLength(2);
-    expect(member?.photos.map((p) => p.photoNo)).toEqual([1, 2]);
+    const member = loaded.groups[0]?.manifest.members.find((m) => m.id === "aynid-morbulet");
+    expect(member?.photos.map((p) => p.photoNo)).toEqual([1, 2, 3, 4, 5]);
   });
 
-  it("creates separate members for different names", async () => {
+  it("rejects a new name that would start below 3 photos", async () => {
     const root = await makeRoot();
-    await writePending(root, "200");
-    await placeManualRaw(root, "aynid-morbulet-01");
-    await approve(root, { messageId: "200", skipFetch: true });
+    await writePending(root, "120", { nama: "Citra Lestari", memberId: "citra-lestari" });
+    await placeManualRaw(root, "citra-lestari-01");
+    await expect(approve(root, { messageId: "120", skipFetch: true })).rejects.toThrow(
+      /member "citra-lestari" would have 1 photos, group "kabinet-merah-putih" requires at least 3/,
+    );
+    // Still pending after refusal; group file untouched.
+    expect(await readdir(path.join(root, "data", "submissions", "pending"))).toEqual(["120.json"]);
+    const body = JSON.parse(
+      await readFile(path.join(root, "data", "groups", "pejabat", "kabinet-merah-putih.json"), "utf8"),
+    ) as { members: unknown[] };
+    expect(body.members).toHaveLength(1);
+  });
 
-    await writePending(root, "201", { nama: "Budi Santoso" });
-    await placeManualRaw(root, "budi-santoso-01");
-    await approve(root, { messageId: "201", skipFetch: true });
+  it("rejects a submission grup that does not match the pool", async () => {
+    const root = await makeRoot();
+    await writePending(root, "130", { grup: "jomok" });
+    await expect(approve(root, { messageId: "130", skipFetch: true })).rejects.toThrow(
+      /submission grup "jomok" does not match pool "pejabat" \(must be kabinet-merah-putih\)/,
+    );
+  });
 
-    const loaded = await loadManifests(root);
-    const members = loaded.groups[0]?.manifest.members ?? [];
-    expect(members.map((m) => m.id).sort()).toEqual(["aynid-morbulet", "budi-santoso"]);
+  it("rejects a --pool override that conflicts with the submission pool", async () => {
+    const root = await makeRoot();
+    await writePending(root, "140");
+    await expect(
+      approve(root, { messageId: "140", pool: "meme", skipFetch: true }),
+    ).rejects.toThrow(/--pool meme conflicts with submission pool "pejabat"/);
+  });
+
+  it("defaults to pejabat for old pendings without a pool field", async () => {
+    const root = await makeRoot();
+    const legacy = pendingMessage("150", {});
+    delete (legacy.submission as Record<string, unknown>).pool;
+    await writeFile(
+      path.join(root, "data", "submissions", "pending", "150.json"),
+      JSON.stringify(legacy),
+    );
+    await placeManualRaw(root, "aynid-morbulet-04");
+    const result = await approve(root, { messageId: "150", skipFetch: true });
+    expect(result.photoNo).toBe(4);
   });
 
   it("rejects a slug collision owned by another file", async () => {
     const root = await makeRoot();
-    // Pre-existing member in a curated group, same slug the submission generates.
+    await mkdir(path.join(root, "data", "groups", "meme"), { recursive: true });
     await writeFile(
-      path.join(root, "data", "groups", "pejabat", "kurasi.json"),
-      JSON.stringify({
-        schemaVersion: 1,
-        pool: "pejabat",
-        group: { id: "kurasi", name: "Kurasi", badge: "KURASI" },
-        members: [
-          {
-            id: "aynid-morbulet",
-            name: "Aynid Morbulet",
-            photos: [1, 2, 3].map((photoNo) => ({
-              photoNo,
-              rarity: "common",
-              imageUrl: "color:#9CA3AF",
-              sourcePageUrl: "https://example.com/wiki/foto",
-              license: null,
-              author: null,
-            })),
-          },
-        ],
-      }),
+      path.join(root, "data", "groups", "meme", "jomok.json"),
+      JSON.stringify(
+        curatedGroup("meme", "jomok", [{ id: "katak-bijak", name: "Katak Bijak", count: 3 }]),
+      ),
     );
-    // Submission lands in a *different* komunitas group file.
-    await writePending(root, "300", { grup: "kelompok-lain" });
+    await writePending(root, "160", { nama: "Katak Bijak", memberId: "katak-bijak" });
+    await expect(approve(root, { messageId: "160", skipFetch: true })).rejects.toThrow(
+      /already exists in data.groups.meme.jomok\.json/,
+    );
+  });
 
-    await expect(approve(root, { messageId: "300", skipFetch: true })).rejects.toThrow(
-      /already exists in data.groups.pejabat.kurasi\.json/,
+  it("rejects when the target file belongs to a different pool", async () => {
+    const root = await makeRoot();
+    await writeFile(
+      path.join(root, "data", "groups", "pejabat", "kabinet-merah-putih.json"),
+      JSON.stringify(
+        curatedGroup("meme", "kabinet-merah-putih", [
+          { id: "aynid-morbulet", name: "Aynid Morbulet", count: 3 },
+        ]),
+      ),
+    );
+    await writePending(root, "170");
+    await expect(approve(root, { messageId: "170", skipFetch: true })).rejects.toThrow(
+      /belongs to pool "meme", not "pejabat"/,
+    );
+  });
+
+  it("errors loudly when the target group file is missing", async () => {
+    const root = await mkdtemp(path.join(tmpdir(), "gatchawek-approve-"));
+    roots.push(root);
+    await mkdir(path.join(root, "data", "groups", "pejabat"), { recursive: true });
+    await mkdir(path.join(root, "data", "submissions", "pending"), { recursive: true });
+    await writeFile(path.join(root, "data", "pools.json"), JSON.stringify(POOLS));
+    await writePending(root, "180");
+    await expect(approve(root, { messageId: "180", skipFetch: true })).rejects.toThrow(
+      /target group file .*kabinet-merah-putih\.json not found; repo groups changed, update POOL_GROUPS/,
     );
   });
 
   it("requires a manual raw file in skip-fetch mode", async () => {
     const root = await makeRoot();
-    await writePending(root, "400");
-    await expect(approve(root, { messageId: "400", skipFetch: true })).rejects.toThrow(
-      /no manual file for aynid-morbulet-01/,
+    await writePending(root, "190");
+    await expect(approve(root, { messageId: "190", skipFetch: true })).rejects.toThrow(
+      /no manual file for aynid-morbulet-04/,
     );
     // Still pending after failure.
-    expect(await readdir(path.join(root, "data", "submissions", "pending"))).toEqual(["400.json"]);
+    expect(await readdir(path.join(root, "data", "submissions", "pending"))).toEqual(["190.json"]);
   });
 });

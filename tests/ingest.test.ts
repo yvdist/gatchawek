@@ -49,7 +49,8 @@ function message(overrides: Partial<APIMessage> & { id: string }): APIMessage {
 }
 
 const VALID_CONTENT = `[nama] Aynid Morbulet
-[grup] komunitas-x
+[pool] pejabat
+[grup] kabinet-merah-putih
 [rarity] rare`;
 
 function mockFetch(messages: APIMessage[]): typeof fetch {

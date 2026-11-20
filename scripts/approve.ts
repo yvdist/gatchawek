@@ -1,10 +1,10 @@
 import { mkdir, readdir, readFile, unlink, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
+import { POOL_GROUPS } from "./lib/submissions.js";
 import { loadManifests } from "./lib/manifests.js";
 import { fetchRemoteImage } from "./fetch-images.js";
 import { slugifyMemberId } from "./lib/discover-commons.js";
-
 export interface PendingSubmission {
   messageId: string;
   channelId: string;
@@ -14,6 +14,7 @@ export interface PendingSubmission {
   submission: {
     nama: string;
     memberId: string;
+    pool?: string;
     grup: string;
     rarity: string;
     label: string | null;
@@ -65,15 +66,19 @@ async function readPending(root: string, messageId: string): Promise<PendingSubm
   }
 }
 
-function groupFileFor(pool: string, grup: string): string {
-  const groupId = slugifyMemberId(grup, new Set());
-  return path.join("data", "groups", pool, `komunitas-${groupId}.json`);
+/** Curated group file for a pool+grup pair. Pools in POOL_GROUPS resolve to
+ * their fixed curated file; anything else falls back to the grup slug
+ * (forward-compatible, never creates files — missing targets fail loud). */
+function targetFileFor(pool: string, grup: string): string {
+  const mapped = (POOL_GROUPS as Record<string, string | undefined>)[pool];
+  const stem = mapped ?? slugifyMemberId(grup, new Set());
+  return path.join("data", "groups", pool, `${stem}.json`);
 }
 
 interface CommunityGroupBody {
   schemaVersion: 1;
   pool: string;
-  group: { id: string; name: string; badge: string; allowSinglePhoto: boolean };
+  group: { id: string; name: string; badge: string; allowSinglePhoto?: boolean };
   members: CommunityMemberBody[];
 }
 
@@ -112,21 +117,39 @@ async function loadGroupFile(absPath: string): Promise<{ body: CommunityGroupBod
 }
 
 export async function approve(root: string, options: ApproveOptions): Promise<ApproveResult> {
-  const pool = options.pool ?? "pejabat";
   const pending = await readPending(root, options.messageId);
   const { submission } = pending;
+  // Pool comes from the submission; --pool is an operator override that must
+  // agree with it. Old in-flight pendings without a pool default to pejabat.
+  const submissionPool = submission.pool ?? options.pool ?? "pejabat";
+  if (
+    options.pool !== undefined &&
+    submission.pool !== undefined &&
+    options.pool !== submission.pool
+  ) {
+    throw new Error(
+      `--pool ${options.pool} conflicts with submission pool "${submission.pool}"`,
+    );
+  }
+  const pool = submissionPool;
 
   const loaded = await loadManifests(root);
   if (!loaded.poolIds.has(pool)) {
     throw new Error(`unknown pool "${pool}" (not in data/pools.json)`);
+  }
+  // Submission grup must match the pool's fixed curated group.
+  const expectedGrup = (POOL_GROUPS as Record<string, string | undefined>)[pool];
+  if (expectedGrup !== undefined && submission.grup.toLowerCase() !== expectedGrup) {
+    throw new Error(
+      `submission grup "${submission.grup}" does not match pool "${pool}" (must be ${expectedGrup})`,
+    );
   }
   // Global member.id uniqueness (mirrors loadManifests enforcement).
   const owner = new Map<string, string>();
   for (const { file, manifest } of loaded.groups) {
     for (const member of manifest.members) owner.set(member.id, file);
   }
-  const targetFile = groupFileFor(pool, submission.grup);
-  const existing = await loadGroupFile(path.join(root, targetFile));
+  const targetFile = targetFileFor(pool, submission.grup);
   // The base slug is the member identity. If another file owns it, reject:
   // silent "-2" suffixes would fork one person into two members.
   const memberId = slugifyMemberId(submission.nama, new Set());
@@ -137,25 +160,21 @@ export async function approve(root: string, options: ApproveOptions): Promise<Ap
     );
   }
 
-  let members: CommunityMemberBody[];
-  let groupBody: CommunityGroupBody;
+  // The target is an existing curated group file. Missing files fail loud:
+  // repo groups changed, update POOL_GROUPS — never create group files here.
+  const existing = await loadGroupFile(path.join(root, targetFile));
   if (existing === null) {
-    groupBody = {
-      schemaVersion: 1,
-      pool,
-      group: {
-        id: `komunitas-${slugifyMemberId(submission.grup, new Set())}`,
-        name: submission.grup,
-        badge: "WARGA",
-        allowSinglePhoto: true,
-      },
-      members: [],
-    };
-    members = groupBody.members;
-  } else {
-    groupBody = existing.body;
-    members = groupBody.members;
+    throw new Error(
+      `target group file ${targetFile} not found; repo groups changed, update POOL_GROUPS`,
+    );
   }
+  const groupBody = existing.body;
+  if (groupBody.pool !== pool) {
+    throw new Error(
+      `target group file ${targetFile} belongs to pool "${groupBody.pool}", not "${pool}"`,
+    );
+  }
+  const members = groupBody.members;
 
   let entry = members.find((m) => m.id === memberId);
   if (entry == null) {
@@ -164,8 +183,14 @@ export async function approve(root: string, options: ApproveOptions): Promise<Ap
   }
   const photos = entry.photos;
   const nextPhotoNo = photos.length + 1;
+  // Curated groups require ≥3 photos per member at validate time. Refuse
+  // early rather than writing a file that fails `pnpm validate`.
+  if (groupBody.group.allowSinglePhoto !== true && nextPhotoNo < 3) {
+    throw new Error(
+      `member "${memberId}" would have ${String(nextPhotoNo)} photos, group "${submission.grup}" requires at least 3 (no allowSinglePhoto); collect ${String(3 - nextPhotoNo)} more photos before approving`,
+    );
+  }
   const cardId = `${memberId}-${String(nextPhotoNo).padStart(2, "0")}`;
-
   let rawPath: string | null = null;
   if (!options.skipFetch) {
     const rawDir = path.join(root, "assets", "raw");
@@ -210,7 +235,6 @@ export async function approve(root: string, options: ApproveOptions): Promise<Ap
   });
 
   const absTarget = path.join(root, targetFile);
-  await mkdir(path.dirname(absTarget), { recursive: true });
   await writeFile(absTarget, `${JSON.stringify(groupBody, null, 2)}\n`);
 
   // Move pending → approved.

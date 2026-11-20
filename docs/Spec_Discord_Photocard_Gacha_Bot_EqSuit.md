@@ -134,26 +134,36 @@ Aturan validasi (Zod di `shared/manifest.schema.ts`):
 ### 4.2.1 Inject komunitas (`community-inject`)
 
 Teman-teman bisa inject kartu manual lewat channel Discord khusus: satu pesan = satu kartu,
-lampiran gambar pesan = foto kartu. Template pesan:
+lampiran gambar pesan = foto kartu. Template pesan (pool + grup pilihan tetap):
 
 ```text
 [nama] Aynid Morbulet
+[pool] pejabat
 [grup] kabinet-merah-putih
 [rarity] rare
 [label] opsional, maks 60 char
 [sumber] https://commons.wikimedia.org/wiki/File:...
 ```
 
-- `nama`/`grup`/`rarity` wajib (key case-insensitive); `rarity` salah satu dari empat key.
+- `nama`/`pool`/`grup`/`rarity` wajib (key case-insensitive); `pool` harus `pejabat`
+  atau `meme`; `grup` harus `kabinet-merah-putih` untuk pool `pejabat`, `jomok`
+  untuk pool `meme` (pemetaan tunggal di `POOL_GROUPS`, `scripts/lib/submissions.ts`).
+  `rarity` salah satu dari empat key.
 - `sumber` opsional; default permalink pesan `https://discord.com/channels/<guild>/<channel>/<message>`.
 - Wajib tepat 1 lampiran gambar; selain itu submission invalid dengan alasan jelas.
 - Alur operator: `pnpm run ingest` (poll REST `GET /channels/{id}/messages`, tulis
   `data/submissions/pending/*.json`, cursor di `data/ingest-state.json`) →
-  review → `pnpm run approve <messageId> [--pool <pool>] [--skip-fetch]` (upsert ke
-  `data/groups/<pool>/komunitas-*.json`) → pipeline lama (`validate` → `fetch-images` →
+  review → `pnpm run approve <messageId> [--pool <pool>] [--skip-fetch]` (upsert
+  langsung ke file grup kurasi `data/groups/<pool>/<grup>.json` dengan `photoNo`
+  lanjutan) → pipeline lama (`validate` → `fetch-images` →
   `seed` → `register` → `deploy`).
-- Grup komunitas lahir dari `approve` dengan `allowSinglePhoto: true`: pengecualian
-  satu-satunya atas aturan minimal 3 foto; grup kurasi tetap wajib ≥3 foto.
+- Pool diambil dari submission; `--pool` hanya override operator yang harus cocok
+  dengan pool submission bila keduanya ada. File target yang hilang bersifat
+  error keras (grup repo berubah → perbarui `POOL_GROUPS`); `approve` tidak pernah
+  membuat file grup baru.
+- Grup kurasi tetap wajib ≥3 foto per member: `approve` menolak submission yang
+  membuat member berakhir di bawah 3 foto (tidak ada lagi file `komunitas-*.json`
+  dengan `allowSinglePhoto`; pengecualian itu sudah dihapus bersama grup fiktif).
   Tanpa migrasi D1, tanpa perubahan Worker.
 
 ### 4.3 Serial
@@ -448,7 +458,7 @@ Setelah batch, baca `settle_token`. Jika sama dengan `tok` → sukses. Jika tida
 - `scripts/fetch-images.ts`: unduh `imageUrl` ke `assets/raw/` dengan konkurensi 4, timeout, User-Agent jelas; validasi `content-type` gambar dan ukuran minimal 500×700 px; tulis `data/reports/fetch-report.json` berisi URL yang gagal agar bisa dikirim balik ke Gemini. Link rusak adalah kasus normal, bukan crash.
 - `scripts/build-cards.ts` (frame generator, lihat di bawah).
 - `scripts/seed.ts`: manifest → `seed.sql` dengan upsert idempoten, menghitung `member_count`/`photo_total`, menetapkan serial (4.3), mematikan (`enabled = 0`) kartu yang hilang dari manifest, lalu `wrangler d1 execute DB --file seed.sql`.
-- Dataset placeholder fiktif: 1 pool, 2 grup, 5 member, 3 sampai 4 foto per member (gambar berwarna polos) untuk menguji seluruh pipeline.
+  (Fase 1 selesai: dataset awal memakai grup fiktif sementara; grup fiktif tersebut sudah dihapus — dataset kini hanya berisi grup kurasi `pejabat/kabinet-merah-putih` dan `meme/jomok`.)
 
 **Spesifikasi bingkai** (`@napi-rs/canvas`, font OFL terdaftar lewat `GlobalFonts`): kanvas 600×900, sudut membulat radius 36, border 8 px bergradien menurut rarity (common abu-perak, rare merah muda→ungu→cyan seperti referensi, super\_rare emas, ultra\_rare pelangi). Foto di-*cover crop* ke 2:3 dengan titik `focus`. Pill kiri atas = `group.badge`; pill kanan atas = bintang; gradasi hitam di 35% bawah; nama 56 px tebal; `fullName` 22 px; label rarity 20 px berwarna rarity; `No. {serial}` kanan bawah. Output WebP kualitas 85 bernama `<cardId>.<hash8>.webp` di `public/cards/`. **VERIFIKASI** bahwa Discord merender WebP beralpha pada embed; jika tidak, ganti PNG.
 

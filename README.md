@@ -56,14 +56,31 @@ terpisah. Di Fase 1+, staging memakai D1 terpisah.
 
 ### Inject komunitas (channel Discord)
 
+Template pesan (pin di channel) — pool dan grup pilihan tetap:
+
+```text
+[nama] Nama Lengkap
+[pool] pejabat
+[grup] kabinet-merah-putih
+[rarity] rare
+```
+
+`[pool]` wajib `pejabat` atau `meme`; `[grup]` wajib `kabinet-merah-putih` (untuk
+pool `pejabat`) atau `jomok` (untuk pool `meme`). `[rarity]` salah satu dari
+`common`, `rare`, `super_rare`, `ultra_rare`. `[label]` (maks 60 char) dan
+`[sumber]` opsional. Hapus semua teks placeholder sebelum posting.
+
 1. Buat channel khusus (mis. `#inject-kartu`); pastikan bot punya **View Channel** +
    **Read Message History** di channel itu. Isi `.env`: `INGEST_CHANNEL_ID=<id channel>`.
-2. Kontributor posting satu pesan per kartu sesuai template (`[nama]`, `[grup]`, `[rarity]`
-   wajib; `[label]`, `[sumber]` opsional) + tepat 1 lampiran gambar.
+2. Kontributor posting satu pesan per kartu sesuai template + tepat 1 lampiran gambar.
 3. `pnpm run ingest` — tarik pesan baru, tulis `data/submissions/pending/*.json`.
 4. Review pending, lalu `pnpm run approve <messageId> [--pool pejabat] [--skip-fetch]` —
-   unduh gambar (gate 500×700 sama seperti `fetch-images`), upsert ke
-   `data/groups/<pool>/komunitas-*.json` (`allowSinglePhoto: true`).
+   pool diambil dari submission (`--pool` hanya override yang harus cocok),
+   unduh gambar (gate 500×700 sama seperti `fetch-images`), upsert langsung ke
+   file grup kurasi (`data/groups/pejabat/kabinet-merah-putih.json` atau
+   `data/groups/meme/jomok.json`) dengan `photoNo` lanjutan.
+   Member grup kurasi wajib ≥3 foto: submission yang membuat member berakhir
+   di bawah 3 foto DITOLAK (kumpulkan 3 foto dulu, jangan approve sebagian).
    Bila unduhan gagal: taruh file manual di `assets/raw/<cardId>.<ext>`, ulangi dengan `--skip-fetch`.
 5. Lanjut pipeline biasa: `pnpm validate && pnpm fetch-images && pnpm seed && pnpm register && pnpm deploy`.
 

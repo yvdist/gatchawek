@@ -25,9 +25,20 @@ export interface ParseSubmissionInput {
   messageId: string;
 }
 
+export type PoolChoice = "pejabat" | "meme";
+
+/** Fixed pool → curated group mapping. Submissions land directly in these
+ * group files; approve.ts imports this so the template, parser, and approve
+ * share one source (no pool/group ids hardcoded elsewhere). */
+export const POOL_GROUPS: Record<PoolChoice, string> = {
+  pejabat: "kabinet-merah-putih",
+  meme: "jomok",
+};
+
 export interface ParsedSubmission {
   nama: string;
   memberId: string;
+  pool: PoolChoice;
   grup: string;
   rarity: RarityKey;
   label: string | null;
@@ -66,11 +77,37 @@ export function parseSubmission(
   }
 
   const nama = fields.get("nama") ?? "";
-  const grup = fields.get("grup") ?? "";
-  const rarityRaw = fields.get("rarity") ?? "";
+  const poolRaw = fields.get("pool") ?? "";
+  const grupRaw = fields.get("grup") ?? "";
   if (nama === "") errors.push("missing required field [nama]");
-  if (grup === "") errors.push("missing required field [grup]");
 
+  let pool: PoolChoice | null = null;
+  if (poolRaw === "") {
+    errors.push("missing required field [pool]");
+  } else {
+    const normalized = poolRaw.toLowerCase();
+    if (normalized !== "pejabat" && normalized !== "meme") {
+      errors.push(`invalid [pool] "${poolRaw}": must be pejabat or meme`);
+    } else {
+      pool = normalized;
+    }
+  }
+
+  let grup: string | null = null;
+  if (grupRaw === "") {
+    errors.push("missing required field [grup]");
+  } else if (pool !== null) {
+    const expected = POOL_GROUPS[pool];
+    if (grupRaw.toLowerCase() !== expected) {
+      errors.push(
+        `invalid [grup] "${grupRaw}" for pool "${pool}": must be ${expected}`,
+      );
+    } else {
+      grup = expected;
+    }
+  }
+
+  const rarityRaw = fields.get("rarity") ?? "";
   let rarity: RarityKey | null = null;
   if (rarityRaw === "") {
     errors.push("missing required field [rarity]");
@@ -121,7 +158,7 @@ export function parseSubmission(
     errors.push("image attachment url must be an https URL");
   }
 
-  if (errors.length > 0 || rarity === null || image === undefined) {
+  if (errors.length > 0 || rarity === null || image === undefined || pool === null || grup === null) {
     return { ok: false, errors };
   }
   return {
@@ -129,6 +166,7 @@ export function parseSubmission(
     value: {
       nama,
       memberId: slugifyMemberId(nama, new Set()),
+      pool,
       grup,
       rarity,
       label,

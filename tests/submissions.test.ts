@@ -14,6 +14,7 @@ const BASE = {
 };
 
 const VALID = `[nama] Aynid Morbulet
+[pool] pejabat
 [grup] kabinet-merah-putih
 [rarity] rare
 [label] wakil ketua
@@ -21,15 +22,12 @@ const VALID = `[nama] Aynid Morbulet
 
 describe("parseSubmission", () => {
   it("accepts a valid template with an image attachment", () => {
-    const result = parseSubmission({
-      content: VALID,
-      attachments: [IMG],
-      ...BASE,
-    });
+    const result = parseSubmission({ content: VALID, attachments: [IMG], ...BASE });
     expect(result.ok).toBe(true);
     if (!result.ok) return;
     expect(result.value.nama).toBe("Aynid Morbulet");
     expect(result.value.memberId).toBe("aynid-morbulet");
+    expect(result.value.pool).toBe("pejabat");
     expect(result.value.grup).toBe("kabinet-merah-putih");
     expect(result.value.rarity).toBe("rare");
     expect(result.value.label).toBe("wakil ketua");
@@ -39,8 +37,56 @@ describe("parseSubmission", () => {
     expect(result.value.imageUrl).toBe(IMG.url);
   });
 
+  it("accepts pool meme + grup jomok", () => {
+    const content = `[nama] Katak Bijak
+[pool] meme
+[grup] jomok
+[rarity] common`;
+    const result = parseSubmission({ content, attachments: [IMG], ...BASE });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.pool).toBe("meme");
+    expect(result.value.grup).toBe("jomok");
+  });
+
+  it("accepts a case-insensitive pool", () => {
+    const content = `[nama] Aynid Morbulet
+[pool] PEJABAT
+[grup] kabinet-merah-putih
+[rarity] rare`;
+    const result = parseSubmission({ content, attachments: [IMG], ...BASE });
+    expect(result.ok).toBe(true);
+    if (!result.ok) return;
+    expect(result.value.pool).toBe("pejabat");
+  });
+
+  it("rejects an invalid pool value", () => {
+    const content = `[nama] Aynid Morbulet
+[pool] dewan
+[grup] kabinet-merah-putih
+[rarity] rare`;
+    const result = parseSubmission({ content, attachments: [IMG], ...BASE });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toContain('invalid [pool] "dewan": must be pejabat or meme');
+  });
+
+  it("rejects a grup that does not match the pool", () => {
+    const content = `[nama] Aynid Morbulet
+[pool] meme
+[grup] kabinet-merah-putih
+[rarity] rare`;
+    const result = parseSubmission({ content, attachments: [IMG], ...BASE });
+    expect(result.ok).toBe(false);
+    if (result.ok) return;
+    expect(result.errors).toContain(
+      'invalid [grup] "kabinet-merah-putih" for pool "meme": must be jomok',
+    );
+  });
+
   it("defaults sumber to the message permalink", () => {
     const content = `[nama] Aynid Morbulet
+[pool] pejabat
 [grup] kabinet-merah-putih
 [rarity] super_rare`;
     const result = parseSubmission({ content, attachments: [IMG], ...BASE });
@@ -54,6 +100,7 @@ describe("parseSubmission", () => {
 
   it("accepts uppercase field keys and rarity", () => {
     const content = `[NAMA] Aynid Morbulet
+[POOL] pejabat
 [GRUP] kabinet-merah-putih
 [RARITY] ULTRA_RARE`;
     const result = parseSubmission({ content, attachments: [IMG], ...BASE });
@@ -70,12 +117,14 @@ describe("parseSubmission", () => {
     });
     expect(result.ok).toBe(false);
     if (result.ok) return;
+    expect(result.errors).toContain("missing required field [pool]");
     expect(result.errors).toContain("missing required field [grup]");
     expect(result.errors).toContain("missing required field [rarity]");
   });
 
   it("rejects an invalid rarity", () => {
     const content = `[nama] Aynid Morbulet
+[pool] pejabat
 [grup] kabinet-merah-putih
 [rarity] legendary`;
     const result = parseSubmission({ content, attachments: [IMG], ...BASE });
@@ -116,6 +165,7 @@ describe("parseSubmission", () => {
 
   it("rejects an overlong label and a non-https sumber", () => {
     const content = `[nama] Aynid Morbulet
+[pool] pejabat
 [grup] kabinet-merah-putih
 [rarity] common
 [label] ${"x".repeat(61)}
