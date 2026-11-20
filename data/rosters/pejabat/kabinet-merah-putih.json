@@ -7,43 +7,11 @@
   "pool": "pejabat",
   "roster": [
     {
-      "fullName": "Prabowo Subianto",
-      "name": "Prabowo",
+      "fullName": "Abdul Kadir Karding",
+      "name": "Karding",
       "wikipedia": {
         "lang": "id",
-        "title": "Prabowo Subianto"
-      }
-    },
-    {
-      "fullName": "Gibran Rakabuming Raka",
-      "name": "Gibran",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Gibran Rakabuming Raka"
-      }
-    },
-    {
-      "fullName": "Budi Gunawan",
-      "name": "Budi Gunawan",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Budi Gunawan"
-      }
-    },
-    {
-      "fullName": "Yusril Ihza Mahendra",
-      "name": "Yusril",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Yusril Ihza Mahendra"
-      }
-    },
-    {
-      "fullName": "Airlangga Hartarto",
-      "name": "Airlangga",
-      "wikipedia": {
-        "lang": "id",
-        "title": "Airlangga Hartarto"
+        "title": "Abdul Kadir Karding"
       }
     },
     {
@@ -55,51 +23,67 @@
       }
     },
     {
-      "fullName": "Pratikno",
-      "name": "Pratikno",
+      "fullName": "Agus Andrianto",
+      "name": "Agus Andrianto",
       "wikipedia": {
         "lang": "id",
-        "title": "Pratikno"
+        "title": "Agus Andrianto"
       }
     },
     {
-      "fullName": "Zulkifli Hasan",
-      "name": "Zulkifli Hasan",
+      "fullName": "Agus Gumiwang Kartasasmita",
+      "name": "Agus Gumiwang",
       "wikipedia": {
         "lang": "id",
-        "title": "Zulkifli Hasan"
+        "title": "Agus Gumiwang Kartasasmita"
       }
     },
     {
-      "fullName": "Prasetyo Hadi",
-      "name": "Prasetyo Hadi",
+      "fullName": "Agus Subiyanto",
+      "name": "Agus Subiyanto",
       "wikipedia": {
         "lang": "id",
-        "title": "Prasetyo Hadi"
+        "title": "Agus Subiyanto"
       }
     },
     {
-      "fullName": "Muhammad Tito Karnavian",
-      "name": "Tito Karnavian",
+      "fullName": "Airlangga Hartarto",
+      "name": "Airlangga",
       "wikipedia": {
         "lang": "id",
-        "title": "Tito Karnavian"
+        "title": "Airlangga Hartarto"
       }
     },
     {
-      "fullName": "Sugiono",
-      "name": "Sugiono",
+      "fullName": "Amran Sulaiman",
+      "name": "Amran",
       "wikipedia": {
         "lang": "id",
-        "title": "Sugiono (politikus)"
+        "title": "Amran Sulaiman"
       }
     },
     {
-      "fullName": "Sjafrie Sjamsoeddin",
-      "name": "Sjafrie",
+      "fullName": "Anis Matta",
+      "name": "Anis Matta",
       "wikipedia": {
         "lang": "id",
-        "title": "Sjafrie Sjamsoeddin"
+        "title": "Anis Matta"
+      }
+    },
+    {
+      "fullName": "Anto Mukti Putranto",
+      "name": "Anto Mukti",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Anto Mukti Putranto"
+      }
+    },
+    {
+      "fullName": "Arifah Choiri Fauzi",
+      "name": "Arifah",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Arifah Fauzi"
       }
     },
     {
@@ -111,6 +95,62 @@
       }
     },
     {
+      "fullName": "Bima Arya Sugiarto",
+      "name": "Bima Arya",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Bima Arya Sugiarto"
+      }
+    },
+    {
+      "fullName": "Brian Yuliarto",
+      "name": "Brian",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Brian Yuliarto"
+      }
+    },
+    {
+      "fullName": "Budi Arie Setiadi",
+      "name": "Budi Arie",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Budi Arie Setiadi"
+      }
+    },
+    {
+      "fullName": "Budi Gunadi Sadikin",
+      "name": "Budi Gunadi",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Budi Gunadi Sadikin"
+      }
+    },
+    {
+      "fullName": "Budi Gunawan",
+      "name": "Budi Gunawan",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Budi Gunawan"
+      }
+    },
+    {
+      "fullName": "Dito Ariotedjo",
+      "name": "Dito",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Dito Ariotedjo"
+      }
+    },
+    {
+      "fullName": "Djamari Chaniago",
+      "name": "Djamari",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Djamari Chaniago"
+      }
+    },
+    {
       "fullName": "Dudung Abdurachman",
       "name": "Dudung",
       "wikipedia": {
@@ -119,11 +159,264 @@
       }
     },
     {
+      "fullName": "Erick Thohir",
+      "name": "Erick Thohir",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Erick Thohir"
+      }
+    },
+    {
+      "fullName": "Fadli Zon",
+      "name": "Fadli Zon",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Fadli Zon"
+      }
+    },
+    {
+      "fullName": "Gibran Rakabuming Raka",
+      "name": "Gibran",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Gibran Rakabuming Raka"
+      }
+    },
+    {
+      "fullName": "Luhut Binsar Pandjaitan",
+      "name": "Luhut",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Luhut Binsar Pandjaitan"
+      }
+    },
+    {
+      "fullName": "Maman Abdurrahman",
+      "name": "Maman",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Maman Abdurrahman (politikus)"
+      }
+    },
+    {
+      "fullName": "Meutya Hafid",
+      "name": "Meutya",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Meutya Hafid"
+      }
+    },
+    {
+      "fullName": "Mochamad Irfan Yusuf",
+      "name": "Gus Irfan",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Mochamad Irfan Yusuf"
+      }
+    },
+    {
+      "fullName": "Muhammad Iftitah Sulaiman Suryanagara",
+      "name": "Iftitah",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Muhammad Iftitah Sulaiman Suryanagara"
+      }
+    },
+    {
+      "fullName": "Muhammad Tito Karnavian",
+      "name": "Tito Karnavian",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Tito Karnavian"
+      }
+    },
+    {
+      "fullName": "Nasaruddin Umar",
+      "name": "Nasaruddin",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Nasaruddin Umar"
+      }
+    },
+    {
+      "fullName": "Natalius Pigai",
+      "name": "Natalius Pigai",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Natalius Pigai"
+      }
+    },
+    {
+      "fullName": "Nezar Patria",
+      "name": "Nezar Patria",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Nezar Patria"
+      }
+    },
+    {
+      "fullName": "Nusron Wahid",
+      "name": "Nusron",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Nusron Wahid"
+      }
+    },
+    {
+      "fullName": "Prabowo Subianto",
+      "name": "Prabowo",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Prabowo Subianto"
+      }
+    },
+    {
+      "fullName": "Prasetyo Hadi",
+      "name": "Prasetyo Hadi",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Prasetyo Hadi"
+      }
+    },
+    {
+      "fullName": "Pratikno",
+      "name": "Pratikno",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Pratikno"
+      }
+    },
+    {
+      "fullName": "Purbaya Yudhi Sadewa",
+      "name": "Purbaya",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Purbaya Yudhi Sadewa"
+      }
+    },
+    {
+      "fullName": "Raja Juli Antoni",
+      "name": "Raja Juli",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Raja Juli Antoni"
+      }
+    },
+    {
+      "fullName": "Rini Widyantini",
+      "name": "Rini",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Rini Widyantini"
+      }
+    },
+    {
+      "fullName": "Rosan Perkasa Roeslani",
+      "name": "Rosan",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Rosan Roeslani"
+      }
+    },
+    {
+      "fullName": "Saifullah Yusuf",
+      "name": "Gus Ipul",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Saifullah Yusuf"
+      }
+    },
+    {
+      "fullName": "Sakti Wahyu Trenggono",
+      "name": "Trenggono",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Sakti Wahyu Trenggono"
+      }
+    },
+    {
+      "fullName": "Sanitiar Burhanuddin",
+      "commonsCategory": "Sanitiar Burhanuddin",
+      "name": "Burhanuddin"
+    },
+    {
+      "fullName": "Satryo Brodjonegoro",
+      "name": "Satryo",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Satryo Brodjonegoro"
+      }
+    },
+    {
+      "fullName": "Sjafrie Sjamsoeddin",
+      "name": "Sjafrie",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Sjafrie Sjamsoeddin"
+      }
+    },
+    {
+      "fullName": "Sri Mulyani Indrawati",
+      "name": "Sri Mulyani",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Sri Mulyani"
+      }
+    },
+    {
       "fullName": "Suahasil Nazara",
       "name": "Suahasil",
       "wikipedia": {
         "lang": "id",
         "title": "Suahasil Nazara"
+      }
+    },
+    {
+      "fullName": "Sugiono",
+      "name": "Sugiono",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Sugiono (politikus)"
+      }
+    },
+    {
+      "fullName": "Teuku Riefky Harsya",
+      "name": "Riefky",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Teuku Riefky Harsya"
+      }
+    },
+    {
+      "fullName": "Todotua Pasaribu",
+      "name": "Todotua",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Todotua Pasaribu"
+      }
+    },
+    {
+      "fullName": "Widiyanti Putri Wardhana",
+      "name": "Widiyanti",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Widiyanti Putri Wardhana"
+      }
+    },
+    {
+      "fullName": "Yusril Ihza Mahendra",
+      "name": "Yusril",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Yusril Ihza Mahendra"
+      }
+    },
+    {
+      "fullName": "Zulkifli Hasan",
+      "name": "Zulkifli Hasan",
+      "wikipedia": {
+        "lang": "id",
+        "title": "Zulkifli Hasan"
       }
     }
   ]

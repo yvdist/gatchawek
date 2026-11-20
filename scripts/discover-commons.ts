@@ -37,10 +37,15 @@ const rosterSchema = z.object({
     z.object({
       name: z.string().min(1),
       fullName: z.string().min(1),
-      wikipedia: z.object({
-        lang: z.string().min(1),
-        title: z.string().min(1),
-      }),
+      wikipedia: z
+        .object({
+          lang: z.string().min(1),
+          title: z.string().min(1),
+        })
+        .optional(),
+      commonsCategory: z.string().min(1).optional(),
+    }).refine((e) => e.wikipedia !== undefined || e.commonsCategory !== undefined, {
+      message: "entry needs wikipedia or commonsCategory",
     }),
   ),
 });
@@ -71,27 +76,37 @@ async function discoverMember(
   entry: Roster["roster"][number],
   cacheDir: string,
 ): Promise<{ eligible: EligiblePhoto[]; skippedCount: number }> {
-  const pageData = await fetchJsonCached(
-    wikipediaPagePropsUrl(entry.wikipedia.lang, entry.wikipedia.title),
-    cacheDir,
-  ).catch((err: unknown) => {
-    const msg = err instanceof Error ? err.message : "unknown-fetch-error";
-    if (msg.startsWith("wikipedia-") || msg.startsWith("api-shape-changed:")) {
-      throw err;
-    }
-    throw new Error(`wikipedia-fetch-failed:${msg}`);
-  });
-  const qid = extractWikibaseItem(pageData);
-  const claimsData = await fetchJsonCached(wikidataClaimsUrl(qid), cacheDir).catch(
-    (err: unknown) => {
+  const direct = entry.commonsCategory;
+  let category: string;
+  if (direct !== undefined) {
+    category = direct;
+    console.log(`  category override: ${category}`);
+  } else if (entry.wikipedia !== undefined) {
+    const wiki = entry.wikipedia;
+    const pageData = await fetchJsonCached(
+      wikipediaPagePropsUrl(wiki.lang, wiki.title),
+      cacheDir,
+    ).catch((err: unknown) => {
       const msg = err instanceof Error ? err.message : "unknown-fetch-error";
-      if (msg.startsWith("wikidata-") || msg.startsWith("api-shape-changed:")) {
+      if (msg.startsWith("wikipedia-") || msg.startsWith("api-shape-changed:")) {
         throw err;
       }
-      throw new Error(`wikidata-fetch-failed:${msg}`);
-    },
-  );
-  const category = extractCommonsCategory(claimsData);
+      throw new Error(`wikipedia-fetch-failed:${msg}`);
+    });
+    const qid = extractWikibaseItem(pageData);
+    const claimsData = await fetchJsonCached(wikidataClaimsUrl(qid), cacheDir).catch(
+      (err: unknown) => {
+        const msg = err instanceof Error ? err.message : "unknown-fetch-error";
+        if (msg.startsWith("wikidata-") || msg.startsWith("api-shape-changed:")) {
+          throw err;
+        }
+        throw new Error(`wikidata-fetch-failed:${msg}`);
+      },
+    );
+    category = extractCommonsCategory(claimsData);
+  } else {
+    throw new Error("roster-entry-missing-source");
+  }
   const eligible: EligiblePhoto[] = [];
   let skippedCount = 0;
   let cont: string | null = null;
