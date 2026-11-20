@@ -135,11 +135,13 @@ beforeAll(async () => {
   await db.insert(members).values([
     { id: "anna", poolId: "pejabat", groupId: "g1", name: "Anna", nameLower: "anna", photoTotal: 2, sortOrder: 0, enabled: true },
     { id: "budi", poolId: "pejabat", groupId: "g1", name: "Budi", nameLower: "budi", photoTotal: 1, sortOrder: 1, enabled: true },
+    { id: "katak", poolId: "pejabat", groupId: "g1", name: "Katak Bijak", nameLower: "katak bijak", photoTotal: 1, sortOrder: 2, enabled: true },
   ]);
   await db.insert(cards).values([
     { id: "anna-01", poolId: "pejabat", groupId: "g1", memberId: "anna", serial: 1, photoNo: 1, rarity: "common", imageFile: "a1.webp", enabled: true },
     { id: "anna-02", poolId: "pejabat", groupId: "g1", memberId: "anna", serial: 2, photoNo: 2, rarity: "super_rare", holoEnabled: true, imageFile: "a2.webp", enabled: true },
     { id: "budi-01", poolId: "pejabat", groupId: "g1", memberId: "budi", serial: 3, photoNo: 1, rarity: "rare", imageFile: "b1.webp", enabled: true },
+    { id: "katak-01", poolId: "pejabat", groupId: "g1", memberId: "katak", serial: 4, photoNo: 1, rarity: "common", imageFile: "k1.webp", enabled: true },
   ]);
   await db.insert(users).values([
     { id: "u1", createdAt: 1 },
@@ -148,6 +150,7 @@ beforeAll(async () => {
   await db.insert(userCards).values([
     { userId: "u1", cardId: "anna-01", quantity: 2, holoQty: 0, firstObtainedAt: 1, lastObtainedAt: 1 },
     { userId: "u2", cardId: "anna-02", quantity: 0, holoQty: 1, firstObtainedAt: 1, lastObtainedAt: 1 },
+    { userId: "u1", cardId: "katak-01", quantity: 1, holoQty: 0, firstObtainedAt: 1, lastObtainedAt: 1 },
   ]);
 }, 60_000);
 
@@ -234,5 +237,39 @@ describe("/cari", () => {
     expect(res.data.choices?.length).toBeLessThanOrEqual(25);
     expect(res.data.choices?.length).toBeGreaterThan(0);
     expect(res.data.choices?.[0]?.name).toContain("Anna");
+  });
+  it("finds members by mid-word match (contains, not prefix)", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({}), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      handleCari(cariSlash("u1", { nama: "tak" }), env, waitUntil);
+      await tasks[0];
+      const [, init] = fetchMock.mock.calls[0] as unknown as [
+        string,
+        { body: string },
+      ];
+      const body = JSON.parse(init.body) as {
+        embeds: { title: string; description: string }[];
+      };
+      expect(body.embeds[0]?.title).toContain("tak");
+      expect(body.embeds[0]?.description).toContain("Katak Bijak");
+      expect(body.embeds[0]?.description).toContain("<@u1>");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("autocompletes mid-word matches", async () => {
+    const res = await handleCariAutocomplete(cariAutocomplete("tak"), env);
+    expect(res.type).toBe(
+      InteractionResponseType.ApplicationCommandAutocompleteResult,
+    );
+    if (
+      res.type !== InteractionResponseType.ApplicationCommandAutocompleteResult
+    )
+      return;
+    const names = (res.data.choices ?? []).map((c) => c.name);
+    expect(names.some((n) => n.includes("Katak"))).toBe(true);
   });
 });

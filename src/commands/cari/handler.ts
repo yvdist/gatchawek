@@ -130,7 +130,7 @@ export async function handleCariAutocomplete(
       .where(
         and(
           eq(members.enabled, true),
-          sanitized === "" ? sql`1 = 1` : like(members.nameLower, `${sanitized}%`),
+          sanitized === "" ? sql`1 = 1` : like(members.nameLower, `%${sanitized}%`),
         ),
       )
       .orderBy(asc(members.nameLower))

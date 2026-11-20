@@ -51,7 +51,7 @@ export async function searchMembers(
       and(
         eq(members.enabled, true),
         poolId === null ? sql`1 = 1` : eq(members.poolId, poolId),
-        sanitized === "" ? sql`1 = 1` : like(members.nameLower, `${sanitized}%`),
+        sanitized === "" ? sql`1 = 1` : like(members.nameLower, `%${sanitized}%`),
       ),
     )
     .orderBy(members.nameLower)
