@@ -262,6 +262,23 @@ export async function listAdminPoolGroups(
     .orderBy(asc(pools.sortOrder), asc(groups.sortOrder), asc(groups.id));
 }
 
+export interface AdminPoolOption {
+  poolId: string;
+  poolName: string;
+  poolEmoji: string;
+}
+
+/**
+ * Pools aktif untuk dropdown import (pool saja; grup ikut nama file).
+ */
+export async function listAdminPools(db: Db): Promise<AdminPoolOption[]> {
+  return db
+    .select({ poolId: pools.id, poolName: pools.name, poolEmoji: pools.emoji })
+    .from(pools)
+    .where(eq(pools.enabled, true))
+    .orderBy(asc(pools.sortOrder), asc(pools.id));
+}
+
 export interface ImportAdminCardInput {
   poolId: string;
   groupId: string;

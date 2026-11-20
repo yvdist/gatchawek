@@ -118,7 +118,9 @@ describe("admin /admin/import routes", () => {
     );
     expect(res.status).toBe(200);
     const html = await res.text();
-    expect(html).toContain('value="ahli-ngebul:default"');
+    expect(html).toContain('value="ahli-ngebul"');
+    expect(html).not.toContain("ahli-ngebul:default");
+    expect(html).toContain("Target pool");
     expect(html).toContain("(holo) - refi kaget.jpg");
     expect(html).toContain("★★★★★ Holo");
   });
@@ -139,7 +141,7 @@ describe("admin /admin/import routes", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const fd = new FormData();
-      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.set("poolGroup", "ahli-ngebul");
       fd.set(
         "files",
         new File([new Uint8Array([1, 2, 3, 4])], "(holo) - refi kaget.jpg", {
@@ -195,7 +197,7 @@ describe("admin /admin/import routes", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const fd = new FormData();
-      fd.set("poolGroup", "pejabat:kabinet");
+      fd.set("poolGroup", "pejabat");
       fd.set(
         "files",
         new File([new Uint8Array([9, 9, 9])], "(secret) - Default - X.jpg", {
@@ -258,7 +260,7 @@ describe("admin /admin/import routes", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const fd = new FormData();
-      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.set("poolGroup", "ahli-ngebul");
       fd.append(
         "files",
         new File([new Uint8Array([5])], "(rare) - Kabinet - Cross Kid.jpg", {
@@ -334,7 +336,7 @@ describe("admin /admin/import routes", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const fd = new FormData();
-      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.set("poolGroup", "ahli-ngebul");
       fd.append(
         "files",
         new File(
@@ -408,7 +410,7 @@ describe("admin /admin/import routes", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const fd = new FormData();
-      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.set("poolGroup", "ahli-ngebul");
       fd.set(
         "files",
         new File([new Uint8Array([13])], "(rare) - @#$% - Simbol Kid.jpg", {
@@ -458,7 +460,7 @@ describe("admin /admin/import routes", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const fd = new FormData();
-      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.set("poolGroup", "ahli-ngebul");
       fd.set(
         "files",
         new File([new Uint8Array([14])], "(rare) - Tabrakan! - Tabrakan Kid.jpg", {

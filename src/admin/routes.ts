@@ -15,6 +15,7 @@ import {
   importAdminCard,
   listAdminCards,
   listAdminPoolGroups,
+  listAdminPools,
   listAdminQueue,
   listRenderableCards,
   setAdminCardEnabled,
@@ -365,8 +366,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
   });
 
   admin.get("/import", async (c) => {
-    const poolGroups = await listAdminPoolGroups(createDb(c.env));
-    return c.html(importPage({ poolGroups }));
+    const pools = await listAdminPools(createDb(c.env));
+    return c.html(importPage({ pools }));
   });
 
   admin.post("/import", async (c) => {
@@ -374,6 +375,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       "application/json",
     );
     const db = createDb(c.env);
+    const pools = await listAdminPools(db);
     const poolGroups = await listAdminPoolGroups(db);
     let formData: FormData;
     try {
@@ -382,23 +384,26 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       const msg = "Form tidak terbaca.";
       return wantsJson
         ? c.json({ ok: false, error: msg, results: [] }, 400)
-        : c.html(importPage({ poolGroups, error: msg }), 400);
+        : c.html(importPage({ pools, error: msg }), 400);
     }
 
     const poolGroupRaw = formData.get("poolGroup");
-    const poolGroupStr =
+    const poolId =
       typeof poolGroupRaw === "string" ? poolGroupRaw.trim() : "";
-    const sep = poolGroupStr.indexOf(":");
-    const poolId = sep > 0 ? poolGroupStr.slice(0, sep) : "";
-    const groupId = sep > 0 ? poolGroupStr.slice(sep + 1) : "";
-    const target = poolGroups.find(
-      (pg) => pg.poolId === poolId && pg.groupId === groupId,
-    );
-    if (target === undefined) {
-      const msg = "Pilih target pool dan grup yang valid.";
+    const pool = pools.find((p) => p.poolId === poolId);
+    if (pool === undefined) {
+      const msg = "Pilih target pool yang valid.";
       return wantsJson
         ? c.json({ ok: false, error: msg, results: [] }, 400)
-        : c.html(importPage({ poolGroups, error: msg }), 400);
+        : c.html(importPage({ pools, error: msg }), 400);
+    }
+    const fallback =
+      poolGroups.find((pg) => pg.poolId === pool.poolId) ?? null;
+    if (fallback === null) {
+      const msg = "Pool belum punya grup aktif.";
+      return wantsJson
+        ? c.json({ ok: false, error: msg, results: [] }, 400)
+        : c.html(importPage({ pools, error: msg }), 400);
     }
 
     const rawFiles = [
@@ -409,7 +414,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       const msg = "Pilih minimal 1 file gambar.";
       return wantsJson
         ? c.json({ ok: false, error: msg, results: [] }, 400)
-        : c.html(importPage({ poolGroups, error: msg }), 400);
+        : c.html(importPage({ pools, error: msg }), 400);
     }
 
     const namaList = formData
@@ -459,14 +464,14 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         });
         continue;
       }
-      let destPoolId = target.poolId;
-      let destGroupId = target.groupId;
+      let destPoolId = fallback.poolId;
+      let destGroupId = fallback.groupId;
       let createdGroupName: string | null = null;
       if (parsed.rawGroup !== null) {
         const planned = planGroupForImport(
           parsed.rawGroup,
           poolGroups,
-          target.poolId,
+          pool.poolId,
         );
         if (planned === "ambiguous") {
           results.push({
@@ -497,8 +502,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
             await ensureImportGroup(db, planned.create);
             poolGroups.push({
               poolId: planned.create.poolId,
-              poolName: target.poolName,
-              poolEmoji: target.poolEmoji,
+              poolName: pool.poolName,
+              poolEmoji: pool.poolEmoji,
               groupId: planned.create.groupId,
               groupName: planned.create.name,
               groupBadge: planned.create.badge,
@@ -580,7 +585,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     if (wantsJson) {
       return c.json({ ok: allOk, results });
     }
-    return c.html(importPage({ poolGroups, results, error: null }));
+    return c.html(importPage({ pools, results, error: null }));
   });
 
   // Mounted under /admin by the caller.
