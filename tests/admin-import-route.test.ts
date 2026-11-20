@@ -568,13 +568,15 @@ describe("admin /admin/import routes", () => {
       );
       expect(res.status).toBe(302);
       expect(calls).toHaveLength(1);
-      expect(calls[0]?.url).toBe("https://api.github.com/repos/o/r/dispatches");
+      expect(calls[0]?.url).toBe(
+        "https://api.github.com/repos/o/r/actions/workflows/render-remote.yml/dispatches",
+      );
       const payload = JSON.parse(calls[0]?.body ?? "{}") as {
-        event_type: string;
-        client_payload: { ids: string };
+        ref: string;
+        inputs: { ids: string };
       };
-      expect(payload.event_type).toBe("render-remote");
-      expect(payload.client_payload.ids).toBe("render-kid-01");
+      expect(payload.ref).toBe("main");
+      expect(payload.inputs.ids).toBe("render-kid-01");
       const loc = res.headers.get("location") ?? "";
       expect(loc).toContain("kind=remote");
       expect(loc).toContain("ok=1");

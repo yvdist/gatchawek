@@ -221,7 +221,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         ? "yvdist/gatchawek"
         : c.env.GITHUB_REPO;
     const res = await fetch(
-      `https://api.github.com/repos/${repo}/dispatches`,
+      `https://api.github.com/repos/${repo}/actions/workflows/render-remote.yml/dispatches`,
       {
         method: "POST",
         headers: {
@@ -230,10 +230,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          event_type: "render-remote",
-          client_payload: {
-            ids: renderable.map((r) => r.id).join(","),
-          },
+          ref: "main",
+          inputs: { ids: renderable.map((r) => r.id).join(",") },
         }),
       },
     );
