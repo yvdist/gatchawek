@@ -22,8 +22,8 @@ import {
   bulkReviewButtons,
   parseBulkCustomId,
 } from "../../ui/bulkReviewEmbed.js";
+import { syncInjectChannel } from "../../scheduled.js";
 import type { WaitUntil } from "../registry.js";
-
 function isApprover(env: Env, userId: string): boolean {
   const raw = env.INJECT_APPROVER_IDS ?? "";
   const allow = raw
@@ -44,17 +44,22 @@ export async function handleBulkReview(
     return ephemeralResponse("Khusus kurator inject.");
   }
   const db = createDb(env);
-  // Acknowledge within Discord's 3s window; heavy D1 reads happen after.
+  // Acknowledge within Discord's 3s window; sync + heavy D1 reads happen after.
   waitUntil(
     (async () => {
       try {
+        try {
+          await syncInjectChannel(env);
+        } catch (err: unknown) {
+          console.warn(`bulk-review: on-demand sync failed: ${(err as Error).message}`);
+        }
         const batch = await oldestPendingBulkBatch(db);
         if (batch === null) {
           await patchOriginal(
             interaction.application_id,
             interaction.token,
             env.DISCORD_BOT_TOKEN,
-            { content: "Antrean bulk kosong. 🎉 Pesan [bulk-json] yang baru masuk butuh ±5 menit diproses cron sebelum bisa direview." },
+            { content: "Antrean bulk kosong. 🎉" },
           );
           return;
         }

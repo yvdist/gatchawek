@@ -30,8 +30,12 @@ function isBulkMessage(content: string, attachments: DiscordAttachment[]): boole
   );
 }
 
-async function downloadText(url: string, token: string): Promise<string> {
-  const res = await fetch(url, { headers: { Authorization: `Bot ${token}` } });
+async function downloadText(
+  url: string,
+  token: string,
+  fetchFn: typeof fetch = fetch,
+): Promise<string> {
+  const res = await fetchFn(url, { headers: { Authorization: `Bot ${token}` } });
   if (!res.ok) throw new Error(`Discord CDN ${String(res.status)} for ${url}`);
   return await res.text();
 }
@@ -40,10 +44,11 @@ async function listMessages(
   token: string,
   channelId: string,
   after: string | null,
+  fetchFn: typeof fetch = fetch,
 ): Promise<DiscordMessage[]> {
   const params = new URLSearchParams({ limit: "100" });
   if (after !== null) params.set("after", after);
-  const res = await fetch(`${API_BASE}/channels/${channelId}/messages?${params}`, {
+  const res = await fetchFn(`${API_BASE}/channels/${channelId}/messages?${params}`, {
     headers: { Authorization: `Bot ${token}` },
   });
   if (!res.ok) {
@@ -51,16 +56,16 @@ async function listMessages(
   }
   return (await res.json()) as DiscordMessage[];
 }
-
 async function replyInvalid(
   token: string,
   channelId: string,
   messageId: string,
   errors: string[],
   bulk = false,
+  fetchFn: typeof fetch = fetch,
 ): Promise<boolean> {
   try {
-    const res = await fetch(`${API_BASE}/channels/${channelId}/messages`, {
+    const res = await fetchFn(`${API_BASE}/channels/${channelId}/messages`, {
       method: "POST",
       headers: {
         Authorization: `Bot ${token}`,
@@ -83,12 +88,22 @@ async function replyInvalid(
   }
 }
 
+export interface SyncCounts {
+  valid: number;
+  invalid: number;
+  replied: number;
+}
+
 /**
- * Scheduled community-inject poll (Cloudflare Cron, every 5 min). Lists new
- * channel messages, validates with the shared pure parser, enqueues to D1,
- * and auto-replies once to invalid ones. Idempotent: re-polls never duplicate.
+ * Pull new channel messages, validate with the shared pure parser, enqueue to
+ * D1, and auto-reply once to invalid ones. Idempotent: re-polls never
+ * duplicate. Shared by the 5-min cron (fallback) and the on-demand review
+ * commands, so review always sees fresh submissions.
  */
-export async function handleScheduled(env: Env): Promise<void> {
+export async function syncInjectChannel(
+  env: Env,
+  fetchFn: typeof fetch = fetch,
+): Promise<SyncCounts> {
   const db = createDb(env);
   const [cursor] = await db
     .select({ m: sql<string | null>`max(${injectQueue.messageId})` })
@@ -97,6 +112,7 @@ export async function handleScheduled(env: Env): Promise<void> {
     env.DISCORD_BOT_TOKEN,
     env.INGEST_CHANNEL_ID,
     cursor?.m ?? null,
+    fetchFn,
   );
   const guildId = env.INGEST_GUILD_ID;
   let valid = 0;
@@ -114,7 +130,7 @@ export async function handleScheduled(env: Env): Promise<void> {
       let jsonText = "";
       try {
         if (jsonFile !== undefined) {
-          jsonText = await downloadText(jsonFile.url, env.DISCORD_BOT_TOKEN);
+          jsonText = await downloadText(jsonFile.url, env.DISCORD_BOT_TOKEN, fetchFn);
         }
       } catch (err: unknown) {
         console.warn(`ingest: bulk download failed: ${(err as Error).message}`);
@@ -158,6 +174,7 @@ export async function handleScheduled(env: Env): Promise<void> {
           message.id,
           bulk.errors,
           true,
+          fetchFn,
         );
         if (okReply) replied += 1;
         continue;
@@ -225,6 +242,8 @@ export async function handleScheduled(env: Env): Promise<void> {
         env.INGEST_CHANNEL_ID,
         message.id,
         parsed.errors,
+        false,
+        fetchFn,
       );
       if (ok) replied += 1;
       continue;
@@ -251,4 +270,10 @@ export async function handleScheduled(env: Env): Promise<void> {
   console.log(
     `ingest: ${String(valid)} valid, ${String(invalid)} invalid, ${String(replied)} replied`,
   );
+  return { valid, invalid, replied };
+}
+
+/** Cloudflare Cron entry (every 5 min): thin wrapper over syncInjectChannel. */
+export async function handleScheduled(env: Env): Promise<void> {
+  await syncInjectChannel(env);
 }

@@ -17,6 +17,7 @@ import {
   oldestPendingBulkBatch,
   enqueueMessage,
   rejectBulkBatch,
+  rejectQueued,
 } from "../src/db/queries/inject.js";
 import {
   handleBulkClick,
@@ -288,8 +289,10 @@ describe("handleBulkReview", () => {
     globalThis.fetch = (async (input: unknown, init?: { method?: string; body?: string }) => {
       if (init?.method === "PATCH") {
         patched = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(JSON.stringify({}));
       }
-      return new Response(JSON.stringify({}));
+      // Sync sees no new messages: empty channel list.
+      return new Response("[]", { headers: { "content-type": "application/json" } });
     }) as typeof fetch;
     try {
       const res = await handleBulkReview(slash("boss"), env, waitUntil);
@@ -309,7 +312,7 @@ describe("handleBulkReview", () => {
     }
   });
 
-  it("shows empty-queue notice with cron hint when nothing pending", async () => {
+  it("shows empty-queue notice when nothing pending", async () => {
     const db = createDb(env);
     // Drain oldest bulk leftovers first so the queue has no bulk batch left
     // (single-photo rows never match the bulk batch query).
@@ -325,7 +328,8 @@ describe("handleBulkReview", () => {
       if (init?.method === "PATCH") {
         patched = JSON.parse(String(init.body)) as Record<string, unknown>;
       }
-      return new Response(JSON.stringify({}));
+      // Sync sees no new messages: empty channel list.
+      return new Response("[]", { headers: { "content-type": "application/json" } });
     }) as typeof fetch;
     try {
       // Solo single-photo row is invisible to bulk review: batch query finds nothing.
@@ -335,7 +339,7 @@ describe("handleBulkReview", () => {
       if (patched === null) throw new Error("expected patchOriginal call");
       const content = String((patched as Record<string, unknown>)["content"] ?? "");
       expect(content).toContain("kosong");
-      expect(content).toContain("5 menit");
+      expect(content).not.toContain("5 menit");
     } finally {
       globalThis.fetch = origFetch;
     }
@@ -351,6 +355,55 @@ describe("handleBulkReview", () => {
       expect(out.type).toBe(5);
       await Promise.all(tasks.map((t) => t.catch(() => {})));
       expect(await countPending(db)).toBe(1);
+    } finally {
+      globalThis.fetch = origFetch;
+    }
+  });
+
+  it("syncs fresh channel messages on demand before showing the batch", async () => {
+    const { tasks, waitUntil } = captureTasks();
+    let patched: Record<string, unknown> | null = null;
+    const origFetch = globalThis.fetch;
+    const freshId = "m-fresh9";
+    globalThis.fetch = (async (input: unknown, init?: { method?: string; body?: string }) => {
+      const url = String(input);
+      if (init?.method === "PATCH") {
+        patched = JSON.parse(String(init.body)) as Record<string, unknown>;
+        return new Response(JSON.stringify({}));
+      }
+      // Channel list: one fresh valid single-photo message after the cursor.
+      if (url.includes("/channels/") && url.includes("/messages")) {
+        return new Response(
+          JSON.stringify([
+            {
+              id: freshId,
+              content: "[nama] Pendatang Baru\n[pool] pejabat\n[grup] kabinet-merah-putih\n[rarity] common",
+              timestamp: "2026-11-20T12:00:00.000Z",
+              author: { id: "user9", bot: false },
+              attachments: [
+                {
+                  url: "https://cdn.discordapp.net/attachments/1/9/foto.png",
+                  filename: "foto.png",
+                  content_type: "image/png",
+                },
+              ],
+            },
+          ]),
+          { headers: { "content-type": "application/json" } },
+        );
+      }
+      return new Response(JSON.stringify({}));
+    }) as typeof fetch;
+    try {
+      // Single-photo row: invisible to bulk query, but must land in the queue.
+      const res = await handleBulkReview(slash("boss"), env, waitUntil);
+      expect(res.type).toBe(5);
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      if (patched === null) throw new Error("expected patchOriginal call");
+      const db = createDb(env);
+      // reject hits only pending rows: proves the fresh message was enqueued
+      // as pending by the on-demand sync (older leftovers aside).
+      expect(await rejectQueued(db, freshId, "boss", Date.now())).toBe(true);
     } finally {
       globalThis.fetch = origFetch;
     }

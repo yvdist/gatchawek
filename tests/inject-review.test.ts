@@ -237,30 +237,62 @@ describe("inject queue", () => {
 
 describe("handleInjectReview", () => {
   it("rejects non-approvers", async () => {
-    const res = await handleInjectReview(slash("random"), env);
+    const { waitUntil } = captureTasks();
+    const res = await handleInjectReview(slash("random"), env, waitUntil);
     expect(res.type).toBe(InteractionResponseType.ChannelMessageWithSource);
   });
 
   it("shows the oldest pending with photo and buttons", async () => {
     const db = createDb(env);
     await enqueueMessage(db, { ...QUEUE_ROW, messageId: "m3", submittedAt: 5000 });
-    const res = await handleInjectReview(slash("boss"), env);
-    expect(res.type).toBe(InteractionResponseType.ChannelMessageWithSource);
-    if (res.type !== InteractionResponseType.ChannelMessageWithSource) return;
-    const embed = res.data.embeds?.[0];
-    expect(embed?.image?.url).toBe("https://cdn.example.com/foto.png");
-    expect(embed?.description).toContain("Tokoh Baru");
-    const buttons = res.data.components?.[0];
-    expect(JSON.stringify(buttons)).toContain("inject:ok:m3");
-    expect(JSON.stringify(buttons)).toContain("inject:no:m3");
+    const { tasks, waitUntil } = captureTasks();
+    let patched: Record<string, unknown> | null = null;
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async (input: unknown, init?: { method?: string; body?: string }) => {
+      if (init?.method === "PATCH") {
+        patched = JSON.parse(String(init.body)) as Record<string, unknown>;
+      }
+      // Sync sees no new messages: empty channel list.
+      return new Response("[]", { headers: { "content-type": "application/json" } });
+    }) as typeof fetch;
+    try {
+      const res = await handleInjectReview(slash("boss"), env, waitUntil);
+      expect(res.type).toBe(InteractionResponseType.DeferredChannelMessageWithSource);
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      if (patched === null) throw new Error("expected patchOriginal call");
+      const embeds = ((patched as Record<string, unknown>)["embeds"] ?? []) as Array<{
+        image?: { url?: string };
+        description?: string;
+      }>;
+      expect(embeds[0]?.image?.url).toBe("https://cdn.example.com/foto.png");
+      expect(embeds[0]?.description).toContain("Tokoh Baru");
+      expect(JSON.stringify((patched as Record<string, unknown>)["components"])).toContain("inject:ok:m3");
+      expect(JSON.stringify((patched as Record<string, unknown>)["components"])).toContain("inject:no:m3");
+    } finally {
+      globalThis.fetch = origFetch;
+    }
     await rejectQueued(db, "m3", "boss", 6000);
   });
 
   it("says the queue is empty when nothing is pending", async () => {
-    const res = await handleInjectReview(slash("boss"), env);
-    expect(res.type).toBe(InteractionResponseType.ChannelMessageWithSource);
-    if (res.type !== InteractionResponseType.ChannelMessageWithSource) return;
-    expect(res.data.content).toContain("kosong");
+    const { tasks, waitUntil } = captureTasks();
+    let patched: Record<string, unknown> | null = null;
+    const origFetch = globalThis.fetch;
+    globalThis.fetch = (async (input: unknown, init?: { method?: string; body?: string }) => {
+      if (init?.method === "PATCH") {
+        patched = JSON.parse(String(init.body)) as Record<string, unknown>;
+      }
+      return new Response("[]", { headers: { "content-type": "application/json" } });
+    }) as typeof fetch;
+    try {
+      const res = await handleInjectReview(slash("boss"), env, waitUntil);
+      expect(res.type).toBe(InteractionResponseType.DeferredChannelMessageWithSource);
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      if (patched === null) throw new Error("expected patchOriginal call");
+      expect(String(patched["content"] ?? "")).toContain("kosong");
+    } finally {
+      globalThis.fetch = origFetch;
+    }
   });
 });
 
