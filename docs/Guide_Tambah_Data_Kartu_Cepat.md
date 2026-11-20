@@ -120,6 +120,5 @@ roster → discover → validate → fetch → build → seed --remote → deplo
 - [ ] Roster ditulis, tanpa probing ulang fakta plan
 - [ ] Typecheck tiap ≤2 edit
 - [ ] Discover full → validate → fetch → build → seed → deploy → register
+- [ ] Bila ada kartu inject baru: `render-inject --remote` (laptop) → `deploy`
 - [ ] Test + lint hijau, assertion = angka final run
-- [ ] Commit berisi hanya file plan, merge, hapus worktree
-- [ ] Laporan: kept/dropped, tech debt kurasi, perubahan serial bila ada
