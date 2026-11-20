@@ -19,6 +19,8 @@ import {
 } from "./commands/trade/handler.js";
 import { handleCariAutocomplete } from "./commands/cari/handler.js";
 import { ephemeralResponse } from "./discord/rest.js";
+import { handleInjectClick } from "./commands/inject-review/handler.js";
+import { handleScheduled } from "./scheduled.js";
 import type { Env } from "./env.js";
 
 const app = new Hono<{ Bindings: Env }>();
@@ -85,6 +87,13 @@ app.post("/interactions", async (c) => {
         ),
       );
     }
+    if (ns === "inject") {
+      return c.json(
+        await handleInjectClick(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
     return c.json(ephemeralResponse("Tombol kedaluwarsa."));
   }
   if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
@@ -114,4 +123,9 @@ app.post("/interactions", async (c) => {
   return c.json({ error: "Unhandled interaction type" }, 400);
 });
 
-export default app;
+export default {
+  fetch: app.fetch,
+  async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
+    await handleScheduled(env);
+  },
+};

@@ -103,6 +103,40 @@ export const users = sqliteTable("users", {
   createdAt: integer("created_at").notNull(),
 });
 
+/**
+ * Community-inject queue: rows written by the scheduled ingest poll, reviewed
+ * from a phone via /inject-review. Replaces the old data/submissions/*.json
+ * files (local-only) so no laptop is needed in the loop.
+ */
+export const injectQueue = sqliteTable(
+  "inject_queue",
+  {
+    messageId: text("message_id").primaryKey(),
+    channelId: text("channel_id").notNull(),
+    guildId: text("guild_id").notNull(),
+    authorId: text("author_id"),
+    submittedAt: integer("submitted_at").notNull(),
+    messageUrl: text("message_url").notNull(),
+    nama: text("nama"),
+    memberId: text("member_id"),
+    pool: text("pool"),
+    grup: text("grup"),
+    rarity: text("rarity", { enum: RARITIES }),
+    label: text("label"),
+    sumber: text("sumber"),
+    imageUrl: text("image_url"),
+    status: text("status", {
+      enum: ["pending", "approved", "rejected"],
+    })
+      .notNull()
+      .default("pending"),
+    errors: text("errors"),
+    reviewedBy: text("reviewed_by"),
+    reviewedAt: integer("reviewed_at"),
+  },
+  (t) => [index("inject_queue_status_idx").on(t.status, t.submittedAt)],
+);
+
 export const userPoolStates = sqliteTable(
   "user_pool_states",
   {

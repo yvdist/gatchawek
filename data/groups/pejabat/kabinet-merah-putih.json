@@ -4137,6 +4137,20 @@
           "author": null
         }
       ]
+    },
+    {
+      "id": "kanda-bahlil-ballroom",
+      "name": "Kanda Bahlil Ballroom",
+      "photos": [
+        {
+          "photoNo": 1,
+          "rarity": "rare",
+          "imageUrl": "https://cdn.discordapp.com/attachments/1573206124168216637/1573234660711075940/images_1.jpeg?ex=6b014474&is=6afff2f4&hm=69be08922c421ed8e589a444f1cca5bd961eeeb5efd1fd6cbaeb20cbfb023168&",
+          "sourcePageUrl": "https://discord.com/channels/869121487020372020/1573206124168216637/1573234661033906186",
+          "license": null,
+          "author": null
+        }
+      ]
     }
   ]
 }

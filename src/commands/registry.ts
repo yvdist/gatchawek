@@ -17,6 +17,8 @@ import { helpDefinition } from "./help/definition.js";
 import { handleHelp } from "./help/handler.js";
 import { tradeDefinition } from "./trade/definition.js";
 import { handleTrade } from "./trade/handler.js";
+import { injectReviewDefinition } from "./inject-review/definition.js";
+import { handleInjectReview } from "./inject-review/handler.js";
 import { cariDefinition } from "./cari/definition.js";
 import { handleCari } from "./cari/handler.js";
 import { topDefinition } from "./top/definition.js";
@@ -38,6 +40,7 @@ export const commandDefinitions = [
   koleksiDefinition,
   helpDefinition,
   tradeDefinition,
+  injectReviewDefinition,
   cariDefinition,
   topDefinition,
 ];
@@ -50,6 +53,7 @@ const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
   ["koleksi", handleKoleksi],
   ["help", handleHelp],
   ["trade", handleTrade],
+  ["inject-review", handleInjectReview],
   ["cari", handleCari],
   ["top", handleTop],
 ];
