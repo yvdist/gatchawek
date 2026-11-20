@@ -174,19 +174,16 @@ describe("injectPage", () => {
 });
 
 describe("importPage", () => {
-  const poolGroups = [
+  const pools = [
     {
       poolId: "ahli-ngebul",
       poolName: "Ahli Ngebul",
       poolEmoji: "💨",
-      groupId: "default",
-      groupName: "Default",
-      groupBadge: "NGEBUL",
     },
   ];
 
   it("renders drag-and-drop import UI, template guide, and Holo/Secret options", () => {
-    const html = importPage({ poolGroups });
+    const html = importPage({ pools });
     expect(html).toContain('id="dropzone"');
     expect(html).toContain('enctype="multipart/form-data"');
     expect(html).toContain("(rarity) - nama grup - nama kartu.ext");
@@ -195,18 +192,19 @@ describe("importPage", () => {
     expect(html).toContain("(holo) - refi kaget.jpg");
     expect(html).toContain("★★★★★ Holo");
     expect(html).toContain("(secret)");
-    expect(html).toContain('value="ahli-ngebul:default"');
-    expect(html).toContain("Ahli Ngebul · Default (NGEBUL)");
+    expect(html).toContain('value="ahli-ngebul"');
+    expect(html).toContain("💨 Ahli Ngebul");
+    expect(html).not.toContain("ahli-ngebul:default");
   });
 
   it("escapes error messages, pool labels, and batch result filenames", () => {
-    const basePg = poolGroups[0];
-    if (basePg === undefined) throw new Error("expected fixture");
+    const basePool = pools[0];
+    if (basePool === undefined) throw new Error("expected fixture");
     const html = importPage({
-      poolGroups: [
+      pools: [
         {
-          ...basePg,
-          groupName: "<script>bad()</script>",
+          ...basePool,
+          poolName: "<script>bad()</script>",
         },
       ],
       error: "<img src=x onerror=alert(1)>",
@@ -224,14 +222,14 @@ describe("importPage", () => {
     expect(html).not.toContain("<svg onload=alert(1)>");
   });
 
-  it("disables submit when no active pool groups exist", () => {
-    const html = importPage({ poolGroups: [] });
-    expect(html).toContain("Belum ada pool/grup aktif");
+  it("disables submit when no active pools exist", () => {
+    const html = importPage({ pools: [] });
+    expect(html).toContain("Belum ada pool aktif");
     expect(html).toContain('id="submitBtn" disabled');
   });
 
   it("renders the shared dark shell with active nav and theme tokens", () => {
-    const html = importPage({ poolGroups });
+    const html = importPage({ pools });
     expect(html).toContain('class="topbar"');
     expect(html).toContain('aria-current="page"');
     expect(html).toContain("--bg:");
@@ -263,7 +261,7 @@ describe("importPage", () => {
   });
 
   it("keeps the dropzone contract with label, file input, and aria", () => {
-    const html = importPage({ poolGroups });
+    const html = importPage({ pools });
     expect(html).toContain('id="dropzone"');
     expect(html).toContain('aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"');
     expect(html).toContain('for="fileInput"');
@@ -281,7 +279,7 @@ describe("importPage", () => {
     expect(forCards).toContain('class="tablewrap"');
     const forInject = injectPage({ rows: [], total: 0, status: "pending", ok: null });
     expect(forInject).toContain('class="tablewrap"');
-    expect(importPage({ poolGroups })).toContain('class="tablewrap"');
+    expect(importPage({ pools })).toContain('class="tablewrap"');
   });
 
   it("shows bulk render controls only on the remote tab", () => {
