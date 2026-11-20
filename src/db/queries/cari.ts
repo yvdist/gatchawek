@@ -9,13 +9,16 @@ export interface CariOwner {
   holoQty: number;
 }
 
-export interface CariCard {
-  cardId: string;
-  photoNo: number;
-  photoLabel: string | null;
-  rarity: RarityKey;
-  owners: CariOwner[];
-}
+ export interface CariCard {
+   cardId: string;
+   photoNo: number;
+   photoTotal: number;
+   serial: number;
+   imageFile: string;
+   photoLabel: string | null;
+   rarity: RarityKey;
+   owners: CariOwner[];
+ }
 
 export interface CariMember {
   memberId: string;
@@ -47,6 +50,7 @@ export function sanitizeCariPrefix(raw: string): string {
        name: members.name,
        groupName: groups.name,
        poolId: members.poolId,
+       photoTotal: members.photoTotal,
      })
      .from(members)
      .innerJoin(groups, eq(members.groupId, groups.id))
@@ -91,6 +95,7 @@ export function sanitizeCariPrefix(raw: string): string {
            name: members.name,
            groupName: groups.name,
            poolId: members.poolId,
+           photoTotal: members.photoTotal,
          })
          .from(members)
          .innerJoin(groups, eq(members.groupId, groups.id))
@@ -111,6 +116,8 @@ export function sanitizeCariPrefix(raw: string): string {
        id: cards.id,
        memberId: cards.memberId,
        photoNo: cards.photoNo,
+       serial: cards.serial,
+       imageFile: cards.imageFile,
        photoLabel: cards.photoLabel,
        rarity: cards.rarity,
      })
@@ -126,6 +133,7 @@ export function sanitizeCariPrefix(raw: string): string {
   // Label-only members: show ONLY label-matching cards (strict per-photo
   // result). Name-matched members keep all their cards. Cap preserved.
   const nameHitIds = new Set(nameRows.map((m) => m.id));
+  const photoTotalByMember = new Map(memberRows.map((m) => [m.id, m.photoTotal] as const));
   const byMember = new Map<string, CariCard[]>();
   for (const c of cardRows) {
     if (
@@ -137,7 +145,7 @@ export function sanitizeCariPrefix(raw: string): string {
     }
     const list = byMember.get(c.memberId) ?? [];
     if (list.length < CARI_CARD_LIMIT) {
-      list.push({ cardId: c.id, photoNo: c.photoNo, photoLabel: c.photoLabel, rarity: c.rarity, owners: [] });
+      list.push({ cardId: c.id, photoNo: c.photoNo, photoTotal: photoTotalByMember.get(c.memberId) ?? 0, serial: c.serial, imageFile: c.imageFile, photoLabel: c.photoLabel, rarity: c.rarity, owners: [] });
       byMember.set(c.memberId, list);
     }
   }

@@ -58,7 +58,7 @@ async function followupCari(
   // postFollowup forces allowed_mentions parse:[] (no pings); owner ids
   // still render as <@id> text per the holo-plan fallback.
   await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
-    embeds: [buildCariEmbed(results, query, truncated)],
+    embeds: buildCariEmbed(results, query, truncated, env.PUBLIC_BASE_URL),
   });
 }
 

@@ -174,13 +174,18 @@ describe("/cari", () => {
         { body: string },
       ];
       const body = JSON.parse(init.body) as {
-        embeds: { title: string; description: string }[];
+        embeds: { title: string; description: string; thumbnail?: { url: string }; color: number }[];
       };
-      expect(body.embeds[0]?.title).toContain("Anna");
+      // Archive style: card name as title, thumbnail on the side, neutral color.
+      expect(body.embeds[0]?.title).toContain("Foto 1");
+      expect(body.embeds[0]?.thumbnail?.url).toContain("https://example.test/cards/a1.webp");
+      expect(body.embeds[0]?.color).toBe(0x6b7280);
       // Owned card shows the owner mention with count.
       expect(body.embeds[0]?.description).toContain("<@u1>");
+      // Second card (holo) arrives as its own embed.
+      expect(body.embeds[1]?.thumbnail?.url).toContain("a2.webp");
       // Holo copy shows ✦ marker.
-      expect(body.embeds[0]?.description).toContain("✦×1");
+      expect(body.embeds[1]?.description).toContain("✦×1");
     } finally {
       vi.unstubAllGlobals();
     }
@@ -253,7 +258,7 @@ describe("/cari", () => {
       const body = JSON.parse(init.body) as {
         embeds: { title: string; description: string }[];
       };
-      expect(body.embeds[0]?.title).toContain("tak");
+      expect(body.embeds[0]?.title).toContain("Foto 1");
       expect(body.embeds[0]?.description).toContain("Katak Bijak");
       expect(body.embeds[0]?.description).toContain("<@u1>");
     } finally {
