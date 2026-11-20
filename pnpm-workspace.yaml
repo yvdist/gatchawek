@@ -1,3 +1,5 @@
 allowBuilds:
   esbuild: true
   workerd: true
+  "@napi-rs/canvas": true
+  tesseract.js: true
