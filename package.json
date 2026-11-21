@@ -20,7 +20,9 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "wrangler d1 migrations apply DB --local",
     "ingest": "tsx scripts/ingest.ts",
-    "approve": "tsx scripts/approve.ts"
+    "approve": "tsx scripts/approve.ts",
+    "reset:progress": "tsx scripts/reset-progress.ts --yes",
+    "reset:progress:remote": "tsx scripts/reset-progress.ts --remote --yes"
   },
   "keywords": [],
   "author": "",
