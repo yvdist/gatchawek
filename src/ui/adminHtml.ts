@@ -3,19 +3,22 @@
  * All DB/user values pass through escapeHtml.
  */
 
-import type {
-  AdminCardDetail,
-  AdminCardKindFilter,
-  AdminCardRow,
-  AdminCounts,
-  AdminPoolOption,
-  AdminQueueStatus,
+import {
+  RENDER_BATCH_MAX,
+  type AdminCardDetail,
+  type AdminCardKindFilter,
+  type AdminCardRow,
+  type AdminCounts,
+  type AdminPoolOption,
+  type AdminQueueStatus,
 } from "../db/queries/admin.js";
 import type { QueueRow } from "../db/queries/inject.js";
 import {
+  RARITY_COLOR,
   RARITY_KEYS,
   RARITY_LABEL,
   RARITY_STARS,
+  type RarityKey,
 } from "../domain/rarity.js";
 
 export type AdminPage =
@@ -49,41 +52,126 @@ export function escapeHtml(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-const ADMIN_CSS = `:root{color-scheme:dark;--bg:#0b0e14;--surface:#12161f;--surface-2:#181e2a;--border:#232b3a;--text:#e8ecf3;--muted:#9aa4b5;--accent:#3b82f6;--accent-ink:#0b1220;--success:#22c55e;--warning:#f59e0b;--error:#ef4444;--radius:.75rem;--r-common:#9ca3af;--r-rare:#a855f7;--r-super:#f59e0b;--r-ultra:#ec4899;--r-holo:#ffd700;--r-secret:#22d3ee}*,*::before,*::after{box-sizing:border-box}body{background:var(--bg);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}h1,h2,h3{letter-spacing:-.02em}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.topbar{background:var(--surface);border-bottom:1px solid var(--border)}.topbar-inner{max-width:1120px;margin:0 auto;padding:.7rem 20px;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.brand{display:inline-flex;align-items:center;gap:.45rem;font-weight:700;color:var(--text);margin-right:.5rem}.brand svg{width:16px;height:16px}.navlink{display:inline-block;padding:.4rem .8rem;border-radius:999px;color:var(--muted);text-decoration:none;font-size:.9rem}.navlink:hover{color:var(--text);background:rgba(59,130,246,.08)}.navlink.is-active{background:rgba(59,130,246,.14);color:#fff}.topbar .sp{flex:1}.wrap{max-width:1120px;margin:0 auto;padding:24px 20px 64px}.foot{color:var(--muted);font-size:12px;max-width:1120px;margin:0 auto;padding:0 20px 32px}.pagehead{margin:0 0 1.1rem}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}.pagehead h1{font-size:clamp(24px,3vw,32px);margin:.25rem 0 .5rem}.lede{color:var(--muted);max-width:65ch;margin:.25rem 0 0}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem}.card h2,.card h3{margin-top:0}.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}table{width:100%;border-collapse:collapse;margin-bottom:0}th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);position:sticky;top:0;background:var(--surface);text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--border)}td{padding:.55rem .7rem;border-bottom:1px solid var(--border);vertical-align:middle}tr:last-child td{border-bottom:none}table img{width:48px;height:48px;border-radius:.5rem;object-fit:cover}.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .55rem;border-radius:999px;font-size:.78rem;border:1px solid var(--border);background:var(--surface-2);color:var(--text);white-space:nowrap}.badge i{width:8px;height:8px;border-radius:50%;background:var(--r-common);display:inline-block}.b-empty{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.4)}.b-remote{background:rgba(245,158,11,.12);border-color:rgba(245,158,11,.4)}.b-static{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.4)}.b-off{background:var(--surface-2);color:var(--muted)}.r-common i{background:var(--r-common)}.r-rare i{background:var(--r-rare)}.r-super_rare i{background:var(--r-super)}.r-ultra_rare i{background:var(--r-ultra)}.r-holo i{background:var(--r-holo)}.r-secret i{background:var(--r-secret)}.thumb-broken{border:2px solid var(--error)}.btn{display:inline-block;background:var(--accent);color:#fff;border:1px solid transparent;border-radius:.6rem;padding:.55rem 1rem;font-weight:600;text-decoration:none;cursor:pointer;transition:transform .12s ease,background .12s ease}.btn:hover{background:#2f6fed;color:#fff;transform:translateY(-1px)}.btn:active{transform:translateY(0)}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}.btn-ghost{display:inline-block;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:.6rem;padding:.55rem 1rem;text-decoration:none;cursor:pointer}.btn-ghost:hover{border-color:var(--accent);color:#fff}.btn-danger-outline{display:inline-block;background:transparent;color:var(--error);border:1px solid var(--error);border-radius:.6rem;padding:.55rem 1rem;cursor:pointer}.alert{padding:.6rem .8rem;border-radius:.6rem;border:1px solid var(--border);background:var(--surface-2)}.alert.is-ok{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.1)}.alert.is-err{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.1)}.alert.is-info{border-color:rgba(59,130,246,.5);background:rgba(59,130,246,.1)}.field{display:grid;gap:.3rem;margin-bottom:.8rem}.field label{font-size:13px;color:var(--muted)}input[type=text],input[type=search],input[type=password],input[type=url],select{background:var(--surface-2);border:1px solid var(--border);border-radius:.6rem;padding:.55rem .7rem;color:var(--text);max-width:100%}input:focus,select:focus{border-color:var(--accent)}.import-table input,.import-table select{margin-bottom:0;min-width:130px}.tabs{display:inline-flex;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px;flex-wrap:wrap}.tabs a{padding:.35rem .85rem;border-radius:999px;color:var(--muted);text-decoration:none;font-size:.88rem}.tabs a.is-active{background:var(--accent);color:#fff}.toolbar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1rem}.toolbar form[role=search]{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:0}.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:.9rem;margin-bottom:1rem}.stat{display:flex;flex-direction:column;gap:.15rem}.stat-label{font-size:13px;color:var(--muted)}.stat-num{font-size:30px;font-weight:700;line-height:1.1}.stat-link{font-size:.88rem}.backlink{display:inline-block;margin-bottom:1rem;color:var(--muted);text-decoration:none}.backlink:hover{color:var(--text)}label.btn{cursor:pointer}.detail{display:grid;grid-template-columns:340px 1fr;gap:1rem;margin-bottom:1rem}.preview img{max-width:100%;border-radius:.5rem;border:1px solid var(--border)}.kv{display:grid;grid-template-columns:auto 1fr;gap:.35rem .9rem;margin:0}.kv dt{font-size:13px;color:var(--muted)}.kv dd{margin:0}.guide ol{margin:.4rem 0 .6rem;padding-left:1.2rem;display:grid;gap:.4rem}.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem}.chips code{font-size:.8rem}.dropzone{border:1.5px dashed #33405a;border-radius:var(--radius);padding:2rem 1rem;text-align:center;cursor:pointer;transition:background .15s ease,border-color .15s ease;margin-bottom:1rem;background:var(--surface-2)}.dropzone.is-dragover{border-color:var(--accent);background:rgba(59,130,246,.08)}.dropzone svg{width:28px;height:28px;color:var(--muted)}.file-hidden{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden;pointer-events:none}.hint{font-size:.82rem;color:var(--muted)}.import-thumb{width:64px;height:64px;object-fit:cover;border-radius:.35rem}.status-ok{color:var(--success)}.status-err{color:var(--error)}.status-wait{color:var(--warning)}.actionbar{position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:.7rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.loginwrap{min-height:100vh;display:grid;place-items:center;padding:1rem}.login{width:min(26rem,92vw)}.login .btn{width:100%}@media (max-width:860px){.statgrid{grid-template-columns:repeat(2,1fr)}.detail{grid-template-columns:1fr}}@media (max-width:640px){.col-owned{display:none}}@media (max-width:520px){.statgrid{grid-template-columns:1fr}}@media (prefers-reduced-motion:reduce){*{transition:none!important}}`;
+const FONTS =
+  "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&display=swap";
+
+const ADMIN_CSS = `:root{color-scheme:dark;--bg:#15171c;--surface:#1d2027;--surface-2:#262a33;--border:#343944;--text:#eef1f6;--muted:#a2a9b8;--accent:#6ea0ff;--accent-solid:#2b63d9;--accent-ink:#0f1115;--paper:#ebe8e1;--paper-ink:#24262c;--success:#4ade80;--warning:#fbbf24;--error:#f87171;--radius:.9rem}*,*::before,*::after{box-sizing:border-box}html{background:var(--bg)}body{min-height:100vh;background:var(--bg);color:var(--text);font-family:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;--pico-font-family:"Bricolage Grotesque",ui-sans-serif,system-ui,sans-serif;--pico-background-color:transparent;--pico-color:var(--text);--pico-primary:var(--accent);--pico-muted-border-color:var(--border);--pico-form-element-background-color:var(--surface-2);--pico-form-element-border-color:var(--border);--pico-form-element-color:var(--text);--pico-card-background-color:var(--surface)}h1,h2,h3{letter-spacing:-.025em;font-weight:750;color:var(--text)}.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(176px,1fr));gap:1.1rem;margin-bottom:1rem}article.tile{min-width:0;position:relative;display:flex;flex-direction:column;gap:.5rem;margin:0;padding:0;background:none;box-shadow:none;border-radius:0}.tile-art{position:relative;display:block;aspect-ratio:2/3;border-radius:14px;overflow:hidden;text-decoration:none;transition:transform .18s ease,box-shadow .18s ease}.tile-art:hover{transform:translateY(-3px)}.is-rendered .tile-art{background:var(--surface-2);border:1px solid color-mix(in srgb,var(--rc) 40%,var(--border));box-shadow:0 6px 14px -8px rgba(0,0,0,.7)}.is-rendered .tile-art:hover{border-color:var(--rc);box-shadow:0 12px 22px -10px rgba(0,0,0,.8)}.tile-art>img{width:100%;height:100%;object-fit:cover;display:block}.is-raw .tile-art{background:var(--paper);color:var(--paper-ink);border:2px dashed #b7b2a6;display:flex;flex-direction:column;padding:.6rem;gap:.55rem}.is-raw .tile-art:hover,.is-final .tile-art:hover{transform:none}.sheet-photo{flex:1;border-radius:8px;overflow:hidden;background:#d8d4cb;display:grid;place-items:center;color:#4f4b44;font-size:.8rem;text-align:center;padding:0}.sheet-photo img{width:100%;height:100%;object-fit:cover;display:block}.sheet-name{font-weight:750;font-size:1rem;line-height:1.15;letter-spacing:-.02em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sheet-sub{display:flex;justify-content:space-between;gap:.4rem;font-size:.75rem;color:#5a564e}.sheet-stars{color:var(--rc);filter:brightness(.75)}.sheet-tag{position:absolute;bottom:.5rem;left:.5rem;right:.5rem;justify-content:center;text-align:center;font-size:.75rem;font-weight:650;padding:.12rem .45rem;border-radius:999px;background:var(--paper-ink);color:var(--paper)}.tile.is-off .tile-art{filter:grayscale(.85);opacity:.55}.tile-meta{display:flex;flex-direction:column;gap:.15rem;padding:0 .15rem}.meta-1{color:var(--text);font-weight:600;font-size:.86rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tile-meta .badge{align-self:flex-start;margin-top:.2rem}.tile-meta small{color:var(--muted);font-size:.76rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tile-badges{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.2rem}label.tile-pick{position:absolute;top:.35rem;left:.35rem;z-index:2;display:grid;place-items:center;width:44px;height:44px;min-width:44px;border-radius:10px;background:rgba(21,23,28,.82);margin:0;cursor:pointer}.tile-pick input{margin:0;width:22px;height:22px;border:2px solid #fff;background-color:rgba(255,255,255,.08)}.tile-pick.is-off{cursor:not-allowed}.tile-pick.is-off input{opacity:.45}.is-final .tile-art{background:var(--surface-2);border:1px solid var(--border);box-shadow:0 6px 14px -8px rgba(0,0,0,.7)}.is-pending .tile-art{border-color:var(--accent);border-style:solid;border-width:3px}.searchbox{position:relative;flex:1;display:flex;min-width:0}.searchbox input[type=search]{padding-right:3rem}.search-x{position:absolute;right:.2rem;top:50%;transform:translateY(-50%);width:44px;height:44px;display:grid;place-items:center;border-radius:8px;color:var(--muted);text-decoration:none;font-size:1.1rem;line-height:1}.search-x:hover{color:var(--text);background:var(--surface)}.pathrow{display:flex;gap:.5rem;align-items:center;margin-top:.6rem;min-width:0}.pathrow code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.75rem;color:var(--muted);background:none;padding:0}.btn-sm{padding:.3rem .6rem;font-size:.8rem}.titlerow{display:flex;gap:.7rem;align-items:center;flex-wrap:wrap}.titlerow h1{margin:0}.stack{display:grid;gap:1rem}.card form{margin-bottom:0}.empty-state{padding:3rem 1rem;text-align:center;color:var(--muted);border:1.5px dashed var(--border);border-radius:var(--radius)}.legend-box{position:relative;flex:none;margin:0}.legend-box summary{list-style:none;width:44px;height:44px;display:grid;place-items:center;border-radius:999px;border:1px solid var(--border);color:var(--muted);cursor:pointer;font-weight:700}.legend-box summary::-webkit-details-marker{display:none}.legend-box summary::after{display:none}.legend-box[open] summary{color:var(--text);border-color:var(--accent)}.legend-pop{position:absolute;right:0;top:calc(100% + .4rem);z-index:6;width:min(20rem,86vw);display:grid;gap:.55rem;padding:.8rem .9rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:0 12px 28px -12px rgba(0,0,0,.8);font-size:.84rem;color:var(--muted)}.legend-pop span{display:flex;align-items:center;gap:.55rem}.legend-pop i{flex:none;width:22px;height:30px;border-radius:4px}.lg-r{background:linear-gradient(160deg,#59606e,#2c313b);border:1px solid #8a92a3}.lg-f{background:#59606e;border:1px solid var(--border);box-shadow:inset 0 -6px 0 #24262c}.lg-p{background:var(--paper);border:1.5px dashed #b7b2a6}.sheet-tag{display:inline-flex;align-items:center;gap:.3rem}.sheet-tag.tone-raw,.sheet-tag.tone-final{background:#24262c;color:#eef1f6}.sheet-tag.tone-empty{background:#8f2f2f;color:#fff}.sheet-tag.tone-pending{background:var(--accent-solid);color:#fff}.sheet-tag.tone-stale{background:var(--warning);color:#1d1606}.badge.tone-raw{background:var(--surface-2);border-color:#5b616e}.badge.tone-final{background:var(--surface-2);border-color:#6b7280;color:var(--muted)}.badge.tone-empty{background:rgba(248,113,113,.14);border-color:rgba(248,113,113,.5)}.badge.tone-pending{background:rgba(43,99,217,.2);border-color:rgba(110,160,255,.6)}.badge.tone-stale{background:rgba(251,191,36,.14);border-color:rgba(251,191,36,.6)}.badge.tone-done{background:rgba(74,222,128,.12);border-color:rgba(74,222,128,.45)}.rdot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--rc);margin-right:.35rem;vertical-align:.05em}.filter-select{display:none}.pager{display:flex;gap:1rem;font-size:.9rem}.pager a{color:var(--muted);text-decoration:none}.pager a:hover{color:var(--text)}.detail-top{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap;margin-bottom:1rem}.detail-top .backlink{margin-bottom:0}.render-one{margin-top:.6rem}#renderForm .grid-cards{margin-bottom:1.4rem}.is-stale .tile-art{border-color:var(--warning);border-style:solid;border-width:3px}.lg-pend{border:3px solid var(--accent)!important}.lg-stale{border:3px solid var(--warning)!important}.lg-empty{background:#d8d4cb!important}.legend-note{font-size:.78rem;border-top:1px solid var(--border);padding-top:.5rem}.tab-n{display:inline-block;min-width:1.4em;padding:0 .35em;margin-left:.2rem;border-radius:999px;background:rgba(255,255,255,.08);font-size:.76rem;font-variant-numeric:tabular-nums;text-align:center}.tabs a.is-active .tab-n{background:rgba(255,255,255,.22)}.meta-1{display:flex;justify-content:space-between;gap:.4rem;align-items:baseline}.tile-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tile-stars{flex:none;color:var(--muted);font-size:.78rem;letter-spacing:.02em}details.replace{padding:0}details.replace>summary{padding:1rem 1.1rem;cursor:pointer;font-weight:700;font-size:1.05rem}details.replace[open]>summary{border-bottom:1px solid var(--border);margin-bottom:.8rem}details.replace>*:not(summary){margin-left:1.1rem;margin-right:1.1rem}details.replace>form:last-child{margin-bottom:1rem}.pick-all{display:inline-flex;align-items:center;gap:.5rem;font-size:.88rem;color:var(--muted);margin:0}.pick-all input{margin:0}.tile-actions{display:flex;gap:.4rem;margin-top:.45rem}.tile-actions form{margin:0;flex:1}.tile-actions button{width:100%;padding:.45rem .5rem;font-size:.88rem}.tile-err{margin:.3rem 0 0;font-size:.78rem;color:var(--error);line-height:1.3}.login{width:min(24rem,92vw)}.login-card{padding:1.6rem;position:relative;z-index:1;margin:0}.login-card h1{font-size:30px;margin:0 0 .35rem}.login-card .lede{margin:0 0 1.2rem}.login-card .btn{width:100%;margin-top:.3rem}.fan{position:relative;height:120px;margin-bottom:-28px}.fan i{position:absolute;left:50%;bottom:0;width:78px;height:112px;border-radius:12px;background:linear-gradient(150deg,var(--rc),color-mix(in srgb,var(--rc) 35%,var(--bg)));box-shadow:0 12px 30px -10px var(--rc);border:2px solid color-mix(in srgb,var(--rc) 60%,#fff)}.fan i:nth-child(1){transform:translateX(-120%) rotate(-14deg)}.fan i:nth-child(2){transform:translateX(-50%) translateY(-10px);z-index:1}.fan i:nth-child(3){transform:translateX(20%) rotate(14deg)}.card h2{font-size:1.2rem;margin-bottom:.6rem}.guide{margin-bottom:1.2rem}.guide ol{font-size:.94rem;color:var(--muted)}.guide strong{color:var(--text)}.fname{font-size:clamp(1.05rem,2.4vw,1.45rem);font-weight:700;letter-spacing:-.01em;margin:0 0 .9rem;padding:.8rem 1rem;border-radius:.7rem;background:var(--surface-2);overflow-wrap:anywhere}.seg-r{color:var(--r-secret)}.seg-g{color:var(--r-super_rare)}.seg-n{color:var(--r-ultra_rare)}.chips code{background:var(--surface-2);color:var(--muted);border-radius:999px;padding:.2rem .6rem}.dropzone{position:relative}.dropzone p{margin:.35rem 0}a{color:var(--accent)}:focus-visible{outline:2px solid var(--accent);outline-offset:2px}.topbar{display:block;position:sticky;top:0;z-index:10;background:var(--bg);border-bottom:1px solid var(--border)}.topbar-inner{width:100%;max-width:1120px;margin:0 auto;padding:.7rem 20px;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.brand{display:inline-flex;align-items:center;gap:.45rem;font-weight:700;color:var(--text);margin-right:.5rem}.brand svg{width:16px;height:16px}.navlink{display:inline-block;padding:.4rem .85rem;border-radius:999px;color:var(--muted);text-decoration:none;font-size:.92rem;font-weight:550}.navlink:hover{color:var(--text);background:rgba(110,160,255,.08)}.navlink.is-active{background:rgba(110,160,255,.16);color:#fff}.topbar .sp{flex:1}.wrap{max-width:1120px;margin:0 auto;padding:24px 20px 64px}.pagehead{margin:0 0 1.1rem}.pagehead h1{font-size:clamp(28px,4vw,42px);line-height:1.05;margin:.25rem 0 .5rem}.lede{color:var(--muted);max-width:65ch;margin:.25rem 0 0;text-wrap:pretty}.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:1rem 1.1rem}.card h2,.card h3{margin-top:0}.tablewrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface)}table{width:100%;border-collapse:collapse;margin-bottom:0}th{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);position:sticky;top:0;background:var(--surface);text-align:left;padding:.6rem .7rem;border-bottom:1px solid var(--border)}td{padding:.55rem .7rem;border-bottom:1px solid var(--border);vertical-align:middle}tr:last-child td{border-bottom:none}table img{width:48px;height:48px;border-radius:.5rem;object-fit:cover}.badge{display:inline-flex;align-items:center;gap:.35rem;padding:.15rem .55rem;border-radius:999px;font-size:.78rem;border:1px solid var(--border);background:var(--surface-2);color:var(--text);white-space:nowrap}.badge i{width:8px;height:8px;border-radius:50%;background:var(--rc,var(--r-common));display:inline-block}.b-off{background:var(--surface-2);color:var(--muted)}.thumb-broken{border:2px solid var(--error)}.btn{display:inline-block;background:var(--accent-solid);color:#fff;font-family:inherit;width:auto;margin:0;border:1px solid transparent;border-radius:.6rem;padding:.55rem 1rem;font-weight:600;text-decoration:none;cursor:pointer;transition:transform .12s ease,background .12s ease}.btn:hover{background:#2255c0;color:#fff;transform:translateY(-1px)}.btn:active{transform:translateY(0)}.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}.btn-ghost{display:inline-block;font-family:inherit;width:auto;margin:0;background:transparent;color:var(--text);border:1px solid var(--border);border-radius:.6rem;padding:.55rem 1rem;text-decoration:none;cursor:pointer}.btn-ghost:hover{border-color:var(--accent);color:#fff}.btn-danger-outline{display:inline-block;background:transparent;color:var(--error);border:1px solid var(--error);border-radius:.6rem;padding:.55rem 1rem;cursor:pointer}.alert{padding:.6rem .8rem;border-radius:.6rem;border:1px solid var(--border);background:var(--surface-2)}.alert.is-ok{border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.1)}.alert.is-err{border-color:rgba(239,68,68,.5);background:rgba(239,68,68,.1)}.alert.is-info{border-color:rgba(110,160,255,.5);background:rgba(110,160,255,.1)}.field{display:grid;gap:.3rem;margin-bottom:.8rem}.field label{font-size:13px;color:var(--muted)}input[type=text],input[type=search],input[type=password],input[type=url],select{background:var(--surface-2);border:1px solid var(--border);border-radius:.6rem;padding:.55rem .7rem;color:var(--text);max-width:100%}input:focus,select:focus{border-color:var(--accent)}.import-table input,.import-table select{margin-bottom:0;min-width:130px}.tabs{display:inline-flex;justify-content:flex-start;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:999px;padding:3px;flex-wrap:nowrap;max-width:100%;overflow-x:auto;scrollbar-width:none}.tabs a{flex:none;white-space:nowrap}.tabs a{padding:.35rem .85rem;border-radius:999px;color:var(--muted);text-decoration:none;font-size:.88rem}.tabs a.is-active{background:var(--accent-solid);color:#fff;font-weight:600}.search-clear{flex:none;align-self:center;font-size:.88rem}.toolbar{display:flex;gap:.6rem;flex-wrap:wrap;align-items:center;margin-bottom:1.1rem}.toolbar .legend-box{order:3}.toolbar form[role=search]{display:flex;gap:.5rem;flex:1 1 420px;min-width:0;margin-bottom:0;order:2}.toolbar form[role=search] input[type=search]{margin:0;flex:1;min-width:140px;height:auto;width:100%}.toolbar form[role=search] .btn-ghost{flex:none}.statgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.9rem;margin-bottom:1rem}.stat{display:flex;flex-direction:column;gap:.15rem}.stat-label{font-size:13px;color:var(--muted)}.stat-num{font-size:44px;font-weight:800;line-height:1;letter-spacing:-.04em}.stat-link{font-size:.88rem;font-weight:600}.stat-done{font-size:.88rem;color:var(--muted)}.stat.is-zero .stat-num{color:var(--muted)}.stat.tone-stale{background:rgba(251,191,36,.08);border-color:rgba(251,191,36,.5)}.stat.tone-empty{background:rgba(248,113,113,.08);border-color:rgba(248,113,113,.45)}.stat.tone-pending{background:rgba(43,99,217,.1);border-color:rgba(110,160,255,.5)}.stat.tone-raw{border-color:#5b616e}.pick-group{display:inline-flex;align-items:center;gap:.8rem;flex-wrap:wrap}.refresh-note{margin:.35rem 0 0;text-wrap:pretty;max-width:65ch}.backlink{display:inline-block;margin-bottom:1rem;color:var(--muted);text-decoration:none}.backlink:hover{color:var(--text)}label.btn{cursor:pointer}.detail{display:grid;grid-template-columns:280px 1fr;gap:1.5rem;margin-bottom:1rem;align-items:start}.detail .tile-art:hover{transform:none}.detail>.tile{min-width:0;width:100%;max-width:280px}.detail-note{margin:.6rem 0 0;font-size:.84rem;color:var(--muted)}.detail-path{display:block;margin-top:.5rem;font-size:.75rem;color:var(--muted);overflow-wrap:anywhere}.or{margin:.2rem 0 .8rem;color:var(--muted);font-size:.85rem}.kv{display:grid;grid-template-columns:auto 1fr;gap:.35rem .9rem;margin:0}.kv dt{font-size:13px;color:var(--muted)}.kv dd{margin:0}.guide ol{margin:.4rem 0 .6rem;padding-left:1.2rem;display:grid;gap:.4rem}.chips{display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.6rem}.chips code{font-size:.8rem}.dropzone{border:1.5px dashed #464c58;border-radius:var(--radius);padding:2rem 1rem;text-align:center;cursor:pointer;transition:background .15s ease,border-color .15s ease;margin-bottom:1rem;background:var(--surface-2)}.dropzone.is-dragover{border-color:var(--accent);background:rgba(110,160,255,.08)}.dropzone svg{width:28px;height:28px;color:var(--muted)}.file-hidden{position:absolute;top:0;left:0;width:1px!important;height:1px!important;padding:0!important;margin:0!important;border:0!important;opacity:0;overflow:hidden;pointer-events:none}.hint{font-size:.82rem;color:var(--muted)}.import-thumb{width:64px;height:64px;object-fit:cover;border-radius:.35rem}.status-ok{color:var(--success)}.status-err{color:var(--error)}.status-wait{color:var(--warning)}button.btn,button.btn-ghost,.actionbar button{width:auto;margin:0}.actionbar{position:sticky;bottom:0;z-index:5;justify-content:space-between;background:var(--surface);border-top:1px solid var(--border);padding:.7rem;display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}.loginwrap{min-height:100vh;display:grid;place-items:center;padding:1rem}@media (max-width:860px){.statgrid{grid-template-columns:repeat(2,1fr)}.detail{grid-template-columns:1fr}}@media (max-width:640px){.hint-long{display:none}.brand-text{display:none}.topbar-inner{flex-wrap:nowrap;gap:.2rem;padding:.55rem 12px;overflow-x:auto;scrollbar-width:none}.navlink{padding:.35rem .45rem;font-size:.84rem}.topbar .btn-ghost{padding:.35rem .55rem;font-size:.84rem}.navlink{flex:none}.topbar .sp{flex:1 0 .2rem}.detail>.tile{max-width:220px}.toolbar form[role=search]{order:-1;flex-basis:100%}.tabs{-webkit-mask-image:linear-gradient(90deg,#000 82%,transparent);mask-image:linear-gradient(90deg,#000 82%,transparent);padding-right:1.5rem;max-width:calc(100% - 60px)}.wrap{padding:18px 14px 56px}}@media (max-width:520px){.tabs{display:none}.filter-select{display:block;flex:1;margin:0;min-width:0}.statgrid{grid-template-columns:1fr}.grid-cards{grid-template-columns:repeat(2,1fr);gap:.8rem}}@media (prefers-reduced-motion:reduce){*{transition:none!important}}`;
+
+const hex = (n: number): string => `#${n.toString(16).padStart(6, "0")}`;
+// Rarity tokens come from RARITY_COLOR so the panel can never drift from the bot's embeds.
+const RARITY_CSS = `:root{${RARITY_KEYS.map((k) => `--r-${k}:${hex(RARITY_COLOR[k])}`).join(";")}}${RARITY_KEYS.map((k) => `.r-${k}{--rc:var(--r-${k})}`).join("")}`;
+const STYLE = `<style>${ADMIN_CSS}${RARITY_CSS}</style>`;
 
 function shell(title: string, active: AdminPage, body: string): string {
   const link = (href: string, label: string, on: boolean): string =>
     `<a class="navlink${on ? " is-active" : ""}" href="${href}"${on ? ' aria-current="page"' : ""}>${label}</a>`;
-  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} · admin</title><link rel="stylesheet" href="${BASE}"><style>${ADMIN_CSS}</style></head><body><nav class="topbar"><div class="topbar-inner"><span class="brand"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M10.7 2.3a2.6 2.6 0 0 0-3.4 3.4L2.6 10.4l3 3 4.7-4.7a2.6 2.6 0 0 0 3.4-3.4l-2 2-1.4-1.4 2-2.6z"/></svg>Admin</span>${link("/admin", "dashboard", active === "dashboard")}${link("/admin/cards", "kartu", active === "cards" || active === "card")}${link("/admin/inject", "inject", active === "inject")}${link("/admin/import", "import", active === "import")}<span class="sp"></span><form method="post" action="/admin/logout"><button type="submit" class="btn-ghost">logout</button></form></div></nav><main class="wrap">${body}</main><footer class="foot">Admin panel · internal</footer></body></html>`;
+  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(title)} · admin</title><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${FONTS}"><link rel="stylesheet" href="${BASE}">${STYLE}</head><body><nav class="topbar"><div class="topbar-inner"><span class="brand"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M10.7 2.3a2.6 2.6 0 0 0-3.4 3.4L2.6 10.4l3 3 4.7-4.7a2.6 2.6 0 0 0 3.4-3.4l-2 2-1.4-1.4 2-2.6z"/></svg><span class="brand-text">Admin</span></span>${link("/admin", "Dashboard", active === "dashboard")}${link("/admin/cards", "Kartu", active === "cards" || active === "card")}${link("/admin/inject", "Inject", active === "inject")}${link("/admin/import", "Import", active === "import")}<span class="sp"></span><form method="post" action="/admin/logout"><button type="submit" class="btn-ghost">Logout</button></form></div></nav><main class="wrap">${body}</main></body></html>`;
 }
 
 export function loginPage(error: string | null): string {
   const err = error === null ? "" : `<p class="alert is-err" role="alert">${escapeHtml(error)}</p>`;
-  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>login · admin</title><link rel="stylesheet" href="${BASE}"><style>${ADMIN_CSS}</style></head><body><main class="loginwrap"><div class="card login"><span class="brand">Admin</span><div class="pagehead"><h1>Masuk</h1><p class="lede">Panel internal — butuh password owner.</p></div>${err}<form method="post" action="/admin/login"><div class="field"><label for="loginPw">password</label><input id="loginPw" type="password" name="password" required autocomplete="current-password"></div><button class="btn" type="submit">Masuk</button></form></div></main></body></html>`;
+  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>login · admin</title><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${FONTS}"><link rel="stylesheet" href="${BASE}">${STYLE}</head><body><main class="loginwrap"><div class="login"><div class="fan" aria-hidden="true"><i class="r-rare"></i><i class="r-secret"></i><i class="r-holo"></i></div><div class="card login-card"><h1>Gatchawek admin</h1><p class="lede">Masukkan password owner untuk mengelola katalog kartu.</p>${err}<form method="post" action="/admin/login"><div class="field"><label for="loginPw">Password</label><input id="loginPw" type="password" name="password" required autocomplete="current-password" autofocus></div><button class="btn" type="submit">Masuk</button></form></div></div></main></body></html>`;
 }
 
 export function dashboardPage(counts: AdminCounts): string {
-  const stat = (label: string, value: number, href: string | null, linkLabel: string): string =>
-    `<article class="card stat"><span class="stat-label">${label}</span><span class="stat-num">${value}</span>${href === null ? "" : `<a class="stat-link" href="${href}">${linkLabel}</a>`}</article>`;
+  // Each card is a to-do; a zero is "done" and gets neither a tone nor a link.
+  const work = (label: string, value: number, href: string, tone: string, action: string): string =>
+    `<article class="card stat${value === 0 ? " is-zero" : ` ${tone}`}"><span class="stat-label">${label}</span><span class="stat-num">${value}</span>${value === 0 ? `<span class="stat-done">Beres</span>` : `<a class="stat-link" href="${href}">${action}</a>`}</article>`;
   return shell(
     "dashboard",
     "dashboard",
-    `<div class="pagehead"><span class="eyebrow">Admin · Dashboard</span><h1>Dashboard</h1><p class="lede">Ringkasan katalog kartu dan antrean inject.</p></div><div class="statgrid">${stat("total kartu", counts.total, null, "")}${stat("image kosong", counts.empty, "/admin/cards?kind=empty", "Lihat →")}${stat("image remote/CDN", counts.remote, "/admin/cards?kind=remote", "Lihat →")}${stat("inject pending", counts.pending, "/admin/inject?status=pending", "Review →")}</div><p><a class="btn" href="/admin/import">Import kartu baru →</a></p>`,
+    `<div class="pagehead"><h1>Dashboard</h1><p class="lede">${counts.total} kartu di katalog. Ini yang perlu ditindaklanjuti.</p></div><div class="statgrid">${work("Render gagal?", counts.renderStale, "/admin/cards?kind=todo", "tone-stale", "Pilih ulang")}${work("Tanpa image", counts.empty, "/admin/cards?kind=empty", "tone-empty", "Lihat")}${work("Belum dirender", counts.remote, "/admin/cards?kind=remote", "tone-raw", "Lihat")}${work("Inject pending", counts.pending, "/admin/inject?status=pending", "tone-pending", "Review")}</div><p><a class="btn" href="/admin/import">Import kartu baru</a></p>`,
   );
 }
 
-function kindBadge(kind: string): string {
-  const cls = kind === "empty" ? "b-empty" : kind === "remote" ? "b-remote" : "b-static";
-  return `<span class="badge ${cls}">${escapeHtml(kind)}</span>`;
+type CardState = "empty" | "pending" | "stale" | "raw" | "final" | "rendered";
+
+const STATE_LABEL: Record<CardState, string> = {
+  empty: "tanpa image",
+  pending: "sedang dirender",
+  stale: "render gagal?",
+  raw: "belum dirender",
+  final: "foto asli",
+  rendered: "sudah dirender",
+};
+const STATE_TONE: Record<CardState, string> = {
+  empty: "tone-empty",
+  pending: "tone-pending",
+  stale: "tone-stale",
+  raw: "tone-raw",
+  final: "tone-final",
+  rendered: "tone-done",
+};
+const STATE_TILE: Record<CardState, string> = {
+  empty: "is-raw",
+  pending: "is-raw is-pending",
+  stale: "is-raw is-stale",
+  raw: "is-raw",
+  final: "is-final",
+  rendered: "is-rendered",
+};
+
+/** Remote photos in render-excluded pools are final as they are, enabled or not. */
+function cardState(r: AdminCardRow): CardState {
+  if (r.imageKind === "static") return "rendered";
+  if (r.imageKind === "empty") return "empty";
+  if (r.excludedPool) return "final";
+  if (r.renderable && r.renderPending) return "pending";
+  // A request whose window passed while the card is still raw most likely failed.
+  if (r.renderable && r.renderRequestedAt !== null) return "stale";
+  return "raw";
+}
+const CLOCK = `<svg viewBox="0 0 16 16" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="8" cy="8" r="6.2"/><path d="M8 4.6V8l2.3 1.5"/></svg>`;
+function pendingAgo(r: AdminCardRow, nowSec: number): string {
+  if (r.renderRequestedAt === null) return STATE_LABEL.pending;
+  const mins = Math.max(0, Math.floor((nowSec - r.renderRequestedAt) / 60));
+  return mins === 0 ? "diminta barusan" : `diminta ${mins} mnt lalu`;
+}
+function stateText(r: AdminCardRow, nowSec: number): string {
+  const st = cardState(r);
+  if (st === "pending") return pendingAgo(r, nowSec);
+  if (st === "stale") return `${STATE_LABEL.stale} ${pendingAgo(r, nowSec)}`;
+  return STATE_LABEL[st];
+}
+function stateBadge(r: AdminCardRow): string {
+  const st = cardState(r);
+  return `<span class="badge ${STATE_TONE[st]}">${STATE_LABEL[st]}</span>`;
+}
+function rarityKey(key: string): RarityKey {
+  return (RARITY_KEYS as readonly string[]).includes(key) ? (key as RarityKey) : "common";
+}
+// rendered/final show the image full-bleed; raw/pending/empty show a plain paper card.
+function cardFace(r: AdminCardRow, base: string, nowSec: number, withTag = true): string {
+  const name = escapeHtml(r.memberName);
+  const src = escapeHtml(localImageSrc(base, r.imageFile));
+  const broken = `onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'Gambar gagal dimuat. Ganti image di halaman kartu.'}))"`;
+  const st = cardState(r);
+  if (st === "rendered") return `<img src="${src}" alt="${name}" loading="lazy" ${broken}>`;
+  const tag = !withTag
+    ? ""
+    : st === "pending"
+      ? `<span class="sheet-tag ${STATE_TONE[st]}">${CLOCK} ${stateText(r, nowSec)}</span>`
+      : st === "stale"
+        ? `<span class="sheet-tag ${STATE_TONE[st]}" title="${stateText(r, nowSec)}">${CLOCK} ${STATE_LABEL.stale}</span>`
+        : `<span class="sheet-tag ${STATE_TONE[st]}">${STATE_LABEL[st]}</span>`;
+  if (st === "final") return `${tag}<img src="${src}" alt="${name}" loading="lazy" ${broken}>`;
+  const photo = st === "empty" ? "belum ada foto" : `<img src="${src}" alt="${name}" loading="lazy" ${broken}>`;
+  return `${tag}<span class="sheet-photo">${photo}</span>`;
 }
 function rarityBadge(key: string): string {
-  const known = (RARITY_KEYS as readonly string[]).includes(key);
-  const cls = known ? `r-${key}` : "r-common";
-  const k = known ? (key as (typeof RARITY_KEYS)[number]) : "common";
-  return `<span class="badge ${cls}"><i></i>${escapeHtml(`${RARITY_STARS[k]} ${RARITY_LABEL[k]}`)}</span>`;
+  const k = rarityKey(key);
+  return `<span class="badge r-${k}"><i></i>${escapeHtml(`${RARITY_STARS[k]} ${RARITY_LABEL[k]}`)}</span>`;
 }
 
-const KINDS: AdminCardKindFilter[] = ["all", "empty", "remote", "static"];
+const KIND_TABS: [AdminCardKindFilter, string][] = [
+  ["todo", "Perlu dikerjakan"],
+  ["empty", "Tanpa image"],
+  ["remote", "Belum dirender"],
+  ["static", "Selesai"],
+  ["all", "Semua"],
+];
+
+const RENDER_SCRIPT = `<script>(function(){var MAX=${RENDER_BATCH_MAX};var btn=document.getElementById("renderBtn");var all=document.getElementById("pickAll");if(!btn)return;function boxes(){return Array.prototype.slice.call(document.querySelectorAll('input[name="ids"]'));}function sync(){var bs=boxes();var n=bs.filter(function(b){return b.checked;}).length;bs.forEach(function(b){b.disabled=!b.checked&&n>=MAX;});btn.disabled=n===0;btn.textContent="Minta render ("+n+"/"+MAX+")";if(all)all.checked=n>0&&n===Math.min(MAX,bs.length);}if(all)all.addEventListener("change",function(){var c=0;boxes().forEach(function(b){b.checked=all.checked&&c<MAX;if(b.checked)c++;});sync();});document.addEventListener("change",function(e){if(e.target&&e.target.name==="ids")sync();});var ps=document.getElementById("pickStale");if(ps)ps.addEventListener("click",function(){var c=boxes().filter(function(b){return b.checked;}).length;boxes().forEach(function(b){if(b.hasAttribute("data-stale")&&!b.checked&&c<MAX){b.checked=true;c++;}});sync();});sync();})();</script>`;
 
 export function cardsPage(args: {
   rows: AdminCardRow[];
@@ -93,22 +181,46 @@ export function cardsPage(args: {
   base: string;
   renderMessage?: string | null;
   renderOk?: boolean;
+  nowSec?: number;
+  counts?: Partial<Record<AdminCardKindFilter, number>>;
 }): string {
-  const tabs = KINDS.map(
-    (k) =>
-      `<a class="${k === args.kind ? "is-active" : ""}" href="/admin/cards?kind=${k}${args.q === "" ? "" : `&amp;q=${encodeURIComponent(args.q)}`}">${k}</a>`,
+  const nowSec = args.nowSec ?? Math.floor(Date.now() / 1000);
+  const qs = args.q === "" ? "" : `&q=${encodeURIComponent(args.q)}`;
+  const listUrl = `/admin/cards?kind=${args.kind}${qs}`;
+  const tabs = KIND_TABS.map(
+    ([k, label]) => {
+      const n = args.counts?.[k];
+      return `<a class="${k === args.kind ? "is-active" : ""}" href="/admin/cards?kind=${k}${escapeHtml(qs)}"${k === args.kind ? ' aria-current="page"' : ""}>${label}${n === undefined ? "" : ` <span class="tab-n">${n}</span>`}</a>`;
+    },
   ).join("");
-  const rows = args.rows
+  const canPick = (r: AdminCardRow): boolean => {
+    const st = cardState(r);
+    return r.renderable && (st === "raw" || st === "stale");
+  };
+  const selectable = args.rows.filter(canPick).length;
+  const staleCount = args.rows.filter((r) => canPick(r) && cardState(r) === "stale").length;
+  const showBulk = selectable > 0;
+  const select = `<select class="filter-select" aria-label="Filter status kartu" onchange="location.href=this.value">${KIND_TABS.map(([k, label]) => {
+    const n = args.counts?.[k];
+    return `<option value="/admin/cards?kind=${k}${escapeHtml(qs)}"${k === args.kind ? " selected" : ""}>${label}${n === undefined ? "" : ` (${n})`}</option>`;
+  }).join("")}</select>`;
+  // While a render is in flight, reload every minute so finished cards appear, unless the owner is mid-selection.
+  const refresh = args.rows.some((r) => cardState(r) === "pending")
+    ? `<script>(function(){var at=document.getElementById("loadedAt");if(at)at.textContent=new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});function t(){if(document.querySelector('input[name="ids"]:checked')||document.querySelector(".legend-box[open]"))return setTimeout(t,60000);location.reload();}setTimeout(t,60000);})();</script>`
+    : "";
+  const refreshNote = refresh === ""
+    ? ""
+    : `<p class="hint refresh-note">Diperbarui otomatis tiap 1 menit selama ada render berjalan<span class="loaded"> · dimuat <span id="loadedAt"></span></span>. Dijeda saat kamu sedang memilih kartu.</p>`;
+  const tiles = args.rows
     .map((r) => {
-      const thumb =
-        r.imageKind === "empty"
-          ? `<span class="badge b-empty">tanpa image</span>`
-          : `<img src="${escapeHtml(localImageSrc(args.base, r.imageFile))}" alt="" loading="lazy" onerror="this.classList.add('thumb-broken');var b=this.nextElementSibling;if(b)b.hidden=false;"><span class="badge b-off" hidden>gagal dimuat</span>`;
-      const pick =
-        r.imageKind === "remote" && r.enabled && r.poolId !== "pejabat"
-          ? `<input type="checkbox" name="ids" value="${escapeHtml(r.id)}" aria-label="pilih ${escapeHtml(r.id)}">`
-          : "";
-      return `<tr><td>${pick}</td><td>${thumb}</td><td><a href="/admin/cards/${escapeHtml(r.id)}">${escapeHtml(r.id)}</a></td><td>${escapeHtml(r.memberName)}</td><td>${escapeHtml(r.poolName)} · ${escapeHtml(r.groupBadge)}</td><td>${rarityBadge(r.rarity)}</td><td>${kindBadge(r.imageKind)}</td><td class="col-owned">×${r.quantityOwned}</td><td>${r.enabled ? "aktif" : `<span class="badge b-off">mati</span>`}</td></tr>`;
+      const rk = rarityKey(r.rarity);
+      const st = cardState(r);
+      const name = escapeHtml(r.memberName);
+      let pick = "";
+      if (showBulk && canPick(r)) {
+        pick = `<label class="tile-pick"><input type="checkbox" name="ids" value="${escapeHtml(r.id)}"${st === "stale" ? " data-stale" : ""} aria-label="Pilih ${name} untuk dirender"></label>`;
+      }
+      return `<article class="tile ${STATE_TILE[st]} r-${rk}${r.enabled ? "" : " is-off"}">${pick}<a class="tile-art" href="/admin/cards/${escapeHtml(r.id)}?from=${encodeURIComponent(listUrl)}" aria-label="${name}, ${RARITY_LABEL[rk]}, ${stateText(r, nowSec)}${r.enabled ? "" : ", nonaktif dan tersembunyi dari pemain"}">${cardFace(r, args.base, nowSec)}</a><div class="tile-meta"><span class="meta-1"><span class="tile-name">${name}</span><span class="tile-stars" aria-hidden="true"><i class="rdot"></i>${RARITY_STARS[rk]}</span></span><small>${escapeHtml(r.poolName)} · ${escapeHtml(r.groupBadge)} #${r.photoNo}</small>${r.enabled ? "" : `<span class="badge b-off">nonaktif</span>`}</div></article>`;
     })
     .join("");
   const banner =
@@ -117,17 +229,26 @@ export function cardsPage(args: {
     args.renderMessage !== ""
       ? `<p class="alert ${args.renderOk === true ? "is-ok" : args.renderOk === false ? "is-err" : "is-info"}" role="alert">${escapeHtml(args.renderMessage)}</p>`
       : "";
-  const inRemoteTab = args.kind === "remote";
-  const bulkOpen = inRemoteTab
-    ? `<form id="renderForm" method="post" action="/admin/cards/render-remote">`
+  const count =
+    args.rows.length < args.total
+      ? `Menampilkan ${args.rows.length} dari ${args.total} kartu. Persempit dengan pencarian.`
+      : `${args.total} kartu.`;
+  const bulkOpen = showBulk
+    ? `<form id="renderForm" method="post" action="/admin/cards/render-remote"><input type="hidden" name="back" value="${escapeHtml(listUrl)}">`
     : "";
-  const bulkClose = inRemoteTab
-    ? `<div class="actionbar"><label class="hint"><input type="checkbox" id="pickAll"> semua</label><button type="submit" id="renderBtn" class="btn" disabled>Minta render (0)</button><span class="hint">Render bingkai di cloud (cron 15 mnt / tombol). Pool pejabat dikecualikan permanen. Butuh GitHub PAT untuk tombol.</span></div></form><script>(function(){var btn=document.getElementById("renderBtn");var all=document.getElementById("pickAll");if(!btn)return;function boxes(){return Array.prototype.slice.call(document.querySelectorAll('input[name="ids"]'));}function sync(){var bs=boxes();var n=bs.filter(function(b){return b.checked;}).length;btn.disabled=n===0;btn.textContent="Minta render ("+n+")";if(all)all.checked=n>0&&bs.every(function(b){return b.checked;});}if(all)all.addEventListener("change",function(){boxes().forEach(function(b){b.checked=all.checked;});sync();});document.addEventListener("change",function(e){if(e.target&&e.target.name==="ids")sync();});sync();})();</script>`
+  const bulkClose = showBulk
+    ? `<div class="actionbar"><span class="pick-group"><label class="pick-all"><input type="checkbox" id="pickAll"> Pilih semua (${Math.min(RENDER_BATCH_MAX, selectable)})</label>${staleCount > 0 ? `<button type="button" class="btn-ghost btn-sm" id="pickStale">Pilih yang gagal (${staleCount})</button>` : ""}</span><button type="submit" id="renderBtn" class="btn" disabled title="Kartu dirender jadi bingkai di cloud dalam 15–30 menit. Cron juga merender otomatis tiap 15 menit.">Minta render (0/${RENDER_BATCH_MAX})</button></div></form>${RENDER_SCRIPT}`
     : "";
+  const clear = args.q === "" ? "" : `<a class="search-x" href="/admin/cards?kind=${args.kind}" aria-label="Hapus pencarian" title="Hapus pencarian">×</a>`;
+  const empty =
+    args.kind === "todo"
+      ? `Semua kartu sudah selesai. <a href="/admin/import">Import kartu baru</a> atau lihat tab <a href="/admin/cards?kind=static">Selesai</a>.`
+      : "Tidak ada kartu untuk filter ini.";
+  const legend = `<details class="legend-box"><summary aria-label="Arti tampilan kartu" title="Arti tampilan kartu">?</summary><div class="legend-pop"><span><i class="lg-r"></i>Sudah dirender: bingkai kartu final</span><span><i class="lg-f"></i>Foto asli: pool ini memang tidak dirender</span><span><i class="lg-p"></i>Belum dirender: foto mentah, bisa dipilih untuk render</span><span><i class="lg-p lg-pend"></i>Sedang dirender: diminta kurang dari 30 menit lalu</span><span><i class="lg-p lg-stale"></i>Render gagal?: diminta lebih dari 30 menit lalu, belum jadi</span><span><i class="lg-p lg-empty"></i>Tanpa image: belum ada foto sama sekali</span><span class="legend-note">Render butuh 15–30 menit. Cron juga merender otomatis tiap 15 menit.</span></div></details>`;
   return shell(
     "kartu",
     "cards",
-    `<div class="pagehead"><span class="eyebrow">Admin · Kartu</span><h1>Kartu (${args.total})</h1><p class="lede">Cari dan kelola katalog kartu.</p></div>${banner}<div class="toolbar"><nav class="tabs" aria-label="Filter kind">${tabs}</nav><form method="get" action="/admin/cards" role="search"><input type="hidden" name="kind" value="${escapeHtml(args.kind)}"><input type="search" name="q" value="${escapeHtml(args.q)}" placeholder="cari nama / id kartu"><button class="btn-ghost" type="submit">Cari</button></form></div>${bulkOpen}<div class="tablewrap"><table><thead><tr><th></th><th>thumb</th><th>id</th><th>member</th><th>pool · grup</th><th>rarity</th><th>kind</th><th class="col-owned">owned</th><th>status</th></tr></thead><tbody>${rows === "" ? `<tr><td colspan="9">kosong.</td></tr>` : rows}</tbody></table></div>${bulkClose}`,
+    `<div class="pagehead"><h1>Kartu</h1><p class="lede">${count}</p>${refreshNote}</div>${banner}<div class="toolbar"><nav class="tabs" aria-label="Filter status kartu">${tabs}</nav>${select}<form method="get" action="/admin/cards" role="search"><input type="hidden" name="kind" value="${escapeHtml(args.kind)}"><span class="searchbox"><input type="search" name="q" value="${escapeHtml(args.q)}" placeholder="Cari kartu" aria-label="Cari kartu">${clear}</span><button class="btn-ghost" type="submit">Cari</button></form>${legend}</div>${bulkOpen}${tiles === "" ? `<p class="empty-state">${empty}</p>` : `<div class="grid-cards">${tiles}</div>`}${bulkClose}<script>(function(){var t=document.querySelector(".tabs .is-active");if(t&&t.scrollIntoView)t.scrollIntoView({block:"nearest",inline:"center"});var d=document.querySelector(".legend-box");if(!d)return;function close(){if(d.open){d.open=false;var s=d.querySelector("summary");if(s)s.focus();}}document.addEventListener("keydown",function(e){if(e.key==="Escape")close();});document.addEventListener("click",function(e){if(d.open&&!d.contains(e.target))d.open=false;});})();</script>${refresh}`,
   );
 }
 
@@ -136,24 +257,58 @@ export function cardDetailPage(args: {
   base: string;
   message: string | null;
   ok: boolean;
+  back?: string;
+  prev?: { id: string; name: string } | undefined;
+  next?: { id: string; name: string } | undefined;
 }): string {
   const c = args.card;
-  const img =
-    c.imageKind === "empty"
-      ? `<p><span class="badge b-empty">tanpa image</span></p>`
-      : `<img src="${escapeHtml(localImageSrc(args.base, c.imageFile))}" alt="" onerror="this.classList.add('thumb-broken');var b=document.getElementById('imgwarn');if(b)b.hidden=false;"><p id="imgwarn" hidden><span class="badge b-off">gagal dimuat — file static hilang atau URL mati</span></p>`;
-  const rawBanner =
-    c.imageKind === "remote"
-      ? `<p><span class="badge b-remote">image raw/CDN — rebuild pipeline (fetch-images → build-cards → seed → deploy) agar permanen</span></p>`
+  const rk = rarityKey(c.rarity);
+  const st = cardState(c);
+  const back = escapeHtml(args.back ?? "/admin/cards");
+  const id = escapeHtml(c.id);
+  const fromQs = args.back === undefined ? "" : `?from=${encodeURIComponent(args.back)}`;
+  const fromField = args.back === undefined ? "" : `<input type="hidden" name="from" value="${back}">`;
+  const step = (n: { id: string; name: string } | undefined, dir: "prev" | "next"): string =>
+    n === undefined
+      ? "<span></span>"
+      : `<a class="pager-${dir}" href="/admin/cards/${escapeHtml(n.id)}${fromQs}">${dir === "prev" ? `← ${escapeHtml(n.name)}` : `${escapeHtml(n.name)} →`}</a>`;
+  const pager =
+    args.prev === undefined && args.next === undefined
+      ? ""
+      : `<nav class="pager" aria-label="Kartu lain di daftar ini">${step(args.prev, "prev")}${step(args.next, "next")}</nav>`;
+  const note: Record<CardState, string> = {
+    empty: "Kartu ini belum punya image. Upload file atau pakai URL di bawah.",
+    pending: "Render sedang berjalan. Hasilnya muncul dalam 15–30 menit setelah diminta.",
+    stale: "Render diminta lebih dari 30 menit lalu tapi belum jadi. Coba minta render lagi.",
+    raw: "Foto ini belum dirender jadi kartu.",
+    final: "Pool ini tidak dirender. Foto asli ini sudah bentuk akhirnya.",
+    rendered: "",
+  };
+  const renderOne =
+    (st === "raw" || st === "stale") && c.renderable
+      ? `<form method="post" action="/admin/cards/render-remote"><input type="hidden" name="ids" value="${id}"><input type="hidden" name="back" value="/admin/cards/${id}${fromQs}"><button class="btn" type="submit">Minta render kartu ini</button></form>`
       : "";
+  const path =
+    c.imageFile === ""
+      ? ""
+      : `<div class="pathrow"><code title="${escapeHtml(c.imageFile)}">${escapeHtml(c.imageFile)}</code><button type="button" class="btn-ghost btn-sm" data-copy="${escapeHtml(c.imageFile)}" onclick="var b=this;navigator.clipboard&&navigator.clipboard.writeText(b.dataset.copy).then(function(){b.textContent='Tersalin';});">Salin</button></div>`;
   const msg =
     args.message === null
       ? ""
       : `<p class="alert ${args.ok ? "is-ok" : "is-err"}" role="alert">${escapeHtml(args.message)}</p>`;
+  const nowSec = Math.floor(Date.now() / 1000);
+  // Render is the primary action when available; upload steps back to secondary.
+  const uploadCls = renderOne === "" ? "btn" : "btn-ghost";
+  // Finished cards (rendered or final photo) keep replacement one deliberate step away.
+  const finished = st === "rendered" || st === "final";
+  const guard = finished
+    ? ` onsubmit="return confirm('Ganti image kartu ini? Image yang sekarang akan ditimpa.')"`
+    : "";
+  const imgBtn = finished ? "btn-ghost" : uploadCls;
   return shell(
     c.id,
     "card",
-    `<a class="backlink" href="/admin/cards">← Kembali ke daftar</a><div class="pagehead"><span class="eyebrow">Admin · Kartu</span><h1>${escapeHtml(c.id)}</h1></div>${msg}<div class="detail"><div class="card preview">${img}${rawBanner}<p><code>${escapeHtml(c.imageFile)}</code></p></div><div class="card meta"><dl class="kv"><dt>member</dt><dd>${escapeHtml(c.memberName)}${c.fullName === null ? "" : ` (${escapeHtml(c.fullName)})`}</dd><dt>pool · grup</dt><dd>${escapeHtml(c.poolName)} · ${escapeHtml(c.groupBadge)}</dd><dt>rarity</dt><dd>${rarityBadge(c.rarity)}</dd><dt>foto</dt><dd>${c.photoNo}/${c.photoTotal}${c.photoLabel === null ? "" : ` · ${escapeHtml(c.photoLabel)}`}</dd><dt>serial</dt><dd>${c.serial}</dd><dt>owned</dt><dd>×${c.quantityOwned}</dd><dt>holo</dt><dd>${c.holoEnabled ? "ya" : "tidak"}</dd><dt>sumber</dt><dd>${c.sourcePageUrl === null ? "—" : escapeHtml(c.sourcePageUrl)}</dd><dt>kind</dt><dd>${kindBadge(c.imageKind)}</dd><dt>status</dt><dd>${c.enabled ? "aktif" : "mati"}</dd></dl></div></div><div class="card"><h2>Ganti image</h2><form method="post" action="/admin/cards/${escapeHtml(c.id)}/image" enctype="multipart/form-data"><div class="field"><label for="imgFile">upload file (≤8 MB)</label><input id="imgFile" type="file" name="file" accept="image/*" required></div><button class="btn" type="submit">upload via discord</button></form><form method="post" action="/admin/cards/${escapeHtml(c.id)}/image"><div class="field"><label for="imgUrl">atau set URL manual (https)</label><input id="imgUrl" type="url" name="url" placeholder="https://…" required></div><button class="btn" type="submit">set URL</button></form><h2>Status</h2><form method="post" action="/admin/cards/${escapeHtml(c.id)}/enabled"><input type="hidden" name="enabled" value="${c.enabled ? "0" : "1"}"><button class="btn-ghost" type="submit">${c.enabled ? "nonaktifkan" : "aktifkan"}</button></form></div>`,
+    `<div class="detail-top"><a class="backlink" href="${back}">← Kembali ke daftar</a>${pager}</div><div class="pagehead"><div class="titlerow"><h1>${escapeHtml(c.memberName)}</h1>${stateBadge(c)}</div><p class="lede">${id}</p></div>${msg}<div class="detail"><div class="tile ${STATE_TILE[st]} r-${rk}${c.enabled ? "" : " is-off"}"><div class="tile-art">${cardFace(c, args.base, nowSec, false)}</div>${note[st] === "" ? "" : `<p class="detail-note">${st === "pending" || st === "stale" ? `${pendingAgo(c, nowSec)}. ` : ""}${note[st]}</p>`}${renderOne === "" ? "" : `<div class="render-one">${renderOne}</div>`}${path}</div><div class="stack"><div class="card meta"><dl class="kv"><dt>Member</dt><dd>${escapeHtml(c.memberName)}${c.fullName === null ? "" : ` (${escapeHtml(c.fullName)})`}</dd><dt>Pool · grup</dt><dd>${escapeHtml(c.poolName)} · ${escapeHtml(c.groupBadge)}</dd><dt>Rarity</dt><dd>${rarityBadge(c.rarity)}</dd><dt>Foto</dt><dd>${c.photoNo}/${c.photoTotal}${c.photoLabel === null ? "" : ` · ${escapeHtml(c.photoLabel)}`}</dd><dt>Serial</dt><dd>${c.serial}</dd><dt>Dimiliki</dt><dd>×${c.quantityOwned}</dd><dt>Holo</dt><dd>${c.holoEnabled ? "ya" : "tidak"}</dd><dt>Sumber</dt><dd>${c.sourcePageUrl === null ? "—" : escapeHtml(c.sourcePageUrl)}</dd></dl></div>${finished ? `<details class="card replace"><summary>Ganti image</summary><p class="hint">Image yang sekarang akan ditimpa.</p>` : `<section class="card"><h2>Image</h2>`}<form method="post" action="/admin/cards/${id}/image" enctype="multipart/form-data"${guard}>${fromField}<div class="field"><label for="imgFile">Upload file (maks 8 MB)</label><input id="imgFile" type="file" name="file" accept="image/*" required></div><button class="${imgBtn}" type="submit">Upload file</button></form><p class="or">atau</p><form method="post" action="/admin/cards/${id}/image"${guard}>${fromField}<div class="field"><label for="imgUrl">URL gambar (https)</label><input id="imgUrl" type="url" name="url" placeholder="https://…" required></div><button class="btn-ghost" type="submit">Pakai URL ini</button></form>${finished ? "</details>" : "</section>"}<section class="card"><h2>Status</h2><p class="hint" style="margin-top:0">Kartu ${c.enabled ? "aktif dan bisa ditarik pemain" : "nonaktif, tersembunyi dari pemain"}.</p><form method="post" action="/admin/cards/${id}/enabled">${fromField}<input type="hidden" name="enabled" value="${c.enabled ? "0" : "1"}"><button class="btn-ghost" type="submit">${c.enabled ? "Nonaktifkan kartu" : "Aktifkan kartu"}</button></form></section></div></div>`,
   );
 }
 
@@ -169,23 +324,27 @@ export function injectPage(args: {
     (s) => `<a class="${s === args.status ? "is-active" : ""}" href="/admin/inject?status=${s}">${s}</a>`,
   ).join("");
   const ok = args.ok === null ? "" : `<p class="alert is-ok" role="alert">${escapeHtml(args.ok)}</p>`;
-  const rows = args.rows
+  const tiles = args.rows
     .map((r) => {
-      const preview =
+      const known = r.rarity !== null && (RARITY_KEYS as readonly string[]).includes(r.rarity);
+      const rk: (typeof RARITY_KEYS)[number] = known && r.rarity !== null ? r.rarity : "common";
+      const name = escapeHtml(r.nama ?? "tanpa nama");
+      const photo =
         r.imageUrl === null || r.imageUrl === ""
-          ? `<span class="badge b-empty">tanpa image</span>`
-          : `<a href="${escapeHtml(r.messageUrl)}"><img src="${escapeHtml(r.imageUrl)}" alt="" loading="lazy" onerror="this.classList.add('thumb-broken');var b=this.nextElementSibling;if(b)b.hidden=false;"><span class="badge b-off" hidden>gagal dimuat</span></a>`;
+          ? "tanpa image"
+          : `<img src="${escapeHtml(r.imageUrl)}" alt="${name}" loading="lazy" onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'gagal dimuat'}))">`;
       const action =
         r.status === "pending"
-          ? `<form method="post" action="/admin/inject/${escapeHtml(r.messageId)}/approve" onsubmit="return confirm('Approve ${escapeHtml(r.nama ?? r.messageId)}?')"><button class="btn" type="submit">approve</button></form><form method="post" action="/admin/inject/${escapeHtml(r.messageId)}/reject" onsubmit="return confirm('Reject ${escapeHtml(r.messageId)}?')"><button type="submit" class="btn-danger-outline">reject</button></form>`
-          : escapeHtml(r.status);
-      return `<tr><td>${preview}</td><td>${escapeHtml(r.nama ?? "—")}<br><small>${escapeHtml(r.messageId)}</small></td><td>${escapeHtml(r.pool ?? "—")} · ${escapeHtml(r.grup ?? "—")}</td><td>${escapeHtml(r.rarity ?? "—")}</td><td>${r.errors === null || r.errors === "" ? "—" : escapeHtml(r.errors)}</td><td><a href="${escapeHtml(r.messageUrl)}">pesan</a></td><td>${action}</td></tr>`;
+          ? `<div class="tile-actions"><form method="post" action="/admin/inject/${escapeHtml(r.messageId)}/approve" onsubmit="return confirm('Approve ${escapeHtml(r.nama ?? r.messageId)}?')"><button class="btn" type="submit">Approve</button></form><form method="post" action="/admin/inject/${escapeHtml(r.messageId)}/reject" onsubmit="return confirm('Reject ${escapeHtml(r.messageId)}?')"><button type="submit" class="btn-danger-outline">Reject</button></form></div>`
+          : `<div class="tile-badges"><span class="badge ${r.status === "approved" ? "tone-done" : "tone-empty"}">${escapeHtml(r.status)}</span></div>`;
+      const errors = r.errors === null || r.errors === "" ? "" : `<p class="tile-err">${escapeHtml(r.errors)}</p>`;
+      return `<article class="tile is-raw r-${rk}"><a class="tile-art" href="${escapeHtml(r.messageUrl)}" title="Buka pesan di Discord"><span class="sheet-photo">${photo}</span><span class="sheet-name">${name}</span><span class="sheet-sub"><span>${escapeHtml(r.grup ?? "—")}</span><span class="sheet-stars">${known ? RARITY_STARS[rk] : "?"}</span></span></a><div class="tile-meta"><small>${escapeHtml(r.pool ?? "—")} · ${known ? RARITY_LABEL[rk] : "rarity kosong"}</small>${errors}${action}</div></article>`;
     })
     .join("");
   return shell(
     "inject",
     "inject",
-    `<div class="pagehead"><span class="eyebrow">Admin · Inject</span><h1>Inject ${escapeHtml(args.status)} (${args.total})</h1></div><div class="toolbar"><nav class="tabs" aria-label="Filter status">${tabs}</nav></div>${ok}<div class="tablewrap"><table><thead><tr><th>preview</th><th>nama</th><th>pool · grup</th><th>rarity</th><th>errors</th><th>link</th><th>aksi</th></tr></thead><tbody>${rows === "" ? `<tr><td colspan="7">kosong.</td></tr>` : rows}</tbody></table></div><p class="lede">Approve/reject via web memakai logika yang sama dengan tombol Discord.</p>`,
+    `<div class="pagehead"><h1>Inject</h1><p class="lede">${args.total} kiriman ${escapeHtml(args.status)}. Approve atau reject di sini sama dengan tombol di Discord.</p></div><div class="toolbar"><nav class="tabs" aria-label="Filter status">${tabs}</nav></div>${ok}${tiles === "" ? `<p class="empty-state">${args.status === "pending" ? "Tidak ada kiriman yang menunggu review." : `Belum ada kiriman ${escapeHtml(args.status)}.`}</p>` : `<div class="grid-cards">${tiles}</div>`}`,
   );
 }
 
@@ -470,6 +629,6 @@ export function importPage(args: {
     args.pools.length === 0
       ? `<p class="alert is-err" role="alert">Belum ada pool aktif di database.</p>`
       : "";
-  const body = `<div class="pagehead"><span class="eyebrow">Admin · Import</span><h1>Import kartu</h1><p class="lede">Seret gambar, periksa hasil parse nama file, lalu import ke katalog.</p></div>${errBanner}${resultsBlock}${noPoolsWarn}<section class="card guide"><h2>Panduan nama file</h2><ol><li><strong>Pilih pool</strong> di dropdown di bawah — grup mengikuti segmen nama file dan dibuat otomatis bila belum ada.</li><li><strong>Beri nama file</strong> dengan pola <code>(rarity) - nama grup - nama kartu.ext</code></li><li><strong>Contoh:</strong> <code>(secret) - Jomok - Refi Kaget.jpg</code> → Rarity: <strong>★★★★★★ Secret</strong>, Grup: <strong>Jomok</strong>, Nama Kartu: <strong>Refi Kaget</strong> (Auto Title Case).</li><li><strong>Tanpa grup:</strong> <code>(holo) - refi kaget.jpg</code> masuk grup pertama pool pilihan, dengan rarity <strong>★★★★★ Holo</strong>. Kode <code>(secret)</code> setara secret.</li></ol><div class="chips"><code>common (c/1)</code><code>rare (r/2)</code><code>super rare (sr/3)</code><code>ultra rare (ur/4)</code><code>holo (h/5)</code><code>secret (s/6)</code></div></section><form id="importForm" method="post" action="/admin/import" enctype="multipart/form-data"><div class="field"><label for="poolGroup">Target pool</label><select id="poolGroup" name="poolGroup" required>${poolOptions}</select></div><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg><p><strong>Seret &amp; letakkan gambar di sini</strong></p><p>atau</p><p><label class="btn" for="fileInput">Pilih file</label></p><p class="hint">JPG, PNG, WebP · maks 8 MB/file</p><input type="file" id="fileInput" class="file-hidden" name="files" accept="image/*" multiple></div><div id="previewWrap" hidden><div class="tablewrap"><table class="import-table"><thead><tr><th>preview</th><th>file</th><th>nama kartu</th><th>rarity</th><th>label (opsional)</th><th>status</th><th></th></tr></thead><tbody id="previewBody"></tbody></table></div><div class="actionbar"><button type="submit" id="submitBtn"${args.pools.length === 0 ? " disabled" : ""} class="btn">Import ke Katalog</button><button type="button" id="clearBtn" class="btn-ghost">Bersihkan Daftar</button><span id="summaryText" class="hint"></span></div></div></form>${buildImportScript()}`;
+  const body = `<div class="pagehead"><h1>Import kartu</h1><p class="lede">Pilih pool, seret gambar, periksa hasil baca nama file, lalu import ke katalog.</p></div>${errBanner}${resultsBlock}${noPoolsWarn}<section class="card guide"><h2>Format nama file</h2><p class="fname" aria-hidden="true"><span class="seg-r">(secret)</span> - <span class="seg-g">Jomok</span> - <span class="seg-n">Refi Kaget</span>.jpg</p><ol><li><strong>Pilih pool</strong> di dropdown di bawah — grup mengikuti segmen nama file dan dibuat otomatis bila belum ada.</li><li><strong>Beri nama file</strong> dengan pola <code>(rarity) - nama grup - nama kartu.ext</code></li><li><strong>Contoh:</strong> <code>(secret) - Jomok - Refi Kaget.jpg</code> → Rarity: <strong>★★★★★★ Secret</strong>, Grup: <strong>Jomok</strong>, Nama Kartu: <strong>Refi Kaget</strong> (Auto Title Case).</li><li><strong>Tanpa grup:</strong> <code>(holo) - refi kaget.jpg</code> masuk grup pertama pool pilihan, dengan rarity <strong>★★★★★ Holo</strong>. Kode <code>(secret)</code> setara secret.</li></ol><div class="chips"><code>common (c/1)</code><code>rare (r/2)</code><code>super rare (sr/3)</code><code>ultra rare (ur/4)</code><code>holo (h/5)</code><code>secret (s/6)</code></div></section><form id="importForm" method="post" action="/admin/import" enctype="multipart/form-data"><div class="field"><label for="poolGroup">Target pool</label><select id="poolGroup" name="poolGroup" required>${poolOptions}</select></div><div id="dropzone" class="dropzone" tabindex="0" role="button" aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 16V4m0 0l-4 4m4-4l4 4"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg><p><strong>Seret gambar ke sini</strong></p><p><label class="btn" for="fileInput">Pilih file</label></p><p class="hint">JPG, PNG, atau WebP, maks 8 MB per file</p><input type="file" id="fileInput" class="file-hidden" name="files" accept="image/*" multiple></div><div id="previewWrap" hidden><div class="tablewrap"><table class="import-table"><thead><tr><th>preview</th><th>file</th><th>nama kartu</th><th>rarity</th><th>label (opsional)</th><th>status</th><th></th></tr></thead><tbody id="previewBody"></tbody></table></div><div class="actionbar"><button type="submit" id="submitBtn"${args.pools.length === 0 ? " disabled" : ""} class="btn">Import ke Katalog</button><button type="button" id="clearBtn" class="btn-ghost">Bersihkan Daftar</button><span id="summaryText" class="hint"></span></div></div></form>${buildImportScript()}`;
   return shell("import", "import", body);
 }

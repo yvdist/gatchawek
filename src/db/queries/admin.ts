@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, like, ne, sql, type SQL } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNull, like, lt, notInArray, or, sql, type SQL } from "drizzle-orm";
 import {
   cards,
   groups,
@@ -13,7 +13,18 @@ import { slugifyBase } from "../../domain/submissions.js";
 import type { QueueRow } from "./inject.js";
 
 export type CardImageKind = "static" | "remote" | "empty";
-export type AdminCardKindFilter = "all" | CardImageKind;
+/** `todo` = every card not rendered yet (empty + remote). */
+export type AdminCardKindFilter = "all" | "todo" | CardImageKind;
+
+// shortcut: excluded pools live in code until `pools` gets a render flag; add a column + migration when a second pool needs it.
+export const RENDER_EXCLUDED_POOL_IDS: readonly string[] = ["pejabat"];
+export const RENDER_BATCH_MAX = 50;
+/** A render request counts as in progress for this long (cron runs every 15 min). */
+export const RENDER_PENDING_SEC = 1800;
+
+const isRemote = sql`${cards.imageFile} LIKE 'http%'`;
+const inExcludedPool = (): SQL => inArray(cards.poolId, [...RENDER_EXCLUDED_POOL_IDS]);
+const outsideExcludedPool = (): SQL => notInArray(cards.poolId, [...RENDER_EXCLUDED_POOL_IDS]);
 export type AdminQueueStatus = "pending" | "approved" | "rejected";
 
 /** static = served from /cards/; remote = raw http(s) URL; empty = "". */
@@ -40,6 +51,14 @@ export interface AdminCardRow {
   imageKind: CardImageKind;
   enabled: boolean;
   quantityOwned: number;
+  /** Remote, enabled, and outside RENDER_EXCLUDED_POOL_IDS. */
+  renderable: boolean;
+  /** A render was requested less than RENDER_PENDING_SEC ago. */
+  renderPending: boolean;
+  /** Unix seconds of the last render request, or null. */
+  renderRequestedAt: number | null;
+  /** Card belongs to a pool that is never rendered (its raw photo is final). */
+  excludedPool: boolean;
 }
 
 export interface AdminCardDetail extends AdminCardRow {
@@ -56,6 +75,8 @@ export interface AdminCounts {
   empty: number;
   remote: number;
   pending: number;
+  /** Render requested more than RENDER_PENDING_SEC ago and the card is still raw. */
+  renderStale: number;
 }
 
 function escapeLike(s: string): string {
@@ -65,13 +86,18 @@ function escapeLike(s: string): string {
 
 function cardWhere(kind: AdminCardKindFilter, q: string): SQL {
   const conds: SQL[] = [];
-  if (kind === "empty") {
+  // Remote photos in excluded pools are final (never rendered), so they count as done, not work.
+  if (kind === "todo") {
+    conds.push(
+      sql`(${cards.imageFile} = '' OR (${isRemote} AND ${outsideExcludedPool()}))`,
+    );
+  } else if (kind === "empty") {
     conds.push(sql`${cards.imageFile} = ''`);
   } else if (kind === "remote") {
-    conds.push(sql`${cards.imageFile} LIKE 'http%'`);
+    conds.push(sql`(${isRemote} AND ${outsideExcludedPool()})`);
   } else if (kind === "static") {
     conds.push(
-      sql`${cards.imageFile} != '' AND ${cards.imageFile} NOT LIKE 'http%'`,
+      sql`((${cards.imageFile} != '' AND ${cards.imageFile} NOT LIKE 'http%') OR (${isRemote} AND ${inExcludedPool()}))`,
     );
   }
   const needle = q.trim().toLowerCase();
@@ -107,9 +133,10 @@ interface AdminCardRaw {
   image_file: string;
   enabled: number;
   owned: number;
+  render_requested_at: number | null;
 }
 
-function toRow(r: AdminCardRaw): AdminCardRow {
+function toRow(r: AdminCardRaw, nowSec: number): AdminCardRow {
   return {
     id: r.id,
     memberName: r.member_name,
@@ -122,6 +149,16 @@ function toRow(r: AdminCardRaw): AdminCardRow {
     imageKind: classifyImageFile(r.image_file),
     enabled: Boolean(r.enabled),
     quantityOwned: Number(r.owned),
+    renderable:
+      classifyImageFile(r.image_file) === "remote" &&
+      Boolean(r.enabled) &&
+      !RENDER_EXCLUDED_POOL_IDS.includes(r.pool_id),
+    renderPending:
+      r.render_requested_at !== null &&
+      Number(r.render_requested_at) > nowSec - RENDER_PENDING_SEC,
+    renderRequestedAt:
+      r.render_requested_at === null ? null : Number(r.render_requested_at),
+    excludedPool: RENDER_EXCLUDED_POOL_IDS.includes(r.pool_id),
   };
 }
 
@@ -137,16 +174,41 @@ export async function listAdminCards(
   const limit = clampLimit(opts.limit);
   const offset = clampOffset(opts.offset);
   const where = cardWhere(opts.kind, opts.q);
+  const nowSec = Math.floor(Date.now() / 1000);
+  // The todo queue leads with cards players can't see at all, and parks in-flight renders last.
+  const order =
+    opts.kind === "todo"
+      ? sql`CASE WHEN ${cards.imageFile} = '' THEN 0 WHEN ${cards.renderRequestedAt} > ${nowSec - RENDER_PENDING_SEC} THEN 2 ELSE 1 END, ${cards.id}`
+      : sql`${cards.id}`;
   const joinMembers = sql`JOIN ${members} ON ${members.id} = ${cards.memberId}`;
   const [rowsRes, countRes] = await nativeBatch(db, [
-    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${pools.name} AS pool_name, ${cards.poolId} AS pool_id, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned FROM ${cards} ${joinMembers} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${where} GROUP BY ${cards.id} ORDER BY ${cards.id} LIMIT ${limit} OFFSET ${offset}`,
+    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${pools.name} AS pool_name, ${cards.poolId} AS pool_id, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned, ${cards.renderRequestedAt} AS render_requested_at FROM ${cards} ${joinMembers} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${where} GROUP BY ${cards.id} ORDER BY ${order} LIMIT ${limit} OFFSET ${offset}`,
     sql`SELECT COUNT(*) AS n FROM ${cards} ${joinMembers} WHERE ${where}`,
   ]);
   const raws = (rowsRes?.results ?? []) as unknown as AdminCardRaw[];
   const total = Number(
     (countRes?.results?.[0] as { n?: number } | undefined)?.n ?? 0,
   );
-  return { rows: raws.map(toRow), total };
+  return { rows: raws.map((r) => toRow(r, nowSec)), total };
+}
+
+const COUNTED_KINDS = ["todo", "empty", "remote", "static", "all"] as const;
+
+/** Card count per list tab for the same search, so tabs can show remaining work. */
+export async function countAdminCardKinds(
+  db: Db,
+  q: string,
+): Promise<Record<AdminCardKindFilter, number>> {
+  const joinMembers = sql`JOIN ${members} ON ${members.id} = ${cards.memberId}`;
+  const res = await nativeBatch(
+    db,
+    COUNTED_KINDS.map(
+      (k) => sql`SELECT COUNT(*) AS n FROM ${cards} ${joinMembers} WHERE ${cardWhere(k, q)}`,
+    ),
+  );
+  const n = (i: number): number =>
+    Number((res[i]?.results?.[0] as { n?: number } | undefined)?.n ?? 0);
+  return { todo: n(0), empty: n(1), remote: n(2), static: n(3), all: n(4) };
 }
 
 interface AdminCardDetailRaw extends AdminCardRaw {
@@ -163,13 +225,13 @@ export async function getAdminCard(
   cardId: string,
 ): Promise<AdminCardDetail | null> {
   const [res] = await nativeBatch(db, [
-    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${pools.name} AS pool_name, ${cards.poolId} AS pool_id, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned, ${cards.photoLabel} AS photo_label, ${members.fullName} AS full_name, ${members.photoTotal} AS photo_total, ${cards.serial} AS serial, ${cards.sourcePageUrl} AS source_page_url, ${cards.holoEnabled} AS holo_enabled FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${cards.id} = ${cardId} GROUP BY ${cards.id}`,
+    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${pools.name} AS pool_name, ${cards.poolId} AS pool_id, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned, ${cards.renderRequestedAt} AS render_requested_at, ${cards.photoLabel} AS photo_label, ${members.fullName} AS full_name, ${members.photoTotal} AS photo_total, ${cards.serial} AS serial, ${cards.sourcePageUrl} AS source_page_url, ${cards.holoEnabled} AS holo_enabled FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${cards.id} = ${cardId} GROUP BY ${cards.id}`,
   ]);
   const raw = (res?.results ?? []) as unknown as AdminCardDetailRaw[];
   const r = raw[0];
   if (r === undefined) return null;
   return {
-    ...toRow(r),
+    ...toRow(r, Math.floor(Date.now() / 1000)),
     photoLabel: r.photo_label,
     fullName: r.full_name,
     photoTotal: Number(r.photo_total),
@@ -227,12 +289,13 @@ export async function getAdminCounts(db: Db): Promise<AdminCounts> {
   const res = await nativeBatch(db, [
     sql`SELECT COUNT(*) AS n FROM ${cards}`,
     sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${cards.imageFile} = ''`,
-    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${cards.imageFile} LIKE 'http%'`,
+    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${isRemote} AND ${outsideExcludedPool()}`,
     sql`SELECT COUNT(*) AS n FROM ${injectQueue} WHERE ${injectQueue.status} = 'pending'`,
+    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${isRemote} AND ${outsideExcludedPool()} AND ${cards.enabled} = 1 AND ${cards.renderRequestedAt} IS NOT NULL AND ${cards.renderRequestedAt} <= ${Math.floor(Date.now() / 1000) - RENDER_PENDING_SEC}`,
   ]);
   const n = (i: number): number =>
     Number((res[i]?.results?.[0] as { n?: number } | undefined)?.n ?? 0);
-  return { total: n(0), empty: n(1), remote: n(2), pending: n(3) };
+  return { total: n(0), empty: n(1), remote: n(2), pending: n(3), renderStale: n(4) };
 }
 
 export interface AdminPoolGroupOption {
@@ -530,8 +593,9 @@ export interface RenderableCard {
 export async function listRenderableCards(
   db: Db,
   ids: readonly string[],
+  nowSec: number,
 ): Promise<RenderableCard[]> {
-  const clean = [...new Set(ids.map((id) => id.trim()).filter((id) => id !== ""))].slice(0, 50);
+  const clean = [...new Set(ids.map((id) => id.trim()).filter((id) => id !== ""))].slice(0, RENDER_BATCH_MAX);
   if (clean.length === 0) return [];
   const rows = await db
     .select({ id: cards.id, imageFile: cards.imageFile })
@@ -541,8 +605,25 @@ export async function listRenderableCards(
         inArray(cards.id, clean),
         like(cards.imageFile, "http%"),
         eq(cards.enabled, true),
-        ne(cards.poolId, "pejabat"),
+        outsideExcludedPool(),
+        or(
+          isNull(cards.renderRequestedAt),
+          lt(cards.renderRequestedAt, nowSec - RENDER_PENDING_SEC),
+        ),
       ),
     );
   return rows;
+}
+
+/** Stamp a successful render request so the panel shows "sedang dirender" and blocks repeats. */
+export async function markRenderRequested(
+  db: Db,
+  ids: readonly string[],
+  nowSec: number,
+): Promise<void> {
+  if (ids.length === 0) return;
+  await db
+    .update(cards)
+    .set({ renderRequestedAt: nowSec })
+    .where(inArray(cards.id, [...ids]));
 }

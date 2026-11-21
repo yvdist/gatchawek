@@ -11,6 +11,7 @@ import { createDb } from "../db/client.js";
 import {
   ensureImportGroup,
   getAdminCard,
+  countAdminCardKinds,
   getAdminCounts,
   importAdminCard,
   listAdminCards,
@@ -18,6 +19,8 @@ import {
   listAdminPools,
   listAdminQueue,
   listRenderableCards,
+  markRenderRequested,
+  RENDER_BATCH_MAX,
   setAdminCardEnabled,
   setAdminCardImage,
   type AdminCardKindFilter,
@@ -115,6 +118,17 @@ async function uploadImageToDiscord(
   return { ok: true, url: cdn, messageId, messageUrl };
 }
 
+function parseKind(raw: string): AdminCardKindFilter {
+  return raw === "all" || raw === "empty" || raw === "remote" || raw === "static"
+    ? raw
+    : "todo";
+}
+
+/** A same-panel card-list URL, or "" — guards every `from` against open redirects. */
+function safeListUrl(raw: unknown): string {
+  return typeof raw === "string" && /^\/admin\/cards(\?[^#]*)?$/.test(raw) ? raw : "";
+}
+
 // Single-user owner panel: cookie is HttpOnly + SameSite=Lax + Secure with
 // POST-only mutations, proportional to this threat model (no CSRF token).
 
@@ -171,11 +185,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
   });
 
   admin.get("/cards", async (c) => {
-    const rawKind = c.req.query("kind") ?? "";
-    const kind: AdminCardKindFilter =
-      rawKind === "empty" || rawKind === "remote" || rawKind === "static"
-        ? rawKind
-        : "all";
+    const kind = parseKind(c.req.query("kind") ?? "");
     const q = c.req.query("q") ?? "";
     const db = createDb(c.env);
     const { rows, total } = await listAdminCards(db, {
@@ -184,37 +194,51 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       limit: 100,
       offset: 0,
     });
+    const counts = await countAdminCardKinds(db, q);
     return c.html(
-      cardsPage({ rows, total, kind, q, base: c.env.PUBLIC_BASE_URL, renderMessage: (c.req.query("msg") ?? "") === "" ? null : (c.req.query("msg") ?? ""), renderOk: (c.req.query("ok") ?? "") === "1" }),
+      cardsPage({ rows, total, kind, q, counts, base: c.env.PUBLIC_BASE_URL, renderMessage: (c.req.query("msg") ?? "") === "" ? null : (c.req.query("msg") ?? ""), renderOk: (c.req.query("ok") ?? "") === "1" }),
     );
   });
 
   admin.post("/cards/render-remote", async (c) => {
-    const fail = (message: string): Response =>
+    let formData: FormData | null;
+    try {
+      formData = await c.req.formData();
+    } catch {
+      formData = null;
+    }
+    // Only the panel's card list or a card page are valid return targets (no open redirect).
+    const backRaw = formData?.get("back");
+    const back =
+      typeof backRaw === "string" &&
+      /^\/admin\/cards(\/[^/?#]+)?(\?[^#]*)?$/.test(backRaw)
+        ? backRaw
+        : "/admin/cards?kind=remote";
+    const to = (ok: boolean, message: string): Response =>
       c.redirect(
-        `/admin/cards?kind=remote&ok=0&msg=${encodeURIComponent(message)}`,
+        `${back}${back.includes("?") ? "&" : "?"}ok=${ok ? "1" : "0"}&msg=${encodeURIComponent(message)}`,
       );
+    const fail = (message: string): Response => to(false, message);
+    if (formData === null) return fail("Form tidak terbaca.");
     const pat = c.env.GITHUB_ACTIONS_PAT;
     if (pat === undefined || pat === "") {
       return fail(
         "Render manual belum dikonfigurasi (GitHub PAT kosong). Cron 15 menit tetap berjalan.",
       );
     }
-    let formData: FormData;
-    try {
-      formData = await c.req.formData();
-    } catch {
-      return fail("Form tidak terbaca.");
-    }
     const rawIds = formData
       .getAll("ids")
       .map((v) => (typeof v === "string" ? v.trim() : ""))
       .filter((v) => v !== "");
     if (rawIds.length === 0) return fail("Pilih minimal 1 kartu remote.");
-    if (rawIds.length > 50) return fail("Maksimal 50 kartu per render.");
-    const renderable = await listRenderableCards(createDb(c.env), rawIds);
+    if (rawIds.length > RENDER_BATCH_MAX) {
+      return fail(`Maksimal ${String(RENDER_BATCH_MAX)} kartu per render.`);
+    }
+    const db = createDb(c.env);
+    const nowSec = Math.floor(Date.now() / 1000);
+    const renderable = await listRenderableCards(db, rawIds, nowSec);
     if (renderable.length === 0) {
-      return fail("Tidak ada kartu remote valid dari pilihan.");
+      return fail("Tidak ada kartu yang bisa dirender dari pilihan (mungkin sedang dirender).");
     }
     const skipped = rawIds.length - renderable.length;
     const repo =
@@ -239,9 +263,15 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     if (!res.ok) {
       return fail(`GitHub dispatch gagal (${String(res.status)}). Coba lagi.`);
     }
+    await markRenderRequested(
+      db,
+      renderable.map((r) => r.id),
+      nowSec,
+    );
     const skipNote = skipped > 0 ? ` (${String(skipped)} dilewati)` : "";
-    return c.redirect(
-      `/admin/cards?kind=remote&ok=1&msg=${encodeURIComponent(`Render ${String(renderable.length)} kartu diminta${skipNote}. Cek lagi ~15 menit.`)}`,
+    return to(
+      true,
+      `Render ${String(renderable.length)} kartu diminta${skipNote}. Cek lagi dalam 15–30 menit.`,
     );
   });
 
@@ -250,12 +280,35 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const card = await getAdminCard(createDb(c.env), id);
     if (card === null) return c.text("Kartu tidak ditemukan", 404);
     const message = c.req.query("msg") ?? null;
+    // Return to the exact list view the owner came from, and step through it.
+    const from = safeListUrl(c.req.query("from") ?? "");
+    let prev: { id: string; name: string } | undefined;
+    let next: { id: string; name: string } | undefined;
+    if (from !== "") {
+      const params = new URL(from, "https://panel.local").searchParams;
+      const { rows } = await listAdminCards(createDb(c.env), {
+        kind: parseKind(params.get("kind") ?? ""),
+        q: params.get("q") ?? "",
+        limit: 100,
+        offset: 0,
+      });
+      const i = rows.findIndex((r) => r.id === id);
+      const at = (j: number): { id: string; name: string } | undefined => {
+        const r = i >= 0 ? rows[j] : undefined;
+        return r === undefined ? undefined : { id: r.id, name: r.memberName };
+      };
+      prev = at(i - 1);
+      next = at(i + 1);
+    }
     return c.html(
       cardDetailPage({
         card,
         base: c.env.PUBLIC_BASE_URL,
         message: message === "" ? null : message,
         ok: (c.req.query("ok") ?? "") === "1",
+        back: from === "" ? "/admin/cards" : from,
+        prev,
+        next,
       }),
     );
   });
@@ -283,9 +336,11 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const file = form["file"];
     const url =
       typeof form["url"] === "string" ? form["url"].trim() : "";
+    const from = safeListUrl(form["from"]);
+    const keep = from === "" ? "" : `&from=${encodeURIComponent(from)}`;
     const done = (message: string): Response =>
       c.redirect(
-        `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent(message)}`,
+        `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent(message)}${keep}`,
       );
     if (file instanceof File && file.size > 0) {
       const uploaded = await uploadImageToDiscord(
@@ -316,7 +371,10 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const enabled = form["enabled"] === "1";
     const ok = await setAdminCardEnabled(createDb(c.env), id, enabled);
     if (!ok) return c.text("Kartu tidak ditemukan", 404);
-    return c.redirect(`/admin/cards/${encodeURIComponent(id)}`);
+    const from = safeListUrl(form["from"]);
+    return c.redirect(
+      `/admin/cards/${encodeURIComponent(id)}${from === "" ? "" : `?from=${encodeURIComponent(from)}`}`,
+    );
   });
 
   admin.get("/inject", async (c) => {

@@ -96,6 +96,8 @@ export const cards = sqliteTable(
     holoEnabled: integer("holo_enabled", { mode: "boolean" })
       .notNull()
       .default(false),
+    /** Unix seconds of the last admin render request; null = never requested. */
+    renderRequestedAt: integer("render_requested_at"),
   },
   (t) => [
     uniqueIndex("cards_pool_serial_uq").on(t.poolId, t.serial),

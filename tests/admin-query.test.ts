@@ -23,6 +23,10 @@ import {
   listAdminQueue,
   setAdminCardEnabled,
   setAdminCardImage,
+  listRenderableCards,
+  markRenderRequested,
+  countAdminCardKinds,
+  RENDER_PENDING_SEC,
 } from "../src/db/queries/admin.js";
 import { syncInjectChannel } from "../src/scheduled.js";
 import type { Env } from "../src/env.js";
@@ -107,16 +111,27 @@ describe("listAdminCards", () => {
     expect(rows[0]?.imageKind).toBe("empty");
   });
 
-  it("filters remote images", async () => {
-    const { rows, total } = await listAdminCards(db, { kind: "remote", q: "", limit: 50, offset: 0 });
-    expect(total).toBe(1);
-    expect(rows[0]?.id).toBe("rapih-01");
+  it("remote filter skips render-excluded pools (their raw photo is final)", async () => {
+    const { total } = await listAdminCards(db, { kind: "remote", q: "", limit: 50, offset: 0 });
+    expect(total).toBe(0);
   });
 
-  it("filters static images including disabled cards", async () => {
+  it("todo filter lists cards still needing work, not excluded-pool photos", async () => {
+    const { rows, total } = await listAdminCards(db, { kind: "todo", q: "", limit: 50, offset: 0 });
+    expect(total).toBe(1);
+    expect(rows.map((r) => r.id)).toEqual(["teddy-01"]);
+  });
+
+  it("marks render eligibility per row, excluding render-excluded pools", async () => {
+    const { rows } = await listAdminCards(db, { kind: "all", q: "rapih", limit: 50, offset: 0 });
+    // rapih-01 is remote + enabled but lives in the excluded pejabat pool.
+    expect(rows[0]?.renderable).toBe(false);
+  });
+
+  it("done filter has rendered cards plus excluded-pool photos", async () => {
     const { rows, total } = await listAdminCards(db, { kind: "static", q: "", limit: 50, offset: 0 });
-    expect(total).toBe(2);
-    expect(rows.map((r) => r.id).sort()).toEqual(["teddy-02", "teddy-03"]);
+    expect(total).toBe(3);
+    expect(rows.map((r) => r.id).sort()).toEqual(["rapih-01", "teddy-02", "teddy-03"]);
   });
 
   it("searches by member name prefix and card id", async () => {
@@ -386,5 +401,59 @@ describe("listAdminPoolGroups / importAdminCard", () => {
     } satisfies Env;
     await syncInjectChannel(syncEnv, fetchMock);
     expect(seenUrls[0]).toBe("https://discord.com/api/v10/channels/c-inject/messages?limit=100");
+  });
+});
+
+describe("render requests", () => {
+  beforeAll(async () => {
+    await db.insert(pools).values({ id: "meme", name: "Jomok", emoji: "🐸", staminaMax: 10, regenIntervalSec: 100, resetCooldownSec: 3600, memberCount: 1, enabled: true });
+    await db.insert(groups).values({ id: "jomok", poolId: "meme", name: "Jomok", badge: "JMK", memberCount: 1, enabled: true });
+    await db.insert(members).values({ id: "ucup", poolId: "meme", groupId: "jomok", name: "Ucup", nameLower: "ucup", photoTotal: 1, sortOrder: 0, enabled: true });
+    await db.insert(cards).values({ id: "ucup-01", poolId: "meme", groupId: "jomok", memberId: "ucup", serial: 1, photoNo: 1, rarity: "rare", imageFile: "https://cdn/u.png", enabled: true });
+    await db.insert(members).values({ id: "abe", poolId: "meme", groupId: "jomok", name: "Abe", nameLower: "abe", photoTotal: 1, sortOrder: 1, enabled: true });
+    await db.insert(cards).values({ id: "abe-01", poolId: "meme", groupId: "jomok", memberId: "abe", serial: 2, photoNo: 1, rarity: "common", imageFile: "https://cdn/a.png", enabled: true });
+  });
+
+  it("orders the todo queue: no image first, then raw", async () => {
+    const { rows } = await listAdminCards(db, { kind: "todo", q: "", limit: 50, offset: 0 });
+    expect(rows[0]?.id).toBe("teddy-01");
+    expect(rows.map((r) => r.id)).toContain("abe-01");
+  });
+
+  it("counts every tab with the same search", async () => {
+    const counts = await countAdminCardKinds(db, "");
+    expect(counts.todo).toBeGreaterThanOrEqual(2);
+    expect(counts.all).toBe(counts.empty + counts.remote + counts.static);
+  });
+
+  it("flags excluded-pool cards even when disabled", async () => {
+    const { rows } = await listAdminCards(db, { kind: "all", q: "rapih", limit: 50, offset: 0 });
+    expect(rows[0]?.excludedPool).toBe(true);
+  });
+
+  it("only accepts renderable cards and blocks repeats while a request is pending", async () => {
+    const now = 1_000_000;
+    await expect(listRenderableCards(db, ["ucup-01", "rapih-01"], now)).resolves.toEqual([
+      { id: "ucup-01", imageFile: "https://cdn/u.png" },
+    ]);
+    await markRenderRequested(db, ["ucup-01"], now);
+    await expect(listRenderableCards(db, ["ucup-01"], now + 60)).resolves.toEqual([]);
+    await expect(
+      listRenderableCards(db, ["ucup-01"], now + RENDER_PENDING_SEC + 1),
+    ).resolves.toHaveLength(1);
+  });
+
+  it("counts stale render requests for the dashboard", async () => {
+    await markRenderRequested(db, ["abe-01"], Math.floor(Date.now() / 1000) - RENDER_PENDING_SEC - 60);
+    const counts = await getAdminCounts(db);
+    // ucup-01 was stamped with a fixed old time by the previous test, abe-01 just now (past the window).
+    expect(counts.renderStale).toBe(2);
+  });
+
+  it("flags a fresh request as pending on the list row", async () => {
+    await markRenderRequested(db, ["ucup-01"], Math.floor(Date.now() / 1000));
+    const { rows } = await listAdminCards(db, { kind: "remote", q: "ucup", limit: 50, offset: 0 });
+    expect(rows[0]).toMatchObject({ id: "ucup-01", renderable: true, renderPending: true });
+    expect(typeof rows[0]?.renderRequestedAt).toBe("number");
   });
 });
