@@ -42,6 +42,8 @@ import {
 import { handleUnwish, handleWish, handleWishlist } from "./wish/handler.js";
 import { kartuDefinition } from "./kartu/definition.js";
 import { handleKartu } from "./kartu/handler.js";
+import { albumDefinition } from "./album/definition.js";
+import { handleAlbum } from "./album/handler.js";
 
 export type WaitUntil = (promise: Promise<unknown>) => void;
 
@@ -72,6 +74,7 @@ export const commandDefinitions = [
   giveDefinition,
   giveToDefinition,
   kartuDefinition,
+  albumDefinition,
 ];
 
 const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
@@ -95,6 +98,7 @@ const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
   ["give", handleGive],
   ["give-to", handleGiveTo],
   ["kartu", handleKartu],
+  ["album", handleAlbum],
 ];
 
 export const commandHandlers: Map<string, CommandHandler | CommandHandlerWithWait> =
