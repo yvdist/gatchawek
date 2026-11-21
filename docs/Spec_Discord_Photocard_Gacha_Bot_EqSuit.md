@@ -18,7 +18,7 @@
 | Label kartu | `✨ Kartu baru!` = member baru. `🆕 Foto baru!` = foto baru dari member yang sudah dimiliki. `🔁 Duplikat ×N` = foto yang sama | Dua label tambahan murah dan informatif. |
 | Penyimpanan gambar | **Workers Static Assets**, bukan R2 | R2 meminta payment method saat pertama diaktifkan, melanggar syarat Rp0 tanpa kartu. Static Assets gratis, request ke aset tidak dihitung kuota, batas free plan 20.000 file dan 25 MiB per file. |
 | Transaksi | `db.batch()` + statement berpenjaga + kolom `version` (optimistic) | D1 tidak mendukung interactive transaction. |
-| RNG | `crypto.getRandomValues`; tanpa pity di v1 | Pity bisa ditambah lewat migrasi additive. |
+| RNG | `crypto.getRandomValues`; satu-satunya pity adalah wish pity (6.5.1). Secret tanpa pity, murni hoki | Hard pity Secret dihapus di migrasi 0006. |
 | Command scope | Guild command untuk satu server, `contexts: [0]` | Update instan, tidak muncul di DM. |
 | Struktur repo | Satu package, bukan monorepo multi-package | Worker dan script Node cukup berbagi schema Zod; dua tsconfig. |
 | Anti-abuse | Tidak ada di v1 (keputusan sadar) | Server tertutup sekitar 10 orang. |
@@ -35,14 +35,14 @@
 
 | key | Bintang | Label | Bobot default | Warna embed |
 | --- | --- | --- | --- | --- |
-| `common` | ★ | Common | 96 | `#9CA3AF` |
-| `rare` | ★★ | Rare | 58 | `#A855F7` |
-| `super_rare` | ★★★ | Super Rare | 23 | `#F59E0B` |
-| `ultra_rare` | ★★★★ | Ultra Rare | 16 | `#EC4899` |
-| `holo` | ★★★★★ | Holo | 6 | `#FFD700` |
+| `common` | ★ | Common | 300 | `#9CA3AF` |
+| `rare` | ★★ | Rare | 70 | `#A855F7` |
+| `super_rare` | ★★★ | Super Rare | 20 | `#F59E0B` |
+| `ultra_rare` | ★★★★ | Ultra Rare | 7 | `#EC4899` |
+| `holo` | ★★★★★ | Holo | 2 | `#FFD700` |
 | `secret` | ★★★★★★ | Secret | 1 | `#22D3EE` |
 
-Total bobot 200 ⇒ peluang 48/29/11,5/8/3/0,5%.
+Total bobot 400 ⇒ peluang 75/17,5/5/1,75/0,5/0,25%.
 
 Konstanta ini hidup di `src/domain/rarity.ts` (satu sumber kebenaran, dipakai juga oleh scripts dan `/help`).
 
@@ -133,7 +133,7 @@ Aturan validasi (Zod di `shared/manifest.schema.ts`):
 - `imageUrl` https langsung ke file gambar. `sourcePageUrl` wajib. `license` dan `author` boleh `null`. `focus` opsional (default x 0.5, y 0.35).
 - `badge` huruf besar, maksimal 8 karakter.
 - `enabled` opsional, default true. `false` = takedown.
-- Distribusi rarity per grup yang jauh dari 48/29/11,5/8/3/0,5 hanya **peringatan**, bukan error.
+- Distribusi rarity per grup yang jauh dari 75/17,5/5/1,75/0,5/0,25 hanya **peringatan**, bukan error.
 
 ### 4.2.1 Inject komunitas (`community-inject`)
 
@@ -388,7 +388,7 @@ Jika kuota masih penuh, tolak tanpa menghabiskan cooldown. Jika belum siap, tamp
 
 1. Satu batch: `INSERT OR IGNORE` ke `users` dan `user_pool_states` (stamina = max, anchor = now, version = 0), lalu `SELECT` state dan konfigurasi pool.
 2. `consume()` murni. Jika `null`, balas ephemeral dengan `<t:next:R>`.
-3. Pilih rarity berdasar bobot, **hanya dari rarity yang punya minimal satu kartu `enabled` di pool**. RNG: `crypto.getRandomValues(new Uint32Array(1))[0] / 2**32`. Lalu pilih kartu seragam dalam rarity itu.
+3. Pilih rarity berdasar bobot, **hanya dari rarity yang punya minimal satu kartu `enabled` di pool**. RNG: `crypto.getRandomValues(new Uint32Array(1))[0] / 2**32`. Lalu pilih kartu seragam dalam rarity itu. **Wish pity** (lihat 6.5.1) dicek sebelum roll rarity.
 4. Baca kepemilikan sebelum tulis: apakah kartu sudah dimiliki, dan apakah member sudah dimiliki (`EXISTS` via join `cards`). Hasilnya menentukan label.
 5. Satu `db.batch()`:
    - (a) CAS state: `UPDATE user_pool_states SET stamina = ?1, stamina_anchor_at = ?2, version = version + 1 WHERE user_id = ?3 AND pool_id = ?4 AND version = ?5`
@@ -409,6 +409,13 @@ ON CONFLICT (user_id, card_id) DO UPDATE SET quantity = quantity + 1, last_obtai
 Klausa `WHERE` pada `INSERT ... SELECT` wajib ada agar tidak terkena ambiguitas parsing SQLite pada `ON CONFLICT`.
 
 **Embed** (mengikuti referensi): judul `🎴 {member} ({grup})`; deskripsi `<@user> dapet photocard {pool} {★} **{Label}**!`, baris `{grup} · {fullName} · 📸 Foto {photoNo}/{photoTotal}`, baris label (`✨ Kartu baru!` / `🆕 Foto baru!` / `🔁 Duplikat ×N`), baris `📚 Koleksi {grup}: **x/y**`; image = URL bingkai; `color` = warna rarity; footer `Sisa tarik: n/max`. Tombol `🎲 Tarik Lagi` dengan `custom_id = gacha:again:<poolId>:<ownerId>`; hasilnya pesan baru, bukan edit.
+
+### 6.5.1 `/wish`, `/unwish`, `/wishlist` dan wish pity
+
+- `/wish <kartu>`: tandai kartu incaran, maksimal **3 per pool** (tabel `wishes`, PK `(user_id, card_id)`). Batas dijaga dalam satu `INSERT ... SELECT ... WHERE count < 3`. Hanya rarity sampai **Holo**; **Secret tidak bisa di-wish**. Autocomplete tidak pernah menampilkan kartu Holo, jadi Holo harus diketik namanya persis (`photo_label` atau nama member, tanpa beda huruf besar/kecil). Semua balasan ephemeral agar nama Holo tidak bocor.
+- `/unwish <kartu>`: hapus dari wishlist. Tidak mereset pity.
+- `/wishlist`: daftar wish milik sendiri per pool beserta counter pity.
+- Counter `user_pool_states.pity_wish` per user per pool, hanya naik saat pool itu punya wish aktif. Di roll ke-50 (counter 49), satu wish dipilih acak dan peluangnya 30%; bila gagal, roll normal. Apa pun hasilnya counter kembali 0. Mendapat kartu wish sebelum roll ke-50 juga mereset counter. Kartu wish yang didapat dihapus dari wishlist di batch CAS yang sama dengan stamina.
 
 ### 6.6 `/trade` dan transaksi atomik
 

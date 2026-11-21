@@ -159,8 +159,30 @@ export const userPoolStates = sqliteTable(
     staminaAnchorAt: integer("stamina_anchor_at").notNull(),
     lastResetAt: integer("last_reset_at"),
     version: integer("version").notNull().default(0),
+    pityWish: integer("pity_wish").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.userId, t.poolId] })],
+);
+
+/** Up to MAX_WISHES_PER_POOL wished cards per user per pool; row deleted on hit. */
+export const wishes = sqliteTable(
+  "wishes",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    poolId: text("pool_id")
+      .notNull()
+      .references(() => pools.id),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => cards.id),
+    createdAt: integer("created_at").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.userId, t.cardId] }),
+    index("wishes_user_pool_idx").on(t.userId, t.poolId),
+  ],
 );
 
 export const userCards = sqliteTable(

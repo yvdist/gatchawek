@@ -34,6 +34,7 @@ export interface PullEmbedArgs {
   kind: PullKind;
   isHolo: boolean;
   isFirstClaim: boolean;
+  wishHit?: boolean;
   quantity: number;
   userId: string;
   groupOwned: number;
@@ -68,6 +69,8 @@ export function buildPullEmbed(args: PullEmbedArgs): APIEmbed {
     `📚 Koleksi ${args.groupName}: **${args.groupOwned}/${args.groupTotal}**`,
   ];
   if (args.isHolo) description.push("✨ Holographic!");
+  if (args.wishHit === true)
+    description.push("🌠 Wish terkabul! Kartu ini dihapus dari wishlist.");
   if (args.isFirstClaim)
     description.push(`🌍 Orang pertama yang punya ${args.memberName}!`);
   return {

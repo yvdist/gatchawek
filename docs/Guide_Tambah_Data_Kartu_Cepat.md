@@ -122,3 +122,21 @@ roster → discover → validate → fetch → build → seed --remote → deplo
 - [ ] Discover full → validate → fetch → build → seed → deploy → register
 - [ ] Bila ada kartu inject baru: `render-inject --remote` (laptop) → `deploy`
 - [ ] Test + lint hijau, assertion = angka final run
+---
+
+## 8. Nama vs label (judul vs subtitle)
+
+Skema penamaan kartu memakai dua kolom independen:
+
+| Input | Kolom DB | Tampil di kartu |
+|---|---|---|
+| nama member | `members.name` | subtitle kecil (hanya bila label diisi), atau judul bila tanpa label |
+| label foto | `cards.photo_label` (nullable, maks 60) | judul besar |
+
+Aturan render: judul = label bila ada, kalau tidak nama member.
+Contoh: file `(secret) - Jomok - Refi Kaget.jpg` menghasilkan member
+`Refi Kaget` + label NULL → satu baris judul. Untuk dua baris, isi kolom
+label di preview import (atau `[label]` di Discord).
+
+Batasan: template filename TIDAK diperluas (tidak ada segmen label ke-4) —
+disengaja agar `parseCardFilename` tidak berubah.

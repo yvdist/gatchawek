@@ -80,6 +80,7 @@ async function followupPull(
             kind: outcome.kind,
             isHolo: outcome.isHolo,
             isFirstClaim: outcome.isFirstClaim,
+            wishHit: outcome.wishHit,
             quantity: outcome.quantity,
             userId,
             groupOwned: outcome.groupOwned,

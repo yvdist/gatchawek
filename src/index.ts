@@ -26,6 +26,14 @@ import {
   handleBattleAutocomplete,
   handleBattleComponent,
 } from "./commands/battle/handler.js";
+import {
+  handleListAutocomplete,
+  handleListPage,
+} from "./commands/list/handler.js";
+import {
+  handleUnwishAutocomplete,
+  handleWishAutocomplete,
+} from "./commands/wish/handler.js";
 import { handleScheduled } from "./scheduled.js";
 import type { Env } from "./env.js";
 import { registerAdminRoutes } from "./admin/routes.js";
@@ -37,11 +45,13 @@ app.get("/health", (c) => c.json({ status: "ok" }, 200));
 /** Card frames from R2 (persistent; Worker assets can't hold runtime files). */
 app.get("/cards/:file", async (c) => {
   const file = c.req.param("file");
-  if (!/^[a-z0-9-]+\.[0-9a-f]{8}\.webp$/.test(file)) return c.text("Not found", 404);
+  if (!/^[a-z0-9-]+\.[0-9a-f]{8}\.(webp|gif)$/.test(file)) {
+    return c.text("Not found", 404);
+  }
   const obj = await c.env.CARDS.get(file);
   if (obj === null) return c.text("Not found", 404);
   const headers = new Headers();
-  headers.set("Content-Type", "image/webp");
+  headers.set("Content-Type", file.endsWith(".gif") ? "image/gif" : "image/webp");
   headers.set("Cache-Control", "public, max-age=31536000, immutable");
   const etag = obj.httpEtag;
   if (etag !== undefined && etag !== "") headers.set("ETag", etag);
@@ -130,6 +140,13 @@ app.post("/interactions", async (c) => {
         ),
       );
     }
+    if (ns === "list" && action === "p") {
+      return c.json(
+        await handleListPage(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
     return c.json(ephemeralResponse("Tombol kedaluwarsa."));
   }
   if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
@@ -169,6 +186,20 @@ app.post("/interactions", async (c) => {
           c.env,
         ),
       );
+    }
+    if (autocomplete.data.name === "list") {
+      return c.json(
+        await handleListAutocomplete(
+          autocomplete as unknown as Parameters<typeof handleListAutocomplete>[0],
+          c.env,
+        ),
+      );
+    }
+    if (autocomplete.data.name === "wish") {
+      return c.json(await handleWishAutocomplete(autocomplete, c.env));
+    }
+    if (autocomplete.data.name === "unwish") {
+      return c.json(await handleUnwishAutocomplete(autocomplete, c.env));
     }
     return c.json(ephemeralResponse("Autocomplete tidak tersedia."));
   }
