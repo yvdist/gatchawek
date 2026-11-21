@@ -154,6 +154,45 @@ function resolveCardFilters(
   return { poolId, groupId, rarity };
 }
 
+/** Dispatch a render-remote workflow run; returns ok or an Indonesian error. */
+async function dispatchRender(
+  env: Env,
+  ids: string[],
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  const pat = env.GITHUB_ACTIONS_PAT;
+  if (pat === undefined || pat === "") {
+    return {
+      ok: false,
+      error: "Render manual belum dikonfigurasi (GitHub PAT kosong). Cron 15 menit tetap berjalan.",
+    };
+  }
+  const repo =
+    env.GITHUB_REPO === undefined || env.GITHUB_REPO === ""
+      ? "yvdist/gatchawek"
+      : env.GITHUB_REPO;
+  let res: Response;
+  try {
+    res = await fetch(
+      `https://api.github.com/repos/${repo}/actions/workflows/render-remote.yml/dispatches`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${pat}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ ref: "main", inputs: { ids: ids.join(",") } }),
+      },
+    );
+  } catch {
+    return { ok: false, error: "GitHub dispatch gagal (jaringan). Coba lagi." };
+  }
+  if (!res.ok) {
+    return { ok: false, error: `GitHub dispatch gagal (${String(res.status)}). Coba lagi.` };
+  }
+  return { ok: true };
+}
+
 // Single-user owner panel: cookie is HttpOnly + SameSite=Lax + Secure with
 // POST-only mutations, proportional to this threat model (no CSRF token).
 
@@ -262,12 +301,6 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       );
     const fail = (message: string): Response => to(false, message);
     if (formData === null) return fail("Form tidak terbaca.");
-    const pat = c.env.GITHUB_ACTIONS_PAT;
-    if (pat === undefined || pat === "") {
-      return fail(
-        "Render manual belum dikonfigurasi (GitHub PAT kosong). Cron 15 menit tetap berjalan.",
-      );
-    }
     const rawIds = formData
       .getAll("ids")
       .map((v) => (typeof v === "string" ? v.trim() : ""))
@@ -283,28 +316,11 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       return fail("Tidak ada kartu yang bisa dirender dari pilihan (mungkin sedang dirender).");
     }
     const skipped = rawIds.length - renderable.length;
-    const repo =
-      c.env.GITHUB_REPO === undefined || c.env.GITHUB_REPO === ""
-        ? "yvdist/gatchawek"
-        : c.env.GITHUB_REPO;
-    const res = await fetch(
-      `https://api.github.com/repos/${repo}/actions/workflows/render-remote.yml/dispatches`,
-      {
-        method: "POST",
-        headers: {
-          Accept: "application/vnd.github+json",
-          Authorization: `Bearer ${pat}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ref: "main",
-          inputs: { ids: renderable.map((r) => r.id).join(",") },
-        }),
-      },
+    const dispatched = await dispatchRender(
+      c.env,
+      renderable.map((r) => r.id),
     );
-    if (!res.ok) {
-      return fail(`GitHub dispatch gagal (${String(res.status)}). Coba lagi.`);
-    }
+    if (!dispatched.ok) return fail(dispatched.error);
     await markRenderRequested(
       db,
       renderable.map((r) => r.id),
@@ -532,8 +548,29 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       return fail(outcome.error);
     }
     const keep = from === "" ? "" : `&from=${encodeURIComponent(from)}`;
+    const nowSec = Math.floor(Date.now() / 1000);
+    const renderable = await listRenderableCards(db, [id], nowSec);
+    if (renderable.length === 0) {
+      return c.redirect(
+        `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent("Perubahan kartu disimpan.")}${keep}`,
+      );
+    }
+    const dispatched = await dispatchRender(
+      c.env,
+      renderable.map((r) => r.id),
+    );
+    if (!dispatched.ok) {
+      return c.redirect(
+        `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent(`Perubahan kartu disimpan. Auto render gagal: ${dispatched.error}`)}${keep}`,
+      );
+    }
+    await markRenderRequested(
+      db,
+      renderable.map((r) => r.id),
+      nowSec,
+    );
     return c.redirect(
-      `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent("Perubahan kartu disimpan.")}${keep}`,
+      `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent("Perubahan kartu disimpan. Render ulang otomatis diminta — selesai dalam 15–30 menit.")}${keep}`,
     );
   });
 

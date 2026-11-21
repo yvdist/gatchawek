@@ -532,6 +532,15 @@ describe("cardsPage pool/group/rarity filters", () => {
   });
 });
 
+describe("render pending overlay", () => {
+  it("marks pending tiles with a spinner tag and sheen", () => {
+    const html = cardsPage({ rows: [{ id: "x-01", memberName: "M", groupBadge: "G", groupId: "g1", poolName: "P", poolId: "p1", photoNo: 1, rarity: "rare", imageFile: "https://cdn.example/x.jpg", imageKind: "remote", enabled: true, quantityOwned: 0, renderable: true, renderPending: true, excludedPool: false, renderRequestedAt: 1000 }], total: 1, kind: "todo", q: "", base: "example.test", nowSec: 1060, poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
+    expect(html).toContain("tile is-raw is-pending");
+    expect(html).toContain("@keyframes render-spin");
+    expect(html).toContain("@keyframes render-sheen");
+  });
+});
+
 describe("cardDetailPage kelola form", () => {
   const pools = [{ poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x" }];
   const poolGroups = [{ poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x", groupId: "g1", groupName: "Satu", groupBadge: "SATU" }];
