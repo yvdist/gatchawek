@@ -24,4 +24,10 @@ export interface Env {
    * Worker secret, never committed. Unset = Sentry no-ops locally.
    */
   SENTRY_DSN?: string;
+  /**
+   * ISO 8601 instant ending a scheduled database outage. Before it, every
+   * Discord interaction and admin page answers without reading the database.
+   * Past it (or unset) the worker behaves normally — no redeploy needed.
+   */
+  MAINTENANCE_UNTIL?: string;
 }

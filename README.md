@@ -20,6 +20,10 @@ server dengan scope `applications.commands` dan `bot`; catat Guild ID. Jalankan 
 Nilai Public Key, Application ID, Bot Token, Guild ID, dan ID channel/guild ingest diminta dari user sebelum verifikasi manual —
 tidak pernah di-commit.
 
+`MAINTENANCE_UNTIL` (ISO 8601, `vars` di `wrangler.jsonc`) adalah saklar maintenance yang kedaluwarsa sendiri: sebelum waktu itu
+semua command Discord (termasuk `/gacha`) dan seluruh panel `/admin` dibalas tanpa membaca D1, cron ingest dilewati. Dipakai saat
+kuota baca harian D1 habis; reset-nya 00:00 UTC (07:00 WIB). Setelah lewat, bot normal lagi tanpa deploy ulang.
+
 ### Perintah
 
 | Perintah | Fungsi |
