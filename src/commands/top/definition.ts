@@ -5,7 +5,7 @@ import {
 
 export const topDefinition = {
   name: "top",
-  description: "Papan peringkat kolektor dan pemilik holo.",
+  description: "Papan peringkat level, kolektor, dan pemilik holo.",
   contexts: [InteractionContextType.Guild],
   options: [],
 } as const satisfies RESTPostAPIChatInputApplicationCommandsJSONBody;

@@ -27,9 +27,11 @@ import {
   executeReset,
   getPoolConfig,
   getStatusOverview,
+  getUserStatusOverview,
   type PoolConfig,
   type PoolStatusRow,
 } from "../src/db/queries/gacha.js";
+import { RARITY_EXP } from "../src/domain/level.js";
 import { buildStatusEmbed } from "../src/ui/gachaEmbed.js";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -717,5 +719,98 @@ describe("getStatusOverview", () => {
     expect(rows[0]?.pool.id).toBe(POOL.id);
     expect(rows[0]?.owned).toBe(1);
     expect(rows[0]?.total).toBe(2);
+  });
+});
+
+describe("executePull EXP & level up", () => {
+  it("awards rarity-scaled EXP atomically and detects level ups", async () => {
+    const userId = "exp-gacha-user";
+    const now = 20_000_000;
+
+    // Seed common (60) + ultra_rare (8) exist in minimal seed? Check: pull first with roll=0.0 (common) and roll=0.99 (highest available rarity).
+    const first = await executePull(db, {
+      userId,
+      pool: POOL,
+      now,
+      rand: scripted([0.0, 0.0, 0.9]),
+    });
+    expect(first.status).toBe("ok");
+    if (first.status !== "ok") throw new Error("expected ok");
+    const firstExpected = RARITY_EXP[first.card.rarity];
+    expect(first.exp.gainedExp).toBe(firstExpected);
+    expect(first.exp.progress.totalExp).toBe(firstExpected);
+
+    // Pull highest rarity available in pool (roll = 0.99 -> ultra_rare or rare)
+    const second = await executePull(db, {
+      userId,
+      pool: POOL,
+      now: now + 1,
+      rand: scripted([0.99, 0.0, 0.9]),
+    });
+    expect(second.status).toBe("ok");
+    if (second.status !== "ok") throw new Error("expected ok");
+    const secondExpected = RARITY_EXP[second.card.rarity];
+    expect(secondExpected).toBeGreaterThan(firstExpected);
+    expect(second.exp.gainedExp).toBe(secondExpected);
+    expect(second.exp.progress.totalExp).toBe(firstExpected + secondExpected);
+
+    // Verify persisted in users.exp and returned by getUserStatusOverview
+    const [u] = await db.select().from(users).where(eq(users.id, userId));
+    expect(u?.exp).toBe(firstExpected + secondExpected);
+    const status = await getUserStatusOverview(db, userId, now + 2);
+    expect(status.userExp).toBe(firstExpected + secondExpected);
+
+    // Top up near Lv 2 threshold (100 EXP) and pull to trigger level up
+    await db.update(users).set({ exp: 95 }).where(eq(users.id, userId));
+    const levelUpPull = await executePull(db, {
+      userId,
+      pool: POOL,
+      now: now + 3,
+      rand: scripted([0.0, 0.0, 0.9]),
+    });
+    expect(levelUpPull.status).toBe("ok");
+    if (levelUpPull.status !== "ok") throw new Error("expected ok");
+    expect(levelUpPull.exp.leveledUp).toBe(true);
+    expect(levelUpPull.exp.previousLevel).toBe(1);
+    expect(levelUpPull.exp.currentLevel).toBe(2);
+    expect(levelUpPull.exp.progress.totalExp).toBe(
+      95 + RARITY_EXP[levelUpPull.card.rarity],
+    );
+  });
+
+  it("awards EXP exactly once on concurrent stamina-1 pull race", async () => {
+    const userId = "exp-race-user";
+    const now = 21_000_000;
+    await db.insert(users).values({ id: userId, createdAt: now, exp: 0 });
+    await db.insert(userPoolStates).values({
+      userId,
+      poolId: POOL.id,
+      stamina: 1,
+      staminaAnchorAt: now,
+      lastResetAt: null,
+      version: 0,
+    });
+    const [a, b] = await Promise.all([
+      executePull(db, {
+        userId,
+        pool: POOL,
+        now,
+        rand: scripted([0.0, 0.0, 0.9]),
+      }),
+      executePull(db, {
+        userId,
+        pool: POOL,
+        now,
+        rand: scripted([0.0, 0.0, 0.9]),
+      }),
+    ]);
+    const winner = a.status === "ok" ? a : b;
+    const loser = a.status === "ok" ? b : a;
+    expect(winner.status).toBe("ok");
+    expect(loser.status).toBe("conflict");
+    if (winner.status !== "ok") throw new Error("expected winner ok");
+
+    const [u] = await db.select().from(users).where(eq(users.id, userId));
+    expect(u?.exp).toBe(RARITY_EXP[winner.card.rarity]);
   });
 });

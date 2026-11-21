@@ -7,6 +7,11 @@ import {
 } from "discord-api-types/v10";
 import { cardDisplayName, type PullKind } from "../domain/gacha.js";
 import {
+  formatProgressBar,
+  getLevelProgress,
+  type ExpGainSummary,
+} from "../domain/level.js";
+import {
   RARITY_COLOR,
   RARITY_LABEL,
   RARITY_STARS,
@@ -42,6 +47,7 @@ export interface PullEmbedArgs {
   staminaLeft: number;
   staminaMax: number;
   imageUrl: string;
+  exp?: ExpGainSummary;
 }
 
 function describePull(kind: PullKind, quantity: number, isHolo = false): string {
@@ -73,6 +79,16 @@ export function buildPullEmbed(args: PullEmbedArgs): APIEmbed {
     description.push("🌠 Wish terkabul! Kartu ini dihapus dari wishlist.");
   if (args.isFirstClaim)
     description.push(`🌍 Orang pertama yang punya ${args.memberName}!`);
+  if (args.exp !== undefined && args.exp.gainedExp > 0) {
+    description.push(
+      `⭐ **+${args.exp.gainedExp} EXP** · Lv.${args.exp.currentLevel} (${args.exp.progress.currentExp}/${args.exp.progress.nextLevelExp} EXP)`,
+    );
+    if (args.exp.leveledUp) {
+      description.push(
+        `🎉 **LEVEL UP!** Lv.${args.exp.previousLevel} → **Lv.${args.exp.currentLevel}**!`,
+      );
+    }
+  }
   return {
     title: `${args.isHolo ? "✦ " : ""}🎴 ${displayName} (${args.groupName})`,
     description: description.join("\n"),
@@ -106,6 +122,7 @@ export function againButton(
 export function buildStatusEmbed(
   rows: PoolStatusRow[],
   userId: string,
+  userExp?: number,
 ): APIEmbed {
   const lines = rows.map((row) => {
     const tick =
@@ -130,9 +147,18 @@ export function buildStatusEmbed(
       ...melt,
     ].join("\n");
   });
+  const headerLines = [`<@${userId}>`];
+  if (userExp !== undefined) {
+    const prog = getLevelProgress(userExp);
+    const bar = formatProgressBar(prog.currentExp, prog.nextLevelExp);
+    headerLines.push(
+      `⭐ **Level ${prog.level}** · ${prog.totalExp} EXP (${prog.currentExp}/${prog.nextLevelExp} ke Lv.${prog.level + 1})`,
+      `\`${bar}\` ${prog.progressPct}%`,
+    );
+  }
   return {
     title: "📊 Status",
-    description: `<@${userId}>\n\n${lines.join("\n\n")}`,
+    description: `${headerLines.join("\n")}\n\n${lines.join("\n\n")}`,
     color: 0x38bdf8,
   };
 }

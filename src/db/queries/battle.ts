@@ -1,5 +1,5 @@
 import { and, eq, sql } from "drizzle-orm";
-import { battles, cards, groups, members, userCards } from "../schema.js";
+import { battles, cards, groups, members, userCards, users } from "../schema.js";
 import {
   BATTLE_BASE_POWER,
   battleExpiry,
@@ -11,6 +11,11 @@ import {
   type BattleValidationError,
 } from "../../domain/battle.js";
 import { cardDisplayName } from "../../domain/gacha.js";
+import {
+  battleWinExp,
+  deriveExpGainFromNewTotal,
+  type ExpGainSummary,
+} from "../../domain/level.js";
 import { RARITY_STARS, type RarityKey } from "../../domain/rarity.js";
 import { nativeBatch, type Db } from "../client.js";
 
@@ -50,6 +55,7 @@ export type SettleBattleOutcome =
       targetCard: BattleCardView;
       mode: BattleMode;
       winnerStats: { wins: number; losses: number };
+      winnerExp: ExpGainSummary;
     }
   | { status: "not-found" }
   | { status: "already-resolved" }
@@ -332,36 +338,53 @@ export async function settleBattle(
     rand: args.rand,
   });
 
+  const mode = existing.mode as BattleMode;
+  const wonCard =
+    calc.winnerId === existing.challengerId ? targetCard : challengerCard;
+  const expGain = battleWinExp(mode, wonCard.rarity);
+
   const tok = crypto.randomUUID();
   const guard = sql`(SELECT 1 FROM battles WHERE id = ${args.battleId} AND settle_token = ${tok})`;
   const stmts = [
     sql`UPDATE battles SET status = 'resolved', target_card_id = ${args.targetCardId}, winner_id = ${calc.winnerId}, challenger_score = ${calc.challengerRoll.total}, target_score = ${calc.targetRoll.total}, challenger_crit = ${calc.challengerRoll.isCrit ? 1 : 0}, target_crit = ${calc.targetRoll.isCrit ? 1 : 0}, resolved_at = ${args.now}, settle_token = ${tok} WHERE id = ${args.battleId} AND status = 'pending' AND expires_at > ${args.now} AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${existing.challengerId} AND card_id = ${existing.challengerCardId} AND quantity >= 1) AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${existing.targetId} AND card_id = ${args.targetCardId} AND quantity >= 1) AND EXISTS (SELECT 1 FROM cards WHERE id = ${existing.challengerCardId} AND enabled = 1) AND EXISTS (SELECT 1 FROM cards WHERE id = ${args.targetCardId} AND enabled = 1)`,
   ];
 
-  if (existing.mode === "wager") {
+  if (mode === "wager") {
     const loserId = calc.loserId;
-    const loserCardId =
-      calc.winnerId === existing.challengerId
-        ? args.targetCardId
-        : existing.challengerCardId;
+    const loserCardId = wonCard.cardId;
     stmts.push(
       sql`UPDATE user_cards SET quantity = quantity - 1 WHERE user_id = ${loserId} AND card_id = ${loserCardId} AND EXISTS ${guard}`,
       sql`DELETE FROM user_cards WHERE quantity = 0 AND holo_qty = 0 AND user_id = ${loserId} AND card_id = ${loserCardId} AND EXISTS ${guard}`,
       sql`INSERT INTO user_cards (user_id, card_id, quantity, holo_qty, first_obtained_at, last_obtained_at) SELECT ${calc.winnerId}, ${loserCardId}, 1, 0, ${args.now}, ${args.now} WHERE EXISTS ${guard} ON CONFLICT (user_id, card_id) DO UPDATE SET quantity = quantity + 1, last_obtained_at = excluded.last_obtained_at`,
+      sql`UPDATE users SET exp = exp + ${expGain} WHERE id = ${calc.winnerId} AND EXISTS ${guard}`,
     );
   }
 
   await nativeBatch(db, stmts);
   const settled = await getBattleById(db, args.battleId);
   if (settled?.settleToken === tok) {
-    const winnerStats = await getPlayerBattleStats(db, calc.winnerId);
+    const [statsResult, expResult] = await nativeBatch(db, [
+      sql`SELECT IFNULL(SUM(CASE WHEN ${battles.winnerId} = ${calc.winnerId} THEN 1 ELSE 0 END), 0) AS wins, IFNULL(SUM(CASE WHEN ${battles.winnerId} != ${calc.winnerId} THEN 1 ELSE 0 END), 0) AS losses FROM ${battles} WHERE ${battles.status} = 'resolved' AND (${battles.challengerId} = ${calc.winnerId} OR ${battles.targetId} = ${calc.winnerId})`,
+      sql`SELECT ${users.exp} AS exp FROM ${users} WHERE ${users.id} = ${calc.winnerId} LIMIT 1`,
+    ]);
+    const statsRow = (statsResult?.results?.[0] ?? undefined) as
+      | { wins?: number; losses?: number }
+      | undefined;
+    const expRow = (expResult?.results?.[0] ?? undefined) as
+      | { exp?: number }
+      | undefined;
+    const winnerTotalExp = Number(expRow?.exp ?? expGain);
     return {
       status: "resolved",
       calc,
       challengerCard,
       targetCard,
-      mode: existing.mode as BattleMode,
-      winnerStats,
+      mode,
+      winnerStats: {
+        wins: Number(statsRow?.wins ?? 0),
+        losses: Number(statsRow?.losses ?? 0),
+      },
+      winnerExp: deriveExpGainFromNewTotal(winnerTotalExp, expGain),
     };
   }
   const current = settled ?? existing;

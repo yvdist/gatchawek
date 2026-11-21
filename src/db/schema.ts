@@ -110,6 +110,7 @@ export const cards = sqliteTable(
 export const users = sqliteTable("users", {
   id: text("id").primaryKey(),
   createdAt: integer("created_at").notNull(),
+  exp: integer("exp").notNull().default(0),
 });
 
 /**

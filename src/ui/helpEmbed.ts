@@ -5,6 +5,7 @@ import {
   RARITY_STARS,
   RARITY_WEIGHTS,
 } from "../domain/rarity.js";
+import { RARITY_EXP } from "../domain/level.js";
 import type { HelpCatalog } from "../db/queries/koleksi.js";
 
 export interface HelpEmbedArgs {
@@ -22,7 +23,7 @@ function fmtPct(weight: number, total: number): string {
 function rateTable(): string {
   const total = RARITY_KEYS.reduce((sum, k) => sum + RARITY_WEIGHTS[k], 0);
   return RARITY_KEYS.map((key) => {
-    return `${RARITY_STARS[key]} ${RARITY_LABEL[key]} — ${fmtPct(RARITY_WEIGHTS[key], total)}`;
+    return `${RARITY_STARS[key]} ${RARITY_LABEL[key]} — ${fmtPct(RARITY_WEIGHTS[key], total)} · +${RARITY_EXP[key]} EXP`;
   }).join("\n");
 }
 

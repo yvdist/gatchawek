@@ -156,4 +156,73 @@ describe("gachaEmbed", () => {
       }),
     ).toContain("<t:777:R>");
   });
+
+  it("renders EXP gain and LEVEL UP banner in pull embed and level bar in status embed", () => {
+    const pullEmbed = buildPullEmbed({
+      poolName: "Pejabat",
+      poolEmoji: "🏛️",
+      memberName: "Aa",
+      photoLabel: null,
+      groupName: "Kabinet",
+      fullName: "Aa Full",
+      photoNo: 1,
+      photoTotal: 5,
+      rarity: "super_rare",
+      kind: "new-member",
+      isHolo: false,
+      isFirstClaim: false,
+      quantity: 1,
+      userId: "111",
+      groupOwned: 1,
+      groupTotal: 5,
+      staminaLeft: 4,
+      staminaMax: 10,
+      imageUrl: "https://example.test/cards/aa-01.webp",
+      exp: {
+        gainedExp: 50,
+        previousLevel: 1,
+        currentLevel: 2,
+        leveledUp: true,
+        progress: {
+          level: 2,
+          totalExp: 120,
+          currentExp: 20,
+          nextLevelExp: 200,
+          progressPct: 10,
+        },
+      },
+    });
+    expect(pullEmbed.description).toContain("+50 EXP");
+    expect(pullEmbed.description).toContain("Lv.2 (20/200 EXP)");
+    expect(pullEmbed.description).toContain("LEVEL UP!");
+    expect(pullEmbed.description).toContain("Lv.1 → **Lv.2**");
+
+    const statusEmbed = buildStatusEmbed(
+      [
+        {
+          pool: {
+            id: "pejabat",
+            name: "Pejabat",
+            emoji: "🏛️",
+            staminaMax: 10,
+            regenIntervalSec: 1500,
+            resetCooldownSec: 10800,
+          },
+          stamina: 10,
+          max: 10,
+          nextAt: null,
+          resetReadyAt: 0,
+          resetReady: false,
+          resetDeniedReason: "full",
+          owned: 2,
+          total: 5,
+        },
+      ],
+      "111",
+      350,
+    );
+    expect(statusEmbed.description).toContain("Level 3");
+    expect(statusEmbed.description).toContain("350 EXP");
+    expect(statusEmbed.description).toContain("50/300 ke Lv.4");
+  });
 });

@@ -1,13 +1,28 @@
 import type { APIEmbed } from "discord-api-types/v10";
-import type { TopCollector, TopHoloOwner } from "../db/queries/top.js";
+import type {
+  TopCollector,
+  TopHoloOwner,
+  TopLevelPlayer,
+} from "../db/queries/top.js";
 
 const MEDAL = ["🥇", "🥈", "🥉", "4.", "5."] as const;
 
 export function buildTopEmbed(
   collectors: TopCollector[],
   holoOwners: TopHoloOwner[],
+  topLevels: TopLevelPlayer[] = [],
 ): APIEmbed {
   const lines: string[] = [];
+  lines.push("**Level & EXP teratas**");
+  if (topLevels.length === 0) {
+    lines.push("_Belum ada EXP._");
+  } else {
+    for (const p of topLevels) {
+      const medal = MEDAL[p.rank - 1] ?? `${p.rank}.`;
+      lines.push(`${medal} <@${p.userId}> — Lv.${p.level} (${p.exp} EXP)`);
+    }
+  }
+  lines.push("");
   lines.push("**Kolektor teratas**");
   if (collectors.length === 0) {
     lines.push("_Belum ada kolektor._");

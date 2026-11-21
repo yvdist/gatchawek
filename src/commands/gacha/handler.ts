@@ -103,6 +103,7 @@ async function followupPull(
             staminaLeft: outcome.staminaLeft,
             staminaMax: pool.staminaMax,
             imageUrl,
+            exp: outcome.exp,
           }),
         ],
         components: [againButton(pool.id, userId), buildWaShareRow(shareUrl)],

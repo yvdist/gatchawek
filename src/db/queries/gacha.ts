@@ -6,6 +6,7 @@ import {
   pools,
   userCards,
   userPoolStates,
+  users,
 } from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
 import {
@@ -23,6 +24,11 @@ import {
   resetReadyAt,
 } from "../../domain/stamina.js";
 import { pullKind, type PullKind } from "../../domain/gacha.js";
+import {
+  deriveExpGainFromNewTotal,
+  gachaPullExp,
+  type ExpGainSummary,
+} from "../../domain/level.js";
 import { nextWishPity, rollWishPity } from "../../domain/wish.js";
 import { getActiveWishes } from "./wish.js";
 
@@ -217,6 +223,7 @@ export type PullOutcome =
       staminaLeft: number;
       groupOwned: number;
       groupTotal: number;
+      exp: ExpGainSummary;
     }
   | { status: "empty"; nextAt: number }
   | { status: "pool-empty" }
@@ -263,9 +270,10 @@ export async function executePull(
 
   const ownership = await readOwnership(db, userId, card.id, card.memberId);
   const kind = pullKind(ownership.quantity > 0, ownership.memberOwned);
+  const expGain = gachaPullExp(card.rarity);
   const newVersion = state.version + 1;
   // Guard on the PRE-state version: inside one atomic batch, either all
-  // three statements see version = state.version (we win) or a concurrent
+  // statements see version = state.version (we win) or a concurrent
   // winner already moved it (everything no-ops). Guarding on newVersion
   // would also match the rival's increment and double-spend.
   const versionGuard = sql`(SELECT 1 FROM user_pool_states WHERE user_id = ${userId} AND pool_id = ${pool.id} AND version = ${state.version})`;
@@ -277,6 +285,7 @@ ON CONFLICT (user_id, card_id) DO UPDATE SET quantity = quantity + ${isHolo ? 0 
     sql`INSERT INTO pulls (user_id, pool_id, card_id, new_member, new_card, is_holo, pulled_at)
 SELECT ${userId}, ${pool.id}, ${card.id}, ${kind === "new-member" ? 1 : 0}, ${kind !== "duplicate" ? 1 : 0}, ${isHolo ? 1 : 0}, ${now}
 WHERE EXISTS ${versionGuard}`,
+    sql`UPDATE users SET exp = exp + ${expGain} WHERE id = ${userId} AND EXISTS ${versionGuard}`,
     ...(wishHit
       ? [
           sql`DELETE FROM wishes WHERE user_id = ${userId} AND card_id = ${card.id} AND EXISTS ${versionGuard}`,
@@ -303,7 +312,7 @@ WHERE EXISTS ${versionGuard}`,
   // for one user action. The loser keeps its stamina and can tap again.
   if ((cas?.meta.changes ?? 0) !== 1) return { status: "conflict" };
 
-  const [qtyRows, ownedRows, groupRows] = await db.batch([
+  const [qtyRows, ownedRows, groupRows, userRows] = await db.batch([
     db
       .select({ quantity: userCards.quantity })
       .from(userCards)
@@ -325,7 +334,13 @@ WHERE EXISTS ${versionGuard}`,
       .from(groups)
       .where(eq(groups.id, card.groupId))
       .limit(1),
+    db
+      .select({ exp: users.exp })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
   ]);
+  const totalExp = userRows[0]?.exp ?? expGain;
   // CAS won (changes === 1 above), so this row is ours.
   return {
     status: "ok",
@@ -338,6 +353,7 @@ WHERE EXISTS ${versionGuard}`,
     staminaLeft: consumed.stamina,
     groupOwned: ownedRows[0]?.n ?? 0,
     groupTotal: groupRows[0]?.memberCount ?? 0,
+    exp: deriveExpGainFromNewTotal(totalExp, expGain),
   };
 }
 
@@ -451,19 +467,29 @@ export interface PoolStatusRow {
   meltPoints?: number | null;
 }
 
-export async function getStatusOverview(
+export interface UserStatusOverview {
+  rows: PoolStatusRow[];
+  userExp: number;
+}
+
+export async function getUserStatusOverview(
   db: Db,
   userId: string,
   now: number,
-): Promise<PoolStatusRow[]> {
+): Promise<UserStatusOverview> {
   const poolRows = await db
     .select()
     .from(pools)
     .where(eq(pools.enabled, true))
     .orderBy(pools.sortOrder);
-  if (poolRows.length === 0) return [];
+  if (poolRows.length === 0) return { rows: [], userExp: 0 };
   const configs = poolRows.map(toPoolConfig);
   const results = await db.batch([
+    db
+      .select({ exp: users.exp })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1),
     db
       .select()
       .from(userPoolStates)
@@ -482,14 +508,16 @@ export async function getStatusOverview(
         ),
     ),
   ]);
-  const [stateRows, ...ownedCounts] = results;
+  const [userRows, stateRows, ...ownedCounts] = results;
+  const userExp =
+    (userRows as { exp: number }[])[0]?.exp ?? 0;
   const byPool = new Map(
     (stateRows as typeof userPoolStates.$inferSelect[]).map((s) => [
       s.poolId,
       s,
     ]),
   );
-  return poolRows.map((row, i) => {
+  const rows = poolRows.map((row, i) => {
     const pool = toPoolConfig(row);
     const s = byPool.get(pool.id);
     const normalized =
@@ -522,4 +550,14 @@ export async function getStatusOverview(
       total: row.memberCount,
     };
   });
+  return { rows, userExp };
+}
+
+export async function getStatusOverview(
+  db: Db,
+  userId: string,
+  now: number,
+): Promise<PoolStatusRow[]> {
+  const { rows } = await getUserStatusOverview(db, userId, now);
+  return rows;
 }
