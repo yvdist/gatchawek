@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { sentry } from "@sentry/hono/cloudflare";
 import {
   InteractionResponseType,
   InteractionType,
@@ -40,8 +41,11 @@ import { registerAdminRoutes } from "./admin/routes.js";
 
 const app = new Hono<{ Bindings: Env }>();
 
-app.get("/health", (c) => c.json({ status: "ok" }, 200));
+// Error tracking (Better Stack via Sentry SDK). DSN from Worker secret;
+// unset locally = SDK no-ops. Must be first middleware.
+app.use(sentry(app, (env) => ({ dsn: env.SENTRY_DSN })));
 
+app.get("/health", (c) => c.json({ status: "ok" }, 200));
 /** Card frames from R2 (persistent; Worker assets can't hold runtime files). */
 app.get("/cards/:file", async (c) => {
   const file = c.req.param("file");
