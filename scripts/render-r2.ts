@@ -2,7 +2,11 @@ import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildCardImage, registerFonts } from "./lib/build-cards.js";
+import {
+  buildCardImage,
+  cardFileExtension,
+  registerFonts,
+} from "./lib/build-cards.js";
 import { fetchRemoteImage } from "./fetch-images.js";
 import { resolveManifestRoot } from "./lib/manifests.js";
 
@@ -128,7 +132,9 @@ async function main(): Promise<void> {
       focusY: 0.35,
     });
     const hash = createHash("sha256").update(buffer).digest("hex").slice(0, 8);
-    const fileName = `${r.id}.${hash}.webp`;
+    const ext = cardFileExtension(r.rarity);
+    const fileName = `${r.id}.${hash}.${ext}`;
+    const contentType = ext === "gif" ? "image/gif" : "image/webp";
     // R2 object put via temp file (binary-safe; avoids shell quoting).
     const { mkdtemp, rm } = await import("node:fs/promises");
     const { tmpdir } = await import("node:os");
@@ -137,7 +143,7 @@ async function main(): Promise<void> {
       const tmpFile = path.join(tmpDir, fileName);
       await writeFile(tmpFile, buffer);
       await sh(
-        `"${wranglerBin(root)}" r2 object put ${bucket}/${fileName} --file "${tmpFile}" --content-type image/webp --remote`,
+        `"${wranglerBin(root)}" r2 object put ${bucket}/${fileName} --file "${tmpFile}" --content-type ${contentType} --remote`,
         root,
       );
     } finally {
