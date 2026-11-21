@@ -191,10 +191,15 @@ async function dispatchRender(
   if (!res.ok) {
     let detail = "";
     try {
-      const body = (await res.clone().json()) as { message?: unknown };
-      if (typeof body.message === "string") detail = body.message.slice(0, 200);
+      const raw = await res.text();
+      try {
+        const body = JSON.parse(raw) as { message?: unknown };
+        if (typeof body.message === "string") detail = body.message.slice(0, 200);
+      } catch {
+        if (raw.trim() !== "") detail = raw.slice(0, 200);
+      }
     } catch {
-      // Non-JSON error body; status alone is enough.
+      // Unreadable error body; status alone is enough.
     }
     return { ok: false, error: `GitHub dispatch gagal (${String(res.status)}${detail === "" ? "" : `: ${detail}`}). Coba lagi.` };
   }
