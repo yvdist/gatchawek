@@ -84,6 +84,11 @@ describe("cardsPage", () => {
       kind: "all",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
     });
     expect(html).not.toContain("<script>alert(1)</script>");
     expect(html).toContain("&lt;script&gt;alert(1)&lt;/script&gt;");
@@ -116,6 +121,11 @@ describe("cardsPage", () => {
         kind: "all",
         q: "",
         base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
       });
       expect(html).toContain(kind === "static" ? "tile is-rendered" : "tile is-raw");
       expect(html).not.toContain("<table");
@@ -143,7 +153,7 @@ describe("cardsPage queue and render cap", () => {
   };
 
   it("labels filter tabs by meaning and links the todo queue", () => {
-    const html = cardsPage({ rows: [], total: 0, kind: "todo", q: "", base: "example.test" });
+    const html = cardsPage({ rows: [], total: 0, kind: "todo", q: "", base: "example.test", poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
     expect(html).toContain("kind=todo");
     expect(html).toContain("Perlu dikerjakan");
     expect(html).toContain("Belum dirender");
@@ -157,6 +167,11 @@ describe("cardsPage queue and render cap", () => {
       kind: "static",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
     });
     expect(html).toContain("tile is-final");
     expect(html).toContain("foto asli");
@@ -171,6 +186,11 @@ describe("cardsPage queue and render cap", () => {
       kind: "todo",
       q: "jo",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
       nowSec: 1000,
     });
     expect(html).toContain('action="/admin/cards/render-remote"');
@@ -182,28 +202,28 @@ describe("cardsPage queue and render cap", () => {
   });
 
   it("keeps tiles to pool and group; ownership lives on the detail page", () => {
-    const html = cardsPage({ rows: [base], total: 1, kind: "all", q: "", base: "example.test" });
+    const html = cardsPage({ rows: [base], total: 1, kind: "all", q: "", base: "example.test", poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
     expect(html).not.toContain("dimiliki");
   });
 
   it("links tiles back to the exact list view", () => {
-    const html = cardsPage({ rows: [base], total: 1, kind: "remote", q: "jo", base: "example.test" });
+    const html = cardsPage({ rows: [base], total: 1, kind: "remote", q: "jo", base: "example.test", poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
     expect(html).toContain(`/admin/cards/x-01?from=${encodeURIComponent("/admin/cards?kind=remote&q=jo")}`);
   });
 
   it("caps render selection at 50 in the client script", () => {
-    const html = cardsPage({ rows: [base], total: 1, kind: "remote", q: "", base: "example.test" });
+    const html = cardsPage({ rows: [base], total: 1, kind: "remote", q: "", base: "example.test", poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
     expect(html).toContain("var MAX=50");
   });
 
   it("does not use eyebrow labels and says when the list is truncated", () => {
-    const html = cardsPage({ rows: [base], total: 250, kind: "all", q: "", base: "example.test" });
+    const html = cardsPage({ rows: [base], total: 250, kind: "all", q: "", base: "example.test", poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
     expect(html).not.toContain('class="eyebrow"');
     expect(html).toContain("1 dari 250");
   });
 
   it("takes rarity colors from the bot's RARITY_COLOR", () => {
-    const html = cardsPage({ rows: [], total: 0, kind: "all", q: "", base: "example.test" });
+    const html = cardsPage({ rows: [], total: 0, kind: "all", q: "", base: "example.test", poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
     expect(html).toContain("--r-holo:#ffd700");
     expect(html).toContain("--r-super_rare:#f59e0b");
   });
@@ -235,6 +255,11 @@ describe("cardsPage round 4", () => {
       kind: "todo",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
       nowSec: 10_000,
     });
     expect(html).toContain("render gagal? diminta 47 mnt lalu");
@@ -248,6 +273,11 @@ describe("cardsPage round 4", () => {
       kind: "todo",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
       counts: { todo: 5, empty: 2, remote: 3, static: 9, all: 14 },
     });
     expect(html).toContain('Belum dirender <span class="tab-n">3</span>');
@@ -261,6 +291,11 @@ describe("cardsPage round 4", () => {
       kind: "static",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
     });
     expect(html).toContain('<span class="tile-name">Mira</span>');
     expect(html).toContain("★★");
@@ -287,14 +322,14 @@ describe("round 5: one state vocabulary, rarity dot, mobile filter", () => {
   };
 
   it("uses the same tone class for a state on tile tag and badge", () => {
-    const list = cardsPage({ rows: [base], total: 1, kind: "todo", q: "", base: "example.test" });
+    const list = cardsPage({ rows: [base], total: 1, kind: "todo", q: "", base: "example.test", poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
     expect(list).toContain('class="sheet-tag tone-raw"');
-    const detailHtml = cardDetailPage({ card: { ...detail(), ...base, photoTotal: 1 }, base: "example.test", message: null, ok: false });
+    const detailHtml = cardDetailPage({ card: { ...detail(), ...base, photoTotal: 1 }, base: "example.test", message: null, ok: false, pools: [], poolGroups: [] });
     expect(detailHtml).toContain('class="badge tone-raw"');
   });
 
   it("marks rarity with a colored dot next to grey stars", () => {
-    const html = cardsPage({ rows: [base], total: 1, kind: "todo", q: "", base: "example.test" });
+    const html = cardsPage({ rows: [base], total: 1, kind: "todo", q: "", base: "example.test", poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
     expect(html).toContain('<i class="rdot"></i>');
   });
 
@@ -305,6 +340,11 @@ describe("round 5: one state vocabulary, rarity dot, mobile filter", () => {
       kind: "todo",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
       counts: { todo: 1, empty: 0, remote: 1, static: 0, all: 1 },
     });
     expect(html).toContain('class="filter-select"');
@@ -339,6 +379,11 @@ describe("round 6", () => {
       kind: "todo",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
       nowSec: 100_000,
     });
     expect(html).toContain('id="pickStale"');
@@ -353,6 +398,11 @@ describe("round 6", () => {
       kind: "todo",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
     });
     expect(html).toContain("Diperbarui otomatis tiap 1 menit");
   });
@@ -367,7 +417,7 @@ describe("round 6", () => {
 
 describe("cardDetailPage", () => {
   it("tucks image replacement on a rendered card behind a confirmed details section", () => {
-    const html = cardDetailPage({ card: detail(), base: "example.test", message: null, ok: false });
+    const html = cardDetailPage({ card: detail(), base: "example.test", message: null, ok: false, pools: [], poolGroups: [] });
     expect(html).toContain('<details class="card replace">');
     expect(html).toContain("<summary>Ganti image</summary>");
     expect(html).toContain("return confirm(");
@@ -377,6 +427,8 @@ describe("cardDetailPage", () => {
     const html = cardDetailPage({
       card: detail(),
       base: "example.test",
+      pools: [],
+      poolGroups: [],
       message: null,
       ok: false,
     });
@@ -389,6 +441,8 @@ describe("cardDetailPage", () => {
     const html = cardDetailPage({
       card: detail({ imageKind: "remote", imageFile: "https://x/y.png", renderable: true }),
       base: "example.test",
+      pools: [],
+      poolGroups: [],
       message: null,
       ok: false,
       back: "/admin/cards?kind=todo",
@@ -405,6 +459,8 @@ describe("cardDetailPage", () => {
     const html = cardDetailPage({
       card: detail({ imageKind: "remote", imageFile: "https://x/y.png", renderable: true }),
       base: "example.test",
+      pools: [],
+      poolGroups: [],
       message: null,
       ok: false,
       back: "/admin/cards?kind=remote",
@@ -418,11 +474,68 @@ describe("cardDetailPage", () => {
     const html = cardDetailPage({
       card: detail({ imageKind: "remote", imageFile: "https://x/y.png", renderable: true }),
       base: "example.test",
+      pools: [],
+      poolGroups: [],
       message: null,
       ok: true,
     });
     expect(html).toContain("belum dirender");
     expect(html).not.toContain("fetch-images");
+  });
+});
+
+describe("cardsPage pool/group/rarity filters", () => {
+  const base = {
+    id: "x-01",
+    memberName: "Mira",
+    groupBadge: "G",
+    poolName: "P",
+    poolId: "ahli-ngebul",
+    photoNo: 1,
+    rarity: "rare" as const,
+    imageFile: "a.webp",
+    imageKind: "static" as const,
+    enabled: true,
+    quantityOwned: 0,
+    renderable: false,
+    renderPending: false,
+    excludedPool: false,
+    renderRequestedAt: null,
+  };
+  const pools = [{ poolId: "ahli-ngebul", poolName: "Ahli Ngebul", poolEmoji: "x" }];
+  const poolGroups = [{ poolId: "ahli-ngebul", poolName: "Ahli Ngebul", poolEmoji: "x", groupId: "g1", groupName: "Satu", groupBadge: "SATU" }];
+
+  it("renders pool/group/rarity selects with the active value selected", () => {
+    const html = cardsPage({ rows: [base], total: 1, kind: "all", q: "", base: "example.test", poolId: "ahli-ngebul", groupId: "g1", rarity: "rare", pools, poolGroups });
+    expect(html).toContain('name="pool"');
+    expect(html).toContain('name="group"');
+    expect(html).toContain('name="rarity"');
+    expect(html).toContain('<option value="ahli-ngebul" selected>');
+    expect(html).toContain('<option value="g1" selected>');
+    expect(html).toContain('<option value="rare" selected>');
+  });
+
+  it("threads filters through tab links and keeps them in search", () => {
+    const html = cardsPage({ rows: [base], total: 1, kind: "remote", q: "jo", base: "example.test", poolId: "ahli-ngebul", groupId: "", rarity: "rare", pools, poolGroups });
+    expect(html).toContain("pool=ahli-ngebul");
+    expect(html).toContain("rarity=rare");
+    expect(html).toContain('name="pool" value="ahli-ngebul"');
+    expect(html).toContain('name="rarity" value="rare"');
+  });
+});
+
+describe("cardDetailPage kelola form", () => {
+  const pools = [{ poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x" }];
+  const poolGroups = [{ poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x", groupId: "g1", groupName: "Satu", groupBadge: "SATU" }];
+
+  it("renders a manage form with member, label, pool, group, rarity, and holo fields", () => {
+    const html = cardDetailPage({ card: detail(), base: "example.test", message: null, ok: false, pools, poolGroups });
+    expect(html).toContain('name="memberName"');
+    expect(html).toContain('name="photoLabel"');
+    expect(html).toContain('name="poolId"');
+    expect(html).toContain('name="groupId"');
+    expect(html).toContain('name="rarity"');
+    expect(html).toContain('name="holoEnabled"');
   });
 });
 
@@ -553,6 +666,11 @@ describe("importPage", () => {
       kind: "all",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
     });
     expect(html).toContain("tile is-rendered r-secret");
   });
@@ -572,6 +690,11 @@ describe("importPage", () => {
       kind: "all",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
     });
     expect(forCards).not.toContain("<table");
     expect(forCards).toContain('class="empty-state"');
@@ -605,6 +728,11 @@ describe("importPage", () => {
       kind: "remote",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
     });
     expect(remote).toContain('action="/admin/cards/render-remote"');
     expect(remote).toContain('name="ids" value="r-01"');
@@ -616,6 +744,11 @@ describe("importPage", () => {
       kind: "all",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
     });
     expect(all).not.toContain("/admin/cards/render-remote");
     expect(all).not.toContain('name="ids"');
@@ -628,6 +761,11 @@ describe("importPage", () => {
       kind: "remote",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
       renderMessage: "Render 2 kartu diminta.",
       renderOk: true,
     });
@@ -660,6 +798,11 @@ describe("importPage", () => {
       kind: "remote",
       q: "",
       base: "example.test",
+      poolId: "",
+      groupId: "",
+      rarity: "",
+      pools: [],
+      poolGroups: [],
     });
     // Nothing renderable on the page, so no render form at all.
     expect(html).not.toContain('action="/admin/cards/render-remote"');
