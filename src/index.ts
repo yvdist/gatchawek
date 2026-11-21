@@ -46,6 +46,14 @@ import {
   handleAlbumAutocomplete,
   handleAlbumWebRequest,
 } from "./commands/album/handler.js";
+import { getShareableCard } from "./db/queries/share.js";
+import { createDb } from "./db/client.js";
+import { isLinkPreviewCrawler } from "./domain/album.js";
+import { cardImageUrl } from "./ui/gachaEmbed.js";
+import {
+  cardShareCrawlerPage,
+  cardSharePage,
+} from "./ui/cardShareHtml.js";
 import { handleScheduled } from "./scheduled.js";
 import type { Env } from "./env.js";
 import { registerAdminRoutes } from "./admin/routes.js";
@@ -88,6 +96,28 @@ app.on(["GET", "HEAD"], "/album/:token", async (c) => {
   c.header("Cache-Control", "no-store, no-cache, must-revalidate");
   c.header("Referrer-Policy", "no-referrer");
   return c.html(res.html, res.status);
+});
+app.on(["GET", "HEAD"], "/kartu/:id", async (c) => {
+  const cardId = c.req.param("id") ?? "";
+  const db = createDb(c.env);
+  const card = await getShareableCard(db, cardId);
+  c.header("Cache-Control", "public, max-age=3600");
+  c.header("Referrer-Policy", "no-referrer");
+  if (card === null || card.enabled !== true) {
+    return c.text("Not found", 404);
+  }
+  const base = c.env.PUBLIC_BASE_URL;
+  const imageUrl = cardImageUrl(base, card.imageFile);
+  const cleanBase = base.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+  const pageUrl = `https://${cleanBase}/kartu/${card.cardId}`;
+  const data = { ...card, imageUrl };
+  if (
+    c.req.method.toUpperCase() === "HEAD" ||
+    isLinkPreviewCrawler(c.req.header("User-Agent"))
+  ) {
+    return c.html(cardShareCrawlerPage(data, pageUrl), 200);
+  }
+  return c.html(cardSharePage(data, pageUrl), 200);
 });
 registerAdminRoutes(app);
 

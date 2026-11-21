@@ -10,6 +10,7 @@ export interface WaShareCard {
   serial: number;
   rarity: RarityKey;
   imageUrl: string;
+  pageUrl?: string;
 }
 
 export function buildWaShareText(card: WaShareCard): string {
@@ -17,13 +18,14 @@ export function buildWaShareText(card: WaShareCard): string {
   const stars = RARITY_STARS[card.rarity];
   const label = RARITY_LABEL[card.rarity];
   const total = card.photoTotal <= 0 ? "?" : String(card.photoTotal);
+  const link = card.pageUrl ?? card.imageUrl;
   return (
     `🎴 ${display} (${card.groupName})\n` +
     `${stars} ${label} · Foto ${card.photoNo}/${total} · No. ${card.serial}\n` +
+    `${link}\n` +
     `${card.imageUrl}`
   );
 }
-
 export function buildWaShareUrl(text: string): string {
   return `https://wa.me/?text=${encodeURIComponent(text)}`;
 }

@@ -49,13 +49,14 @@ describe("buildWaShareText", () => {
   it("uses memberName when photoLabel is null", () => {
     const text = buildWaShareText(baseCard({ photoLabel: null }));
     const lines = text.split("\n");
-    expect(lines).toHaveLength(3);
+    expect(lines).toHaveLength(4);
     expect(lines[0]).toBe("🎴 Pilip Decul (Jomok)");
     expect(lines[1]).toContain("Foto 2/8");
     expect(lines[1]).toContain("No. 7");
     expect(lines[1]).toContain("★★");
     expect(lines[1]).toContain("Rare");
     expect(lines[2]).toBe("https://example.test/cards/pilip-02.x.webp");
+    expect(lines[3]).toBe("https://example.test/cards/pilip-02.x.webp");
   });
 
   it("prefers photoLabel when the photo has its own identity", () => {
@@ -65,14 +66,24 @@ describe("buildWaShareText", () => {
     expect(text.split("\n")[0]).toBe("🎴 Pose Keren (Jomok)");
   });
 
+  it("links the share page first when pageUrl is set", () => {
+    const text = buildWaShareText(
+      baseCard({ pageUrl: "https://example.test/kartu/pilip-02" }),
+    );
+    const lines = text.split("\n");
+    expect(lines).toHaveLength(4);
+    expect(lines[2]).toBe("https://example.test/kartu/pilip-02");
+    expect(lines[3]).toBe("https://example.test/cards/pilip-02.x.webp");
+  });
+
   it("renders unknown total as ? instead of crashing", () => {
     const text = buildWaShareText(baseCard({ photoTotal: 0 }));
     expect(text).toContain("Foto 2/?");
   });
 
-  it("keeps an empty imageUrl as an empty third line", () => {
+  it("keeps an empty imageUrl as an empty fourth line", () => {
     const text = buildWaShareText(baseCard({ imageUrl: "" }));
-    expect(text.split("\n")).toHaveLength(3);
+    expect(text.split("\n")).toHaveLength(4);
     expect(text.endsWith("\n")).toBe(true);
   });
 });
