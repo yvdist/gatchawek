@@ -3,8 +3,6 @@ import { cards, groups, members, pools, type Rarity } from "../schema.js";
 import { clampListPage, LIST_PAGE_SIZE } from "../../domain/list.js";
 import { nativeBatch, type Db } from "../client.js";
 
-export type VisibleRarity = Exclude<Rarity, "secret">;
-
 export interface ListFilters {
   poolId: string | null;
   groupId: string | null;
@@ -15,7 +13,7 @@ export interface ListCardRow {
   serial: number;
   photoNo: number;
   photoLabel: string | null;
-  rarity: VisibleRarity;
+  rarity: Rarity;
   holoEnabled: boolean;
   memberId: string;
   memberName: string;
@@ -49,7 +47,7 @@ interface RawListCardRow {
   serial: number;
   photo_no: number;
   photo_label: string | null;
-  rarity: VisibleRarity;
+  rarity: Rarity;
   holo_enabled: number;
   member_id: string;
   member_name: string;
@@ -62,8 +60,8 @@ interface RawListCardRow {
 }
 
 /**
- * Returns one page of enabled, non-secret cards filtered by optional pool and/or
- * group. Secret cards (`rarity = 'secret'`) are never queried or counted.
+ * Returns one page of enabled cards filtered by optional pool and/or group.
+ * Holo and secret tiers are listed with censored names (`censorName`).
  */
 export async function getListPage(
   db: Db,
@@ -102,7 +100,7 @@ export async function getListPage(
     scopeGroup = group;
   }
 
-  const baseWhere = sql`${cards.enabled} = 1 AND ${cards.rarity} != 'secret' AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${pools.enabled} = 1`;
+  const baseWhere = sql`${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${pools.enabled} = 1`;
   const poolFilter =
     filters.poolId === null ? sql`` : sql` AND ${cards.poolId} = ${filters.poolId}`;
   const groupFilter =
@@ -181,7 +179,7 @@ export async function searchListGroups(
   typed: string,
 ): Promise<{ id: string; name: string; badge: string; poolId: string }[]> {
   const sanitized = typed.replace(/[%_\\]/g, "");
-  const hasVisibleCard = sql`EXISTS (SELECT 1 FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} WHERE ${cards.groupId} = ${groups.id} AND ${cards.enabled} = 1 AND ${cards.rarity} != 'secret' AND ${members.enabled} = 1)`;
+  const hasVisibleCard = sql`EXISTS (SELECT 1 FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} WHERE ${cards.groupId} = ${groups.id} AND ${cards.enabled} = 1 AND ${members.enabled} = 1)`;
 
   const validPool =
     poolId !== null && poolId !== ""

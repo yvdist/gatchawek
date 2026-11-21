@@ -103,8 +103,8 @@ describe("getKoleksiPage", () => {
     const anna = outcome.members.find((m) => m.memberId === "anna");
     expect(anna?.ownedPhotos).toBe(2);
     expect(anna?.photos).toEqual([
-      { photoNo: 1, quantity: 1, photoLabel: null },
-      { photoNo: 3, quantity: 2, photoLabel: null },
+      { cardId: "anna-01", photoNo: 1, quantity: 1, rarity: "common", photoLabel: null },
+      { cardId: "anna-03", photoNo: 3, quantity: 2, rarity: "rare", photoLabel: null },
     ]);
     expect(outcome.totalPages).toBe(1);
     expect(outcome.page).toBe(0);

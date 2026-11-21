@@ -11,8 +11,10 @@ import { verifyDiscordRequest } from "./discord/verify.js";
 import { commandHandlers } from "./commands/registry.js";
 import { handleGachaAgain } from "./commands/gacha/handler.js";
 import {
+  handleKoleksiCardSelect,
   handleKoleksiGrupAutocomplete,
   handleKoleksiPage,
+  handleKoleksiPamerClick,
 } from "./commands/koleksi/handler.js";
 import {
   handleTradeAutocomplete,
@@ -35,6 +37,10 @@ import {
   handleUnwishAutocomplete,
   handleWishAutocomplete,
 } from "./commands/wish/handler.js";
+import {
+  handleGiveAutocomplete,
+  handleGiveClick,
+} from "./commands/give/handler.js";
 import { handleScheduled } from "./scheduled.js";
 import type { Env } from "./env.js";
 import { registerAdminRoutes } from "./admin/routes.js";
@@ -116,6 +122,20 @@ app.post("/interactions", async (c) => {
         ),
       );
     }
+    if (ns === "koleksi" && action === "d") {
+      return c.json(
+        await handleKoleksiCardSelect(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
+    if (ns === "koleksi" && action === "pr") {
+      return c.json(
+        await handleKoleksiPamerClick(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
     if (ns === "trade") {
       return c.json(
         await handleTradeClick(component, c.env, (p) =>
@@ -140,6 +160,13 @@ app.post("/interactions", async (c) => {
     if (ns === "battle") {
       return c.json(
         await handleBattleComponent(component, c.env, (p) =>
+          c.executionCtx.waitUntil(p),
+        ),
+      );
+    }
+    if (ns === "give") {
+      return c.json(
+        await handleGiveClick(component, c.env, (p) =>
           c.executionCtx.waitUntil(p),
         ),
       );
@@ -195,6 +222,14 @@ app.post("/interactions", async (c) => {
       return c.json(
         await handleListAutocomplete(
           autocomplete as unknown as Parameters<typeof handleListAutocomplete>[0],
+          c.env,
+        ),
+      );
+    }
+    if (autocomplete.data.name === "give" || autocomplete.data.name === "give-to") {
+      return c.json(
+        await handleGiveAutocomplete(
+          autocomplete as unknown as Parameters<typeof handleGiveAutocomplete>[0],
           c.env,
         ),
       );

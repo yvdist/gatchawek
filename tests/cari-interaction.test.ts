@@ -22,6 +22,7 @@ import {
   handleCari,
   handleCariAutocomplete,
 } from "../src/commands/cari/handler.js";
+import { searchMembers } from "../src/db/queries/cari.js";
 import type { WaitUntil } from "../src/commands/registry.js";
 import type { Env } from "../src/env.js";
 
@@ -136,6 +137,8 @@ beforeAll(async () => {
     { id: "anna", poolId: "pejabat", groupId: "g1", name: "Anna", nameLower: "anna", photoTotal: 2, sortOrder: 0, enabled: true },
     { id: "budi", poolId: "pejabat", groupId: "g1", name: "Budi", nameLower: "budi", photoTotal: 1, sortOrder: 1, enabled: true },
     { id: "katak", poolId: "pejabat", groupId: "g1", name: "Katak Bijak", nameLower: "katak bijak", photoTotal: 1, sortOrder: 2, enabled: true },
+    { id: "refi", poolId: "pejabat", groupId: "g1", name: "Refi", nameLower: "refi", photoTotal: 1, sortOrder: 3, enabled: true },
+    { id: "rahasia", poolId: "pejabat", groupId: "g1", name: "Rahasia", nameLower: "rahasia", photoTotal: 1, sortOrder: 4, enabled: true },
   ]);
   await db.insert(cards).values([
     { id: "anna-01", poolId: "pejabat", groupId: "g1", memberId: "anna", serial: 1, photoNo: 1, rarity: "common", imageFile: "a1.webp", enabled: true },
@@ -143,6 +146,8 @@ beforeAll(async () => {
     { id: "budi-01", poolId: "pejabat", groupId: "g1", memberId: "budi", serial: 3, photoNo: 1, rarity: "rare", imageFile: "b1.webp", enabled: true },
     { id: "budi-02", poolId: "pejabat", groupId: "g1", memberId: "budi", serial: 5, photoNo: 2, rarity: "common", photoLabel: "Ryan Unjuk Kebolehan", imageFile: "b2.webp", enabled: true },
     { id: "katak-01", poolId: "pejabat", groupId: "g1", memberId: "katak", serial: 4, photoNo: 1, rarity: "common", imageFile: "k1.webp", enabled: true },
+    { id: "refi-01", poolId: "pejabat", groupId: "g1", memberId: "refi", serial: 6, photoNo: 1, rarity: "holo", photoLabel: "Kaget Holo", imageFile: "r1.webp", enabled: true },
+    { id: "rahasia-01", poolId: "pejabat", groupId: "g1", memberId: "rahasia", serial: 7, photoNo: 1, rarity: "secret", photoLabel: "Top Secret", imageFile: "s1.webp", enabled: true },
   ]);
   await db.insert(users).values([
     { id: "u1", createdAt: 1 },
@@ -315,5 +320,33 @@ describe("/cari", () => {
     expect(match).toBeDefined();
     expect(match?.name).toContain("Budi");
     expect(match?.value).toBe("Budi");
+  });
+  it("never surfaces holo or secret rarity cards", async () => {
+    const db = createDb(env);
+    // Members whose only cards are holo/secret are not searchable at all.
+    expect(await searchMembers(db, "refi", null)).toEqual([]);
+    expect(await searchMembers(db, "rahasia", null)).toEqual([]);
+    expect(await searchMembers(db, "top", null)).toEqual([]);
+    const anna = await searchMembers(db, "anna", null);
+    expect(anna.flatMap((m) => m.cards.map((c) => c.cardId))).toEqual([
+      "anna-01",
+      "anna-02",
+    ]);
+  });
+
+  it("keeps holo and secret labels out of autocomplete", async () => {
+    for (const typed of ["kaget", "top"]) {
+      const res = await handleCariAutocomplete(cariAutocomplete(typed), env);
+      expect(res.type).toBe(
+        InteractionResponseType.ApplicationCommandAutocompleteResult,
+      );
+      if (
+        res.type !== InteractionResponseType.ApplicationCommandAutocompleteResult
+      )
+        continue;
+      const names = (res.data.choices ?? []).map((c) => c.name).join(" | ");
+      expect(names).not.toContain("Kaget");
+      expect(names).not.toContain("Top Secret");
+    }
   });
 });

@@ -45,6 +45,13 @@ export const RARITY_STARS: Record<RarityKey, string> = {
   secret: "★★★★★★",
 };
 
+/** Tiers hidden from browsing and gifting: never in /cari, censored in /list, never giftable. */
+export const HIDDEN_RARITIES = ["holo", "secret"] as const satisfies readonly RarityKey[];
+
+export function isHiddenRarity(rarity: RarityKey): boolean {
+  return (HIDDEN_RARITIES as readonly RarityKey[]).includes(rarity);
+}
+
 export const HOLO_CHANCE: Record<
   Extract<RarityKey, "super_rare" | "ultra_rare">,
   number

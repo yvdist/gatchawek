@@ -65,3 +65,53 @@ export function koleksiPageCustomId(
 ): string {
   return `koleksi:p:${ownerId}:${poolId}:${groupId}:${page}`;
 }
+
+export interface KoleksiCardSelectTarget {
+  ownerId: string;
+  chunk: number;
+}
+
+const CHUNK_SEGMENT = /^\d{1,2}$/;
+
+/** Parses `koleksi:d:<ownerId>:<chunk>`. Null on any other shape. */
+export function parseKoleksiCardSelectCustomId(
+  customId: string,
+): KoleksiCardSelectTarget | null {
+  const parts = customId.split(":");
+  if (parts.length !== 4) return null;
+  const [ns, action, ownerId, chunkRaw] = parts;
+  if (ns !== "koleksi" || action !== "d") return null;
+  if (ownerId === undefined || ownerId === "") return null;
+  if (chunkRaw === undefined || !CHUNK_SEGMENT.test(chunkRaw)) return null;
+  return { ownerId, chunk: Number(chunkRaw) };
+}
+
+export function koleksiCardSelectCustomId(
+  ownerId: string,
+  chunk: number,
+): string {
+  return `koleksi:d:${ownerId}:${chunk}`;
+}
+
+export interface KoleksiPamerTarget {
+  ownerId: string;
+  cardId: string;
+}
+
+/** Parses `koleksi:pr:<ownerId>:<cardId>`. Null on any other shape. */
+export function parseKoleksiPamerCustomId(
+  customId: string,
+): KoleksiPamerTarget | null {
+  const parts = customId.split(":");
+  if (parts.length !== 4) return null;
+  const [ns, action, ownerId, cardId] = parts;
+  if (ns !== "koleksi" || action !== "pr") return null;
+  if (ownerId === undefined || ownerId === "" || cardId === undefined || cardId === "") {
+    return null;
+  }
+  return { ownerId, cardId };
+}
+
+export function koleksiPamerCustomId(ownerId: string, cardId: string): string {
+  return `koleksi:pr:${ownerId}:${cardId}`;
+}
