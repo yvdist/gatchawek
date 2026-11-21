@@ -148,11 +148,6 @@ export function buildBattleResolvedEmbed(args: {
       lines.push(
         `⭐ **EXP:** <@${args.calc.winnerId}> mendapat **+${args.winnerExp.gainedExp} EXP** (${RARITY_STARS[stolenCard.rarity]} ${RARITY_LABEL[stolenCard.rarity]}) · Lv.${args.winnerExp.currentLevel} (${args.winnerExp.progress.currentExp}/${args.winnerExp.progress.nextLevelExp} EXP)`,
       );
-      if (args.winnerExp.leveledUp) {
-        lines.push(
-          `🎉 **LEVEL UP!** <@${args.calc.winnerId}> naik ke **Lv.${args.winnerExp.currentLevel}**!`,
-        );
-      }
     }
   }
   lines.push(

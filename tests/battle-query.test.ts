@@ -752,4 +752,88 @@ describe("battle interaction handlers", () => {
     expect(w1Card?.quantity).toBe(3);
     expect(w2Card?.quantity).toBe(1);
   });
+
+  it("sends a dedicated Level Up notification followup when wager battle winner levels up", async () => {
+    const now = Math.floor(Date.now() / 1000);
+    await db.insert(users).values([
+      { id: "lvl-b1", createdAt: now, exp: 80 },
+      { id: "lvl-b2", createdAt: now, exp: 0 },
+    ]);
+    await db.insert(userCards).values([
+      { userId: "lvl-b1", cardId: "ani-02", quantity: 2, firstObtainedAt: now, lastObtainedAt: now },
+      { userId: "lvl-b2", cardId: "ani-02", quantity: 2, firstObtainedAt: now, lastObtainedAt: now },
+    ]);
+    const created = await createBattle(db, {
+      challengerId: "lvl-b1",
+      targetId: "lvl-b2",
+      targetIsBot: false,
+      challengerCardId: "ani-02",
+      mode: "wager",
+      now,
+    });
+    if (created.status !== "ok") throw new Error("expected ok");
+
+    const calls: { url: string; method: string; body: Record<string, unknown> }[] = [];
+    const fetchMock = vi.fn(
+      async (input: unknown, init?: { method?: string; body?: string }) => {
+        const url = String(input);
+        const method = init?.method ?? "GET";
+        if (method === "GET" && url.includes("/users/lvl-b1")) {
+          return new Response(
+            JSON.stringify({
+              id: "lvl-b1",
+              username: "b1user",
+              global_name: "Sang Juara",
+              avatar: "winhash",
+              discriminator: "0",
+            }),
+            { status: 200 },
+          );
+        }
+        calls.push({
+          url,
+          method,
+          body: init?.body ? (JSON.parse(init.body) as Record<string, unknown>) : {},
+        });
+        return new Response("{}", { status: 200 });
+      },
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      // Challenger (lvl-b1) wins wager against ani-02 (+50 EXP -> 80+50=130 -> Lv 2)
+      const rolls = [0.95, 0.9, 0.05, 0.9];
+      let idx = 0;
+      const { tasks, waitUntil } = captureTasks();
+      const res = await handleBattleComponent(
+        selectPick(`battle:pick:${created.battleId}`, "ani-02", "lvl-b2"),
+        env,
+        waitUntil,
+        () => rolls[idx++] ?? 0.5,
+      );
+      expect(res.type).toBe(InteractionResponseType.DeferredMessageUpdate);
+      await Promise.all(tasks);
+
+      expect(calls).toHaveLength(2);
+      expect(calls[0]?.method).toBe("PATCH");
+      expect(calls[1]?.method).toBe("POST");
+      const notifEmbed = (
+        (calls[1]?.body["embeds"] ?? []) as Array<{
+          title?: string;
+          description?: string;
+          thumbnail?: { url?: string };
+          footer?: { text?: string };
+        }>
+      )[0];
+      expect(notifEmbed?.title).toBe("🌟 Level Up!");
+      expect(notifEmbed?.description).toContain(
+        "**Sang Juara** naik ke **Level 2**!",
+      );
+      expect(notifEmbed?.thumbnail?.url).toBe(
+        "https://cdn.discordapp.com/avatars/lvl-b1/winhash.png?size=256",
+      );
+      expect(notifEmbed?.footer?.text).toContain("Battle Taruhan");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });

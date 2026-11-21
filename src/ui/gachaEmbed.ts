@@ -7,8 +7,9 @@ import {
 } from "discord-api-types/v10";
 import { cardDisplayName, type PullKind } from "../domain/gacha.js";
 import {
-  formatProgressBar,
+  formatSleekProgressBar,
   getLevelProgress,
+  getLevelTier,
   type ExpGainSummary,
 } from "../domain/level.js";
 import {
@@ -83,11 +84,6 @@ export function buildPullEmbed(args: PullEmbedArgs): APIEmbed {
     description.push(
       `⭐ **+${args.exp.gainedExp} EXP** · Lv.${args.exp.currentLevel} (${args.exp.progress.currentExp}/${args.exp.progress.nextLevelExp} EXP)`,
     );
-    if (args.exp.leveledUp) {
-      description.push(
-        `🎉 **LEVEL UP!** Lv.${args.exp.previousLevel} → **Lv.${args.exp.currentLevel}**!`,
-      );
-    }
   }
   return {
     title: `${args.isHolo ? "✦ " : ""}🎴 ${displayName} (${args.groupName})`,
@@ -123,6 +119,7 @@ export function buildStatusEmbed(
   rows: PoolStatusRow[],
   userId: string,
   userExp?: number,
+  avatarUrl?: string,
 ): APIEmbed {
   const lines = rows.map((row) => {
     const tick =
@@ -148,19 +145,26 @@ export function buildStatusEmbed(
     ].join("\n");
   });
   const headerLines = [`<@${userId}>`];
+  let accentColor = 0x38bdf8;
   if (userExp !== undefined) {
     const prog = getLevelProgress(userExp);
-    const bar = formatProgressBar(prog.currentExp, prog.nextLevelExp);
+    const tier = getLevelTier(prog.level);
+    const bar = formatSleekProgressBar(prog.currentExp, prog.nextLevelExp);
+    accentColor = tier.color;
     headerLines.push(
-      `⭐ **Level ${prog.level}** · ${prog.totalExp} EXP (${prog.currentExp}/${prog.nextLevelExp} ke Lv.${prog.level + 1})`,
-      `\`${bar}\` ${prog.progressPct}%`,
+      `${tier.badge} **Level ${prog.level}** · ${tier.title} · ${prog.totalExp} EXP (${prog.currentExp}/${prog.nextLevelExp} ke Lv.${prog.level + 1})`,
+      `\`${bar}\` **${prog.progressPct}%**`,
     );
   }
-  return {
+  const embed: APIEmbed = {
     title: "📊 Status",
     description: `${headerLines.join("\n")}\n\n${lines.join("\n\n")}`,
-    color: 0x38bdf8,
+    color: accentColor,
   };
+  if (avatarUrl !== undefined && avatarUrl !== "") {
+    embed.thumbnail = { url: avatarUrl };
+  }
+  return embed;
 }
 
 export function resetResultText(

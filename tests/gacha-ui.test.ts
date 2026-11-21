@@ -157,7 +157,7 @@ describe("gachaEmbed", () => {
     ).toContain("<t:777:R>");
   });
 
-  it("renders EXP gain and LEVEL UP banner in pull embed and level bar in status embed", () => {
+  it("renders EXP gain in pull embed and upgraded level card in status embed", () => {
     const pullEmbed = buildPullEmbed({
       poolName: "Pejabat",
       poolEmoji: "🏛️",
@@ -194,8 +194,7 @@ describe("gachaEmbed", () => {
     });
     expect(pullEmbed.description).toContain("+50 EXP");
     expect(pullEmbed.description).toContain("Lv.2 (20/200 EXP)");
-    expect(pullEmbed.description).toContain("LEVEL UP!");
-    expect(pullEmbed.description).toContain("Lv.1 → **Lv.2**");
+    expect(pullEmbed.description).not.toContain("LEVEL UP!");
 
     const statusEmbed = buildStatusEmbed(
       [
@@ -220,9 +219,14 @@ describe("gachaEmbed", () => {
       ],
       "111",
       350,
+      "https://cdn.discordapp.com/avatars/111/a.png?size=256",
     );
     expect(statusEmbed.description).toContain("Level 3");
+    expect(statusEmbed.description).toContain("Newcomer");
     expect(statusEmbed.description).toContain("350 EXP");
     expect(statusEmbed.description).toContain("50/300 ke Lv.4");
+    expect(statusEmbed.thumbnail?.url).toBe(
+      "https://cdn.discordapp.com/avatars/111/a.png?size=256",
+    );
   });
 });
