@@ -189,7 +189,14 @@ async function dispatchRender(
     return { ok: false, error: "GitHub dispatch gagal (jaringan). Coba lagi." };
   }
   if (!res.ok) {
-    return { ok: false, error: `GitHub dispatch gagal (${String(res.status)}). Coba lagi.` };
+    let detail = "";
+    try {
+      const body = (await res.clone().json()) as { message?: unknown };
+      if (typeof body.message === "string") detail = body.message.slice(0, 200);
+    } catch {
+      // Non-JSON error body; status alone is enough.
+    }
+    return { ok: false, error: `GitHub dispatch gagal (${String(res.status)}${detail === "" ? "" : `: ${detail}`}). Coba lagi.` };
   }
   return { ok: true };
 }
