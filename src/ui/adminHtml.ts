@@ -5,6 +5,7 @@
 
 import {
   RENDER_BATCH_MAX,
+  RENDER_PENDING_SEC,
   type AdminCardDetail,
   type AdminCardKindFilter,
   type AdminCardRow,
@@ -113,11 +114,14 @@ const STATE_TILE: Record<CardState, string> = {
 };
 
 /** Remote photos in render-excluded pools are final as they are, enabled or not. */
-function cardState(r: AdminCardRow): CardState {
-  if (r.imageKind === "static") return "rendered";
+function cardState(r: AdminCardRow, nowSec?: number): CardState {
   if (r.imageKind === "empty") return "empty";
   if (r.excludedPool) return "final";
-  if (r.renderable && r.renderPending) return "pending";
+  // A re-render request counts as in flight for every kind, including an
+  // already-rendered card being rebuilt from its source URL.
+  const now = nowSec ?? Math.floor(Date.now() / 1000);
+  if (r.renderRequestedAt !== null && r.renderRequestedAt > now - RENDER_PENDING_SEC) return "pending";
+  if (r.imageKind === "static") return "rendered";
   // A request whose window passed while the card is still raw most likely failed.
   if (r.renderable && r.renderRequestedAt !== null) return "stale";
   return "raw";
@@ -129,13 +133,13 @@ function pendingAgo(r: AdminCardRow, nowSec: number): string {
   return mins === 0 ? "diminta barusan" : `diminta ${mins} mnt lalu`;
 }
 function stateText(r: AdminCardRow, nowSec: number): string {
-  const st = cardState(r);
+  const st = cardState(r, nowSec);
   if (st === "pending") return pendingAgo(r, nowSec);
   if (st === "stale") return `${STATE_LABEL.stale} ${pendingAgo(r, nowSec)}`;
   return STATE_LABEL[st];
 }
-function stateBadge(r: AdminCardRow): string {
-  const st = cardState(r);
+function stateBadge(r: AdminCardRow, nowSec?: number): string {
+  const st = cardState(r, nowSec);
   return `<span class="badge ${STATE_TONE[st]}">${STATE_LABEL[st]}</span>`;
 }
 function rarityKey(key: string): RarityKey {
@@ -146,7 +150,7 @@ function cardFace(r: AdminCardRow, base: string, nowSec: number, withTag = true)
   const name = escapeHtml(r.memberName);
   const src = escapeHtml(localImageSrc(base, r.imageFile));
   const broken = `onerror="this.replaceWith(Object.assign(document.createElement('span'),{textContent:'Gambar gagal dimuat. Ganti image di halaman kartu.'}))"`;
-  const st = cardState(r);
+  const st = cardState(r, nowSec);
   if (st === "rendered") return `<img src="${src}" alt="${name}" loading="lazy" ${broken}>`;
   const tag = !withTag
     ? ""
@@ -209,18 +213,18 @@ export function cardsPage(args: {
     },
   ).join("");
   const canPick = (r: AdminCardRow): boolean => {
-    const st = cardState(r);
+    const st = cardState(r, nowSec);
     return r.renderable && (st === "raw" || st === "stale");
   };
   const selectable = args.rows.filter(canPick).length;
-  const staleCount = args.rows.filter((r) => canPick(r) && cardState(r) === "stale").length;
+  const staleCount = args.rows.filter((r) => canPick(r) && cardState(r, nowSec) === "stale").length;
   const showBulk = selectable > 0;
   const select = `<select class="filter-select" aria-label="Filter status kartu" onchange="location.href=this.value">${KIND_TABS.map(([k, label]) => {
     const n = args.counts?.[k];
     return `<option value="/admin/cards${escapeHtml(tabQs(k))}"${k === args.kind ? " selected" : ""}>${label}${n === undefined ? "" : ` (${n})`}</option>`;
   }).join("")}</select>`;
   // While a render is in flight, reload every minute so finished cards appear, unless the owner is mid-selection.
-  const refresh = args.rows.some((r) => cardState(r) === "pending")
+  const refresh = args.rows.some((r) => cardState(r, nowSec) === "pending")
     ? `<script>(function(){var at=document.getElementById("loadedAt");if(at)at.textContent=new Date().toLocaleTimeString("id-ID",{hour:"2-digit",minute:"2-digit"});function t(){if(document.querySelector('input[name="ids"]:checked')||document.querySelector(".legend-box[open]"))return setTimeout(t,60000);location.reload();}setTimeout(t,60000);})();</script>`
     : "";
   const refreshNote = refresh === ""
@@ -229,7 +233,7 @@ export function cardsPage(args: {
   const tiles = args.rows
     .map((r) => {
       const rk = rarityKey(r.rarity);
-      const st = cardState(r);
+      const st = cardState(r, nowSec);
       const name = escapeHtml(r.memberName);
       let pick = "";
       if (showBulk && canPick(r)) {
@@ -304,7 +308,8 @@ export function cardDetailPage(args: {
 }): string {
   const c = args.card;
   const rk = rarityKey(c.rarity);
-  const st = cardState(c);
+  const nowSec = Math.floor(Date.now() / 1000);
+  const st = cardState(c, nowSec);
   const back = escapeHtml(args.back ?? "/admin/cards");
   const id = escapeHtml(c.id);
   const fromQs = args.back === undefined ? "" : `?from=${encodeURIComponent(args.back)}`;
@@ -335,7 +340,6 @@ export function cardDetailPage(args: {
     args.message === null
       ? ""
       : `<p class="alert ${args.ok ? "is-ok" : "is-err"}" role="alert">${escapeHtml(args.message)}</p>`;
-  const nowSec = Math.floor(Date.now() / 1000);
   // Render is the primary action when available; upload steps back to secondary.
   const uploadCls = renderOne === "" ? "btn" : "btn-ghost";
   // Finished cards (rendered or final photo) keep replacement one deliberate step away.
