@@ -1,7 +1,6 @@
-import {
-  ApplicationCommandOptionType,
-  type APIChatInputApplicationCommandInteraction,
-  type APIInteractionResponse,
+import type {
+  APIChatInputApplicationCommandInteraction,
+  APIInteractionResponse,
 } from "discord-api-types/v10";
 import { createDb } from "../../db/client.js";
 import { getKartuProfileStats } from "../../db/queries/kartu.js";
@@ -32,7 +31,7 @@ import {
 } from "../../ui/kartuImage.js";
 import type { WaitUntil } from "../registry.js";
 
-export interface TargetMemberIdentity {
+export interface CallerMemberIdentity {
   readonly userId: string;
   readonly username: string;
   readonly displayName: string;
@@ -76,85 +75,31 @@ function pickDisplayName(
   return fallbackId;
 }
 
-export function extractTargetIdentity(
+export function extractCallerIdentity(
   interaction: APIChatInputApplicationCommandInteraction,
-): TargetMemberIdentity | null {
+): CallerMemberIdentity | null {
   const callerId = invokerId(interaction);
   if (callerId === null) return null;
 
-  const userOption = interaction.data.options?.find(
-    (o) =>
-      o.name === "user" &&
-      o.type === ApplicationCommandOptionType.User &&
-      typeof o.value === "string",
-  );
-  const targetUserId =
-    userOption !== undefined && "value" in userOption && typeof userOption.value === "string"
-      ? userOption.value
-      : callerId;
-
-  const resolvedUser = interaction.data.resolved?.users?.[targetUserId];
-  const resolvedMember = interaction.data.resolved?.members?.[targetUserId];
-
-  if (targetUserId === callerId) {
-    const member = interaction.member;
-    const user = member?.user ?? interaction.user ?? resolvedUser;
-    const username = user?.username ?? callerId;
-    const nick =
-      member?.nick ??
-      (resolvedMember !== undefined && "nick" in resolvedMember
-        ? resolvedMember.nick
-        : null);
-    const memberAvatar =
-      member?.avatar ??
-      (resolvedMember !== undefined && "avatar" in resolvedMember
-        ? resolvedMember.avatar
-        : null);
-    const joinedAtIso = member?.joined_at ?? resolvedMember?.joined_at ?? null;
-    return {
-      userId: callerId,
-      username,
-      displayName: pickDisplayName(
-        nick,
-        user?.global_name,
-        user?.username,
-        callerId,
-      ),
-      joinedAtIso,
-      avatarUrl: buildAvatarUrl(
-        callerId,
-        user?.avatar,
-        interaction.guild_id,
-        memberAvatar,
-      ),
-    };
-  }
-
-  const username = resolvedUser?.username ?? targetUserId;
-  const nick =
-    resolvedMember !== undefined && "nick" in resolvedMember
-      ? resolvedMember.nick
-      : null;
-  const memberAvatar =
-    resolvedMember !== undefined && "avatar" in resolvedMember
-      ? resolvedMember.avatar
-      : null;
+  const member = interaction.member;
+  const user = member?.user ?? interaction.user;
+  const username = user?.username ?? callerId;
 
   return {
-    userId: targetUserId,
+    userId: callerId,
     username,
     displayName: pickDisplayName(
-      nick,
-      resolvedUser?.global_name,
-      resolvedUser?.username,
-      targetUserId,
+      member?.nick,
+      user?.global_name,
+      user?.username,
+      callerId,
     ),
-    joinedAtIso: resolvedMember?.joined_at ?? null,
+    joinedAtIso: member?.joined_at ?? null,
     avatarUrl: buildAvatarUrl(
-      targetUserId,
-      resolvedUser?.avatar,
+      callerId,
+      user?.avatar,
       interaction.guild_id,
-      memberAvatar,
+      member?.avatar,
     ),
   };
 }
@@ -177,18 +122,18 @@ async function runKartuTask(
   env: Env,
   appId: string,
   token: string,
-  target: TargetMemberIdentity,
+  caller: CallerMemberIdentity,
 ): Promise<void> {
   try {
     const db = createDb(env);
     const nowSec = Math.floor(Date.now() / 1000);
     const [stats, avatar] = await Promise.all([
-      getKartuProfileStats(db, target.userId),
-      fetchAvatarRgba(target.avatarUrl),
+      getKartuProfileStats(db, caller.userId),
+      fetchAvatarRgba(caller.avatarUrl),
     ]);
 
     const joinSec = resolveJoinTimestamp(
-      target.joinedAtIso,
+      caller.joinedAtIso,
       stats.userCreatedAt,
       stats.firstCardAt,
       nowSec,
@@ -196,12 +141,12 @@ async function runKartuTask(
     const jabatan = computeJabatan(stats.highestRarity, stats.uniqueMembers);
 
     const pngBytes = await renderKartuPng({
-      userId: target.userId,
-      displayName: target.displayName,
-      username: target.username,
-      nim: deriveNim(target.userId),
-      bloodType: deriveBloodType(target.userId),
-      birthInfo: deriveBirthInfo(target.userId),
+      userId: caller.userId,
+      displayName: caller.displayName,
+      username: caller.username,
+      nim: deriveNim(caller.userId),
+      bloodType: deriveBloodType(caller.userId),
+      birthInfo: deriveBirthInfo(caller.userId),
       koleksiText: formatKoleksiRingkas(
         stats.totalCards,
         stats.uniqueMembers,
@@ -238,12 +183,12 @@ export function handleKartu(
   env: Env,
   waitUntil: WaitUntil,
 ): APIInteractionResponse {
-  const target = extractTargetIdentity(interaction);
-  if (target === null) {
+  const caller = extractCallerIdentity(interaction);
+  if (caller === null) {
     return ephemeralResponse("Tidak bisa membaca identitasmu.");
   }
   waitUntil(
-    runKartuTask(env, interaction.application_id, interaction.token, target),
+    runKartuTask(env, interaction.application_id, interaction.token, caller),
   );
   return deferredResponse();
 }

@@ -12,7 +12,6 @@ import {
   vi,
 } from "vitest";
 import {
-  ApplicationCommandOptionType,
   InteractionResponseType,
   InteractionType,
   type APIChatInputApplicationCommandInteraction,
@@ -27,10 +26,12 @@ import {
   users,
 } from "../src/db/schema.js";
 import {
+  CARD_MOTIFS,
   computeJabatan,
   deriveBarcodeWidths,
   deriveBirthInfo,
   deriveBloodType,
+  deriveCardTheme,
   deriveNim,
   formatAndalan,
   formatIndonesianDate,
@@ -46,10 +47,12 @@ import {
   encodeRgbaToPng,
   KARTU_HEIGHT,
   KARTU_WIDTH,
+  renderKartuPixels,
   renderKartuPng,
 } from "../src/ui/kartuImage.js";
+import { kartuDefinition } from "../src/commands/kartu/definition.js";
 import {
-  extractTargetIdentity,
+  extractCallerIdentity,
   handleKartu,
 } from "../src/commands/kartu/handler.js";
 import type { WaitUntil } from "../src/commands/registry.js";
@@ -69,49 +72,12 @@ function captureTasks(): { tasks: Promise<unknown>[]; waitUntil: WaitUntil } {
 function kartuSlash(
   callerId: string,
   opts?: {
-    targetId?: string;
-    targetUsername?: string;
-    targetNick?: string;
-    targetAvatar?: string | null;
-    targetJoinedAt?: string;
+    username?: string;
+    nick?: string;
+    avatar?: string | null;
+    joinedAt?: string;
   },
 ): APIChatInputApplicationCommandInteraction {
-  const options =
-    opts?.targetId !== undefined
-      ? [
-          {
-            name: "user",
-            type: ApplicationCommandOptionType.User,
-            value: opts.targetId,
-          },
-        ]
-      : [];
-  const resolved =
-    opts?.targetId !== undefined
-      ? {
-          users: {
-            [opts.targetId]: {
-              id: opts.targetId,
-              username: opts.targetUsername ?? "temangacha",
-              global_name: "Teman Gacha",
-              discriminator: "0",
-              avatar: opts.targetAvatar ?? null,
-            },
-          },
-          members: {
-            [opts.targetId]: {
-              nick: opts.targetNick ?? null,
-              avatar: null,
-              roles: [],
-              joined_at: opts.targetJoinedAt ?? "2026-04-01T00:00:00.000Z",
-              pending: false,
-              flags: 0,
-              permissions: "0",
-            },
-          },
-        }
-      : undefined;
-
   return {
     type: InteractionType.ApplicationCommand,
     id: "int-kartu-1",
@@ -126,24 +92,22 @@ function kartuSlash(
       id: "cmd-kartu",
       name: "kartu",
       type: 1,
-      options,
-      ...(resolved !== undefined ? { resolved } : {}),
     },
     member: {
       user: {
         id: callerId,
-        username: "rep5900",
+        username: opts?.username ?? "rep5900",
         global_name: "Sannohzzz",
         discriminator: "0",
-        avatar: null,
+        avatar: opts?.avatar ?? null,
       },
-      nick: "Sannohzzz",
+      nick: opts?.nick ?? "Sannohzzz",
       avatar: null,
       roles: [],
       premium_since: null,
       pending: false,
       permissions: "0",
-      joined_at: "2026-04-01T05:00:00.000Z",
+      joined_at: opts?.joinedAt ?? "2026-04-01T05:00:00.000Z",
       flags: 0,
       mute: false,
       deaf: false,
@@ -289,8 +253,13 @@ beforeEach(async () => {
   await db.delete(users);
 });
 
-describe("domain/kartu pure helpers", () => {
-  it("derives deterministic 10-digit NIM, blood type, and birth info", () => {
+describe("domain/kartu pure helpers & unique themes", () => {
+  it("defines /kartu without any <user> option (caller-only)", () => {
+    expect(kartuDefinition.name).toBe("kartu");
+    expect("options" in kartuDefinition).toBe(false);
+  });
+
+  it("derives deterministic 10-digit NIM, blood type, birth info, and unique themes per member", () => {
     const nim = deriveNim("869121487020372020");
     expect(nim).toMatch(/^[1-9][0-9]{9}$/);
     expect(deriveNim("869121487020372020")).toBe(nim);
@@ -301,10 +270,16 @@ describe("domain/kartu pure helpers", () => {
 
     const birth = deriveBirthInfo("869121487020372020");
     expect(birth).toMatch(/^[A-Za-z]+, \d{1,2} [A-Za-z]+ \d{4}$/);
+
+    const theme1 = deriveCardTheme("869121487020372020");
+    const theme2 = deriveCardTheme("223344556677889901");
+    expect(CARD_MOTIFS).toContain(theme1.motif);
+    expect(CARD_MOTIFS).toContain(theme2.motif);
+    expect(deriveCardTheme("869121487020372020")).toEqual(theme1);
+    expect(theme1).not.toEqual(theme2);
   });
 
   it("formats dates, jabatan, andalan, pool favorit, and koleksi summary", () => {
-    // 2026-04-01T00:00:00Z -> 1 April 2026 in WIB
     const apr1 = Math.floor(Date.parse("2026-04-01T00:00:00Z") / 1000);
     expect(formatIndonesianDate(apr1)).toBe("1 April 2026");
 
@@ -350,16 +325,8 @@ describe("domain/kartu pure helpers", () => {
 });
 
 describe("ui/kartuImage PNG renderer & decoder", () => {
-  it("renders a valid 640x384 RGBA PNG and decodes it back via decodePngToRgba", async () => {
-    const smallAvatarPixels = new Uint32Array(16 * 16).fill(0xff8040d0);
-    const smallAvatarPng = await encodeRgbaToPng(smallAvatarPixels, 16, 16);
-    const decodedAvatar = await decodePngToRgba(smallAvatarPng);
-    expect(decodedAvatar).not.toBeNull();
-    expect(decodedAvatar?.width).toBe(16);
-    expect(decodedAvatar?.height).toBe(16);
-
-    const png = await renderKartuPng({
-      userId: "869121487020372020",
+  it("renders distinct backgrounds for different userIds and round-trips RGBA PNG", async () => {
+    const baseFields = {
       displayName: "Sannohzzz",
       username: "rep5900",
       nim: "7601932684",
@@ -371,13 +338,35 @@ describe("ui/kartuImage PNG renderer & decoder", () => {
       jabatanColorHex: "#4ADE80",
       andalanText: "Reze (+25 lainnya)",
       poolFavoritText: "Pejabat (8/15)",
+    };
+
+    const pixelsA = renderKartuPixels({
+      ...baseFields,
+      userId: "869121487020372020",
+    });
+    const pixelsB = renderKartuPixels({
+      ...baseFields,
+      userId: "223344556677889901",
+    });
+
+    const probeIdx = 100 * KARTU_WIDTH + 480;
+    expect(pixelsA[probeIdx]).not.toBe(pixelsB[probeIdx]);
+
+    const smallAvatarPixels = new Uint32Array(16 * 16).fill(0xff8040d0);
+    const smallAvatarPng = await encodeRgbaToPng(smallAvatarPixels, 16, 16);
+    const decodedAvatar = await decodePngToRgba(smallAvatarPng);
+    expect(decodedAvatar).not.toBeNull();
+
+    const png = await renderKartuPng({
+      ...baseFields,
+      userId: "869121487020372020",
       avatar: decodedAvatar,
     });
 
     expect(png[0]).toBe(137);
-    expect(png[1]).toBe(80); // P
-    expect(png[2]).toBe(78); // N
-    expect(png[3]).toBe(71); // G
+    expect(png[1]).toBe(80);
+    expect(png[2]).toBe(78);
+    expect(png[3]).toBe(71);
 
     const decodedCard = await decodePngToRgba(png);
     expect(decodedCard).not.toBeNull();
@@ -429,7 +418,7 @@ describe("db/queries/kartu & /kartu interaction handler", () => {
     });
   });
 
-  it("handles /kartu for self and target user, uploading kartu-identitas.png", async () => {
+  it("handles /kartu for the invoking member only and uploads kartu-identitas.png publicly", async () => {
     await db.insert(users).values({ id: "u-self", createdAt: 1710000000 });
     await db.insert(userCards).values({
       userId: "u-self",
@@ -450,7 +439,15 @@ describe("db/queries/kartu & /kartu interaction handler", () => {
       });
 
     try {
-      const selfInteraction = kartuSlash("u-self");
+      const selfInteraction = kartuSlash("u-self", {
+        username: "rep5900",
+        nick: "Sannohzzz",
+      });
+      const callerInfo = extractCallerIdentity(selfInteraction);
+      expect(callerInfo?.userId).toBe("u-self");
+      expect(callerInfo?.username).toBe("rep5900");
+      expect(callerInfo?.displayName).toBe("Sannohzzz");
+
       const { tasks, waitUntil } = captureTasks();
       const res = handleKartu(selfInteraction, env, waitUntil);
       expect(res.type).toBe(
@@ -466,25 +463,16 @@ describe("db/queries/kartu & /kartu interaction handler", () => {
       expect(formBody).toBeInstanceOf(FormData);
       const form = formBody as FormData;
       const payloadJson = JSON.parse(String(form.get("payload_json"))) as {
+        flags?: number;
         attachments: { id: number; filename: string }[];
       };
+      expect(payloadJson.flags).toBeUndefined();
       expect(payloadJson.attachments).toEqual([
         { id: 0, filename: "kartu-identitas.png" },
       ]);
       const fileBlob = form.get("files[0]") as Blob;
       expect(fileBlob).toBeInstanceOf(Blob);
       expect(fileBlob.size).toBeGreaterThan(1000);
-
-      // Target user option extraction
-      const targetInteraction = kartuSlash("u-self", {
-        targetId: "u-friend",
-        targetUsername: "kawan99",
-        targetNick: "Kawan Sultan",
-      });
-      const targetInfo = extractTargetIdentity(targetInteraction);
-      expect(targetInfo?.userId).toBe("u-friend");
-      expect(targetInfo?.username).toBe("kawan99");
-      expect(targetInfo?.displayName).toBe("Kawan Sultan");
     } finally {
       fetchSpy.mockRestore();
     }
