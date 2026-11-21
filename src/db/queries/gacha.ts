@@ -448,6 +448,7 @@ export interface PoolStatusRow {
   resetDeniedReason: "full" | "cooldown" | null;
   owned: number;
   total: number;
+  meltPoints?: number | null;
 }
 
 export async function getStatusOverview(

@@ -1,8 +1,8 @@
 # Project Rules & Architecture Guidelines
 
 ## 1. Source of Truth
-- Seluruh spesifikasi teknis, skema database, dan urutan fase pengerjaan merujuk mutlak pada `docs/Spec_Discord_Photocard_Gacha_Bot_EqSuit.md`.
-- Kerjakan proyek secara bertahap per fase. Dilarang melompat ke fase berikutnya sebelum seluruh Acceptance Criteria fase aktif lulus.
+- Source of truth is the code plus `Guide_Tambah_Data_Kartu_Cepat.md` (card-data guide). The old `docs/Spec_*` Phase 1–5 spec is retired; do not treat it as binding.
+- Work incrementally per task; do not widen scope before the active task's acceptance criteria pass.
 
 ## 2. Extensibility & Data-Driven Design
 - Bot ini dirancang untuk menampung banyak kategori kartu (`pools`) yang dapat terus bertambah di masa depan tanpa mengubah kode aplikasi.
@@ -23,9 +23,7 @@ Sebelum melakukan commit dan menyatakan satu fase selesai, wajib jalankan dan pa
 2. `npm test` (unit & integration test)
 3. `npm run lint`
 
-## 5. Git Workflow & Version Control
-- **Mulai Tugas (Branching):** Sebelum menulis atau mengubah kode apa pun, wajib pastikan berada di `main`, jalankan `git pull origin main`, lalu buat dan pindah ke branch baru dengan format `<tipe>/phase-<nomor>-<deskripsi-singkat>` (contoh: `feat/phase-0-foundation`). Dilarang bekerja atau commit langsung ke branch `main`.
-- **Selesai Tugas (Commit & Push):** Setelah seluruh Acceptance Criteria dan langkah verifikasi di Bagian 4 lulus, wajib lakukan `git add`, `git commit` menggunakan standar **Conventional Commits** (`feat:`, `fix:`, `chore:`, `test:`, `refactor:`), dan `git push -u origin <nama-branch>` ke remote repository.
+- **Mulai Tugas (Branching):** Sebelum menulis atau mengubah kode apa pun, wajib pastikan berada di `main`, jalankan `git pull origin main`, lalu buat dan pindah ke branch baru dengan format `<tipe>/<deskripsi-singkat>` (contoh: `feat/dismantle-melt-points`). Dilarang bekerja atau commit langsung ke branch `main`.
 - **Selesai Tugas (PR & Merge via `gh`):** Setelah push, JANGAN berhenti di branch — selalu selesaikan sampai merge agar tidak ada PR menggantung yang harus dibuat manual:
   1. `gh pr create --title "<commit-subject>" --body "<ringkasan AC + hasil verifikasi>"` (atau `gh pr create --fill` bila commit message sudah lengkap).
   2. Tunggu CI/checks bila ada (`gh pr checks --watch`), pastikan hijau sebelum merge.
