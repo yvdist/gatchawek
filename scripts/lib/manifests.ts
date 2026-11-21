@@ -133,9 +133,9 @@ export async function loadManifests(root?: string): Promise<LoadedManifests> {
   return { pools, poolIds, groups };
 }
 
-const EXPECTED_DIST: Record<RarityKey, number> = { common: 48, rare: 29, super_rare: 11.5, ultra_rare: 8, holo: 3, secret: 0.5 };
+const EXPECTED_DIST: Record<RarityKey, number> = { common: 75, rare: 17.5, super_rare: 5, ultra_rare: 1.75, holo: 0.5, secret: 0.25 };
 
-/** Rarity mixes far from 48/29/11.5/8/3/0.5 are warnings, never errors. */
+/** Rarity mixes far from 75/17.5/5/1.75/0.5/0.25 are warnings, never errors. */
 export function rarityWarnings(loaded: LoadedManifests): string[] {
   const warnings: string[] = [];
   for (const { file, manifest } of loaded.groups) {
@@ -164,7 +164,7 @@ export function rarityWarnings(loaded: LoadedManifests): string[] {
     );
     if (far) {
       warnings.push(
-        `warning: ${file} rarity distribution far from 48/29/11.5/8/3/0.5 (${dist})`,
+        `warning: ${file} rarity distribution far from 75/17.5/5/1.75/0.5/0.25 (${dist})`,
       );
     }
   }
