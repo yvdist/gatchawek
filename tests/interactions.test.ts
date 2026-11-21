@@ -5,7 +5,7 @@ import {
   InteractionResponseType,
   InteractionType,
 } from "discord-api-types/v10";
-import app from "../src/index.js";
+import { app } from "../src/index.js";
 
 const TIMESTAMP = "1700000000";
 

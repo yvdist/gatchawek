@@ -1,3 +1,4 @@
+import { existsSync } from "node:fs";
 import { cp, mkdtemp, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import * as path from "node:path";
@@ -9,6 +10,7 @@ import { loadImage } from "@napi-rs/canvas";
 
 const execAsync = promisify(exec);
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
+const HAS_ASSETS = existsSync(path.join(REPO_ROOT, "assets"));
 
 let fixture = "";
 let env: NodeJS.ProcessEnv = {};
@@ -62,6 +64,7 @@ async function runSeed(): Promise<string> {
  }
 
 beforeAll(async () => {
+  if (!HAS_ASSETS) return;
   fixture = await mkdtemp(path.join(tmpdir(), "gatchawek-seed-"));
   for (const dir of ["data", "assets"]) {
     await cp(path.join(REPO_ROOT, dir), path.join(fixture, dir), {
@@ -72,6 +75,7 @@ beforeAll(async () => {
 }, 120_000);
 
 afterAll(async () => {
+  if (!HAS_ASSETS) return;
   await rm(fixture, { recursive: true, force: true });
   // Fixture seeds apply to the repo local D1; restore canonical state.
   const tsxPath = path.join(REPO_ROOT, "node_modules", "tsx", "dist", "cli.mjs");
@@ -81,7 +85,7 @@ afterAll(async () => {
   });
 }, 300_000);
 
-describe("seed idempotency", () => {
+describe.skipIf(!HAS_ASSETS)("seed idempotency", () => {
   it("two seeds produce identical rows, serials, and files", async () => {
     await runSeed();
     const counts1 = await tableCounts();
