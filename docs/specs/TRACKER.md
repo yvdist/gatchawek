@@ -7,7 +7,7 @@
 
 | Fase | Nama | Status | Selesai pada | Catatan |
 |---|---|---|---|---|
-| 0 | Recon & Fondasi Repo | IN_PROGRESS | | Dikerjakan di branch `feat/phase-0-recon-fondasi`. |
+| 0 | Recon & Fondasi Repo | BLOCKED | | Scaffold, `pnpm check`, DO echo, schema+migrasi (lokal), CI & README selesai. Tertahan **satu verifikasi**: migrasi `0014` ke D1 staging belum bisa jalan karena kuota row read D1 akun habis sampai 00:00 UTC — lihat Blockers. |
 | 1 | Engine Inti + Mode Duel | TODO | | |
 | 2 | Konten Kartu & Balancing | TODO | | |
 | 3 | Backend, Auth, Realtime | TODO | | |
@@ -38,7 +38,7 @@
 - [ ] P0-T7 Schema Drizzle & migrasi baru — **lokal ✅** (`0014_game_tables.sql` applied, 8 tabel); **staging tertunda**: kuota baca D1 akun habis (lihat Blockers)
 - [x] P0-T8 CI minimal — `.github/workflows/check.yml` (install + `pnpm check`, PR & branch non-main); deploy tetap manual
 - [x] P0-T9 `.env.example` & README repo — `games/adu-batang/.dev.vars.example` + bagian "Game — Adu Batang" di `README.md` (perintah, secret, deploy staging/prod, CI)
-- [ ] P0-T10 Salin task fase ke `TRACKER.md` + ringkasan temuan
+- [x] P0-T10 Salin task fase ke `TRACKER.md` + ringkasan temuan — lihat `docs/PROJECT_STATE.md` §1–7
 
 ### Fase 1
 - [ ] (diisi agent)
@@ -82,6 +82,8 @@
 
 ## Temuan & utang teknis
 
+- **Ringkasan Fase 0:** bot, D1, dan R2 sudah dipetakan dengan nama nyata (10 tabel lama + `user_cards` sebagai sumber kepemilikan; R2 key `<cardId>.<sha8>.webp` di root bucket; foto mentah hanya ada di `assets/raw/`, tidak di R2). Repo kini punya workspace `games/adu-batang` + `packages/{engine,shared,bots}`, `pnpm check` hijau (587 test), Worker game dengan binding D1/R2 + DO SQLite dan echo WebSocket yang terbukti di workerd, serta migrasi additive `0014_game_tables.sql` yang sudah jalan di D1 lokal.
+- `tests/seed-idempotency.test.ts` (bot) **skip** di clone bersih karena butuh `assets/raw/` yang gitignored — perilaku lama, bukan regresi Fase 0; uji ulang sebelum rilis.
 - **Kuota baca D1** free tier (100k row read/hari) sudah pernah habis dan memblokir recon produksi hari ini (`code 7500`).
   Jumlah kartu D1 **produksi** belum terverifikasi; angka di `PROJECT_STATE.md` berasal dari manifest + lock file. Verifikasi ulang setelah 00:00 UTC.
 - `pools.hidden=1` pada pool `pejabat`: perlu keputusan (Decision Log Fase 2) apakah kartu pool hidden boleh dipakai sebagai kartu game.
