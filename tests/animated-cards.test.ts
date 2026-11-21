@@ -87,11 +87,46 @@ describe("animated holo & secret cards", () => {
     const holoBuf = await buildCardImage(sampleInput("holo", "c-holo"));
     expect(isGif89a(holoBuf)).toBe(true);
     expect(hasMultipleGifFrames(holoBuf)).toBe(true);
+    // Verify Global Color Table flag (bit 7 of logical screen descriptor packed byte at offset 10) is set.
+    expect((holoBuf[10] ?? 0) & 0x80).toBe(0x80);
 
     const secretBuf = await buildCardImage(sampleInput("secret", "c-secret"));
     expect(isGif89a(secretBuf)).toBe(true);
     expect(hasMultipleGifFrames(secretBuf)).toBe(true);
+    expect((secretBuf[10] ?? 0) & 0x80).toBe(0x80);
     expect(secretBuf.equals(holoBuf)).toBe(false);
+  });
+
+  it("preserves rich gradient color fidelity without 4-bit rgba4444 posterization", async () => {
+    const gradPath = path.join(workDir, "smooth-portrait.png");
+    const c = createCanvas(400, 600);
+    const ctx = c.getContext("2d");
+    const g = ctx.createLinearGradient(0, 0, 400, 600);
+    g.addColorStop(0, "#1f2937");
+    g.addColorStop(0.35, "#9a3412");
+    g.addColorStop(0.65, "#fdba74");
+    g.addColorStop(1, "#312e81");
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, 400, 600);
+    await writeFile(gradPath, await c.encode("png"));
+
+    const holoBuf = await buildCardImage({
+      ...sampleInput("holo", "c-grad-holo"),
+      rawPath: gradPath,
+    });
+    // Extract unique RGB triplets from the 256-entry Global Color Table (offset 13, 256 * 3 bytes).
+    const gct = holoBuf.subarray(13, 13 + 256 * 3);
+    let nonFourBitAlignedEntries = 0;
+    for (let i = 0; i < 255; i += 1) {
+      const r = gct[i * 3] ?? 0;
+      const gr = gct[i * 3 + 1] ?? 0;
+      const b = gct[i * 3 + 2] ?? 0;
+      // In rgba4444 quantization every channel is a multiple of 17 (0x00, 0x11, ..., 0xFF) or 16.
+      if (r % 17 !== 0 || gr % 17 !== 0 || b % 17 !== 0) {
+        nonFourBitAlignedEntries += 1;
+      }
+    }
+    expect(nonFourBitAlignedEntries).toBeGreaterThan(100);
   });
 
   it("buildAllCards writes .gif for holo/secret and .webp for others, pruning stale files", async () => {

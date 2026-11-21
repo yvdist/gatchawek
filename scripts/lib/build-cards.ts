@@ -5,7 +5,19 @@ import { createCanvas, GlobalFonts, loadImage } from "@napi-rs/canvas";
 import * as gifencNamespace from "gifenc";
 import gifencDefault from "gifenc";
 interface GifencEncoder {
-  writeFrame(index: Uint8Array, width: number, height: number, opts: { palette?: number[][] | null; delay?: number; repeat?: number; transparent?: boolean; dispose?: number }): void;
+  writeFrame(
+    index: Uint8Array,
+    width: number,
+    height: number,
+    opts: {
+      palette?: number[][] | null;
+      delay?: number;
+      repeat?: number;
+      transparent?: boolean;
+      transparentIndex?: number;
+      dispose?: number;
+    },
+  ): void;
   finish(): void;
   bytesView(): Uint8Array;
 }
@@ -130,35 +142,50 @@ const TIERS: Record<string, TierStyle> = {
   holo: {
     label: "Holo",
     stars: "★★★★★",
-    stops: ["#06B6D4", "#8B5CF6", "#EC4899", "#FACC15", "#10B981", "#38BDF8", "#FFFFFF"],
-    accent: "#FDE047",
-    accent2: "#38BDF8",
-    glow: "rgba(250,204,21,0.95)",
-    sheenStops: [
-      "rgba(56,189,248,0)",
-      "rgba(253,224,71,0.7)",
-      "rgba(255,255,255,0.75)",
-      "rgba(236,72,153,0.6)",
-      "rgba(52,211,153,0.6)",
-      "rgba(168,85,247,0)",
+    stops: [
+      "#E0F2FE",
+      "#F5D0FE",
+      "#FEF08A",
+      "#FFFFFF",
+      "#BAE6FD",
+      "#FBCFE8",
+      "#DDD6FE",
     ],
-    sheenAlpha: 0.48,
+    accent: "#FEF08A",
+    accent2: "#BAE6FD",
+    glow: "rgba(254,240,138,0.75)",
+    sheenStops: [
+      "rgba(186,230,253,0)",
+      "rgba(254,240,138,0.22)",
+      "rgba(255,255,255,0.28)",
+      "rgba(251,207,232,0.22)",
+      "rgba(186,230,253,0)",
+    ],
+    sheenAlpha: 0.14,
   },
   secret: {
     label: "Secret",
     stars: "★★★★★★",
-    stops: ["#082F49", "#0EA5E9", "#67E8F9", "#FFFFFF", "#A78BFA", "#22D3EE", "#0F172A"],
-    accent: "#A5F3FC",
-    accent2: "#C4B5FD",
-    glow: "rgba(34,211,238,1)",
-    sheenStops: [
-      "rgba(14,165,233,0)",
-      "rgba(165,243,252,0.8)",
-      "rgba(255,255,255,0.85)",
-      "rgba(196,181,253,0.7)",
-      "rgba(34,211,238,0)",
+    stops: [
+      "#082F49",
+      "#38BDF8",
+      "#E0F2FE",
+      "#FFFFFF",
+      "#C4B5FD",
+      "#22D3EE",
+      "#0C4A6E",
     ],
-    sheenAlpha: 0.54,
+    accent: "#A5F3FC",
+    accent2: "#DDD6FE",
+    glow: "rgba(56,189,248,0.85)",
+    sheenStops: [
+      "rgba(56,189,248,0)",
+      "rgba(186,230,253,0.24)",
+      "rgba(255,255,255,0.32)",
+      "rgba(196,181,253,0.22)",
+      "rgba(56,189,248,0)",
+    ],
+    sheenAlpha: 0.16,
   },
 };
 
@@ -192,7 +219,7 @@ export function registerFonts(fontsDir: string): boolean {
 
 type Ctx = ReturnType<ReturnType<typeof createCanvas>["getContext"]>;
 
-function roundRectPath(
+function roundRectSubPath(
   ctx: Ctx,
   x: number,
   y: number,
@@ -200,7 +227,6 @@ function roundRectPath(
   h: number,
   r: number,
 ): void {
-  ctx.beginPath();
   ctx.moveTo(x + r, y);
   ctx.lineTo(x + w - r, y);
   ctx.arcTo(x + w, y, x + w, y + r, r);
@@ -211,6 +237,18 @@ function roundRectPath(
   ctx.lineTo(x, y + r);
   ctx.arcTo(x, y, x + r, y, r);
   ctx.closePath();
+}
+
+function roundRectPath(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+): void {
+  ctx.beginPath();
+  roundRectSubPath(ctx, x, y, w, h, r);
 }
 
 function makeGradient(
@@ -226,41 +264,6 @@ function makeGradient(
     grad.addColorStop(stops.length === 1 ? 0 : i / (stops.length - 1), color);
   });
   return grad;
-}
-
-function drawAnamorphicFlare(
-  ctx: Ctx,
-  cx: number,
-  cy: number,
-  width: number,
-  color: string,
-  alpha: number,
-): void {
-  ctx.save();
-  ctx.translate(cx, cy);
-  ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = alpha;
-
-  const hg = ctx.createLinearGradient(-width, 0, width, 0);
-  hg.addColorStop(0, "rgba(255,255,255,0)");
-  hg.addColorStop(0.35, color);
-  hg.addColorStop(0.5, "#FFFFFF");
-  hg.addColorStop(0.65, color);
-  hg.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = hg;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, width, 2.5, 0, 0, Math.PI * 2);
-  ctx.fill();
-
-  const vg = ctx.createLinearGradient(0, -width * 0.28, 0, width * 0.28);
-  vg.addColorStop(0, "rgba(255,255,255,0)");
-  vg.addColorStop(0.5, "#FFFFFF");
-  vg.addColorStop(1, "rgba(255,255,255,0)");
-  ctx.fillStyle = vg;
-  ctx.beginPath();
-  ctx.ellipse(0, 0, 2, width * 0.28, 0, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.restore();
 }
 
 function drawGradeMotif(
@@ -425,153 +428,42 @@ function drawGradeMotif(
   }
 
   if (rarity === "holo") {
+    // Clean, unobstructed portrait window with a delicate pearlescent inner hairline.
     ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    ctx.lineWidth = 1.3;
-    for (let i = 0; i < 16; i += 1) {
-      const yBase = 80 + i * 38;
-      ctx.strokeStyle = makeGradient(ctx, 0, yBase, iw, yBase + 60, [
-        "rgba(56,189,248,0)",
-        "rgba(253,224,71,0.22)",
-        "rgba(236,72,153,0.22)",
-        "rgba(52,211,153,0.22)",
-        "rgba(56,189,248,0)",
-      ]);
-      ctx.beginPath();
-      ctx.moveTo(0, yBase);
-      ctx.bezierCurveTo(
-        iw * 0.33,
-        yBase - 34,
-        iw * 0.66,
-        yBase + 34,
-        iw,
-        yBase - 12,
-      );
-      ctx.stroke();
-    }
-    ctx.restore();
-
-    ctx.save();
-    ctx.shadowColor = tier.glow;
-    ctx.shadowBlur = 16;
+    ctx.globalAlpha = 0.55;
     ctx.strokeStyle = makeGradient(ctx, 0, 0, iw, ih, tier.stops);
-    ctx.lineWidth = 2.2;
+    ctx.lineWidth = 1.25;
     roundRectPath(ctx, 10, 10, iw - 20, ih - 20, RADIUS - BORDER - 6);
     ctx.stroke();
-
-    for (const [cx, cy, sx, sy] of [
-      [10, 10, 1, 1],
-      [iw - 10, 10, -1, 1],
-      [10, ih - 10, 1, -1],
-      [iw - 10, ih - 10, -1, -1],
-    ] as const) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(sx, sy);
-      ctx.fillStyle = makeGradient(ctx, 0, 0, 60, 60, tier.stops);
-      ctx.beginPath();
-      ctx.moveTo(0, 64);
-      ctx.lineTo(0, 0);
-      ctx.lineTo(64, 0);
-      ctx.lineTo(48, 12);
-      ctx.lineTo(18, 12);
-      ctx.lineTo(12, 18);
-      ctx.lineTo(12, 48);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
     ctx.restore();
-
-    drawAnamorphicFlare(ctx, iw - 86, 53, 180, "#FDE047", 0.85);
     return;
   }
 
   if (rarity === "secret") {
+    // Sleek crystal-cyan inner hairline & top diamond emblem without obscuring the photo.
     ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    for (let i = 0; i < 3; i += 1) {
-      const y0 = 150 + i * 140;
-      const g = ctx.createLinearGradient(0, y0 - 80, iw, y0 + 80);
-      g.addColorStop(0, "rgba(34,211,238,0)");
-      g.addColorStop(0.35, "rgba(103,232,249,0.22)");
-      g.addColorStop(0.65, "rgba(167,139,250,0.22)");
-      g.addColorStop(1, "rgba(34,211,238,0)");
-      ctx.fillStyle = g;
-      ctx.beginPath();
-      ctx.moveTo(0, y0);
-      ctx.bezierCurveTo(iw * 0.3, y0 - 90, iw * 0.7, y0 + 90, iw, y0 - 20);
-      ctx.lineTo(iw, y0 + 55);
-      ctx.bezierCurveTo(iw * 0.7, y0 + 145, iw * 0.3, y0 - 35, 0, y0 + 55);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.restore();
-
-    ctx.save();
-    ctx.globalCompositeOperation = "screen";
-    ctx.strokeStyle = "rgba(165,243,252,0.32)";
-    ctx.lineWidth = 1.4;
-    ctx.beginPath();
-    ctx.arc(iw / 2, ih * 0.36, 210, 0, Math.PI * 2);
-    ctx.stroke();
-    ctx.strokeStyle = "rgba(196,181,253,0.26)";
-    ctx.beginPath();
-    ctx.arc(iw / 2, ih * 0.36, 232, -Math.PI * 0.85, -Math.PI * 0.15);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(iw / 2, ih * 0.36, 232, Math.PI * 0.15, Math.PI * 0.85);
-    ctx.stroke();
-    ctx.restore();
-
-    ctx.save();
-    ctx.shadowColor = tier.glow;
-    ctx.shadowBlur = 18;
+    ctx.globalAlpha = 0.65;
     ctx.strokeStyle = makeGradient(ctx, 0, 0, iw, ih, tier.stops);
-    ctx.lineWidth = 2.4;
+    ctx.lineWidth = 1.4;
     roundRectPath(ctx, 10, 10, iw - 20, ih - 20, RADIUS - BORDER - 6);
     ctx.stroke();
 
+    ctx.globalAlpha = 0.85;
     ctx.fillStyle = "#E0F2FE";
     ctx.beginPath();
-    ctx.moveTo(iw / 2, 12);
-    ctx.lineTo(iw / 2 + 16, 26);
-    ctx.lineTo(iw / 2, 40);
-    ctx.lineTo(iw / 2 - 16, 26);
+    ctx.moveTo(iw / 2, 13);
+    ctx.lineTo(iw / 2 + 10, 22);
+    ctx.lineTo(iw / 2, 31);
+    ctx.lineTo(iw / 2 - 10, 22);
     ctx.closePath();
     ctx.fill();
-
-    for (const [cx, cy, sx, sy] of [
-      [10, 10, 1, 1],
-      [iw - 10, 10, -1, 1],
-      [10, ih - 10, 1, -1],
-      [iw - 10, ih - 10, -1, -1],
-    ] as const) {
-      ctx.save();
-      ctx.translate(cx, cy);
-      ctx.scale(sx, sy);
-      ctx.fillStyle = makeGradient(ctx, 0, 0, 68, 68, tier.stops);
-      ctx.beginPath();
-      ctx.moveTo(0, 72);
-      ctx.lineTo(0, 0);
-      ctx.lineTo(72, 0);
-      ctx.lineTo(52, 14);
-      ctx.lineTo(22, 14);
-      ctx.lineTo(14, 22);
-      ctx.lineTo(14, 52);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-    }
     ctx.restore();
-
-    drawAnamorphicFlare(ctx, iw - 92, 53, 210, "#67E8F9", 0.95);
-    drawAnamorphicFlare(ctx, 78, 53, 120, "#C4B5FD", 0.65);
   }
 }
 
 async function drawBaseCard(ctx: Ctx, input: CardInput): Promise<void> {
   const tier = TIERS[input.rarity] ?? DEFAULT_TIER;
+  const animated = isAnimatedRarity(input.rarity);
 
   // 1. Sculpted outer metallic/iridescent frame.
   roundRectPath(ctx, 0, 0, CARD_W, CARD_H, RADIUS);
@@ -583,15 +475,15 @@ async function drawBaseCard(ctx: Ctx, input: CardInput): Promise<void> {
   roundRectPath(ctx, 1.5, 1.5, CARD_W - 3, CARD_H - 3, RADIUS - 1.5);
   ctx.lineWidth = 3;
   const bevel = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
-  bevel.addColorStop(0, "rgba(255,255,255,0.9)");
-  bevel.addColorStop(0.35, "rgba(255,255,255,0.22)");
-  bevel.addColorStop(0.65, "rgba(0,0,0,0.28)");
-  bevel.addColorStop(1, "rgba(0,0,0,0.68)");
+  bevel.addColorStop(0, "rgba(255,255,255,0.92)");
+  bevel.addColorStop(0.35, "rgba(255,255,255,0.28)");
+  bevel.addColorStop(0.65, "rgba(0,0,0,0.22)");
+  bevel.addColorStop(1, "rgba(0,0,0,0.55)");
   ctx.strokeStyle = bevel;
   ctx.stroke();
   ctx.restore();
 
-  // Dark recessed frame channel.
+  // Recessed frame channel (soft silver-slate for holo, deep obsidian for others).
   ctx.save();
   roundRectPath(
     ctx,
@@ -601,7 +493,10 @@ async function drawBaseCard(ctx: Ctx, input: CardInput): Promise<void> {
     CARD_H - (BORDER - 3) * 2,
     RADIUS - BORDER + 3,
   );
-  ctx.fillStyle = "rgba(8, 10, 18, 0.88)";
+  ctx.fillStyle =
+    input.rarity === "holo"
+      ? "rgba(226, 232, 240, 0.45)"
+      : "rgba(8, 10, 18, 0.88)";
   ctx.fill();
   ctx.restore();
 
@@ -625,30 +520,34 @@ async function drawBaseCard(ctx: Ctx, input: CardInput): Promise<void> {
 
   // 3. Recessed inner shadow around photo frame seam.
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,0.92)";
-  ctx.shadowBlur = 30;
-  ctx.lineWidth = 14;
-  ctx.strokeStyle = "rgba(0,0,0,0.72)";
+  ctx.shadowColor =
+    input.rarity === "holo" ? "rgba(15,23,42,0.45)" : "rgba(0,0,0,0.92)";
+  ctx.shadowBlur = input.rarity === "holo" ? 16 : 30;
+  ctx.lineWidth = input.rarity === "holo" ? 10 : 14;
+  ctx.strokeStyle =
+    input.rarity === "holo" ? "rgba(15,23,42,0.35)" : "rgba(0,0,0,0.72)";
   roundRectPath(ctx, -6, -6, iw + 12, ih + 12, RADIUS - BORDER + 4);
   ctx.stroke();
   ctx.restore();
 
-  // 4. Diagonal glossy light sweep & studio corner reflection.
-  ctx.save();
-  ctx.globalCompositeOperation = "screen";
-  ctx.globalAlpha = tier.sheenAlpha;
-  ctx.translate(iw * 0.5, ih * 0.36);
-  ctx.rotate(-0.58);
-  const beam = ctx.createLinearGradient(0, -240, 0, 240);
-  tier.sheenStops.forEach((c, i) => {
-    beam.addColorStop(
-      tier.sheenStops.length === 1 ? 0.5 : i / (tier.sheenStops.length - 1),
-      c,
-    );
-  });
-  ctx.fillStyle = beam;
-  ctx.fillRect(-iw * 1.2, -240, iw * 2.4, 480);
-  ctx.restore();
+  // 4. Diagonal glossy light sweep (static cards only; animated cards render a moving foil glint per frame).
+  if (!animated) {
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.globalAlpha = tier.sheenAlpha;
+    ctx.translate(iw * 0.5, ih * 0.36);
+    ctx.rotate(-0.58);
+    const beam = ctx.createLinearGradient(0, -240, 0, 240);
+    tier.sheenStops.forEach((c, i) => {
+      beam.addColorStop(
+        tier.sheenStops.length === 1 ? 0.5 : i / (tier.sheenStops.length - 1),
+        c,
+      );
+    });
+    ctx.fillStyle = beam;
+    ctx.fillRect(-iw * 1.2, -240, iw * 2.4, 480);
+    ctx.restore();
+  }
 
   ctx.save();
   ctx.globalCompositeOperation = "screen";
@@ -660,20 +559,20 @@ async function drawBaseCard(ctx: Ctx, input: CardInput): Promise<void> {
     ih * 0.06,
     iw * 0.82,
   );
-  gloss.addColorStop(0, "rgba(255,255,255,0.22)");
-  gloss.addColorStop(0.5, "rgba(255,255,255,0.05)");
+  gloss.addColorStop(0, animated ? "rgba(255,255,255,0.08)" : "rgba(255,255,255,0.22)");
+  gloss.addColorStop(0.5, animated ? "rgba(255,255,255,0.02)" : "rgba(255,255,255,0.05)");
   gloss.addColorStop(1, "rgba(255,255,255,0)");
   ctx.fillStyle = gloss;
   ctx.fillRect(0, 0, iw, ih * 0.65);
   ctx.restore();
 
-  // 5. Deep cinematic bottom vignette.
-  const gradTop = ih * 0.5;
+  // 5. Deep cinematic bottom vignette (starts lower on animated cards to keep portrait bright).
+  const gradTop = animated ? ih * 0.58 : ih * 0.5;
   const shade = ctx.createLinearGradient(0, gradTop, 0, ih);
   shade.addColorStop(0, "rgba(4,6,14,0)");
-  shade.addColorStop(0.42, "rgba(4,6,14,0.5)");
-  shade.addColorStop(0.75, "rgba(4,6,14,0.88)");
-  shade.addColorStop(1, "rgba(4,6,14,0.97)");
+  shade.addColorStop(0.42, animated ? "rgba(4,6,14,0.42)" : "rgba(4,6,14,0.5)");
+  shade.addColorStop(0.75, animated ? "rgba(4,6,14,0.82)" : "rgba(4,6,14,0.88)");
+  shade.addColorStop(1, animated ? "rgba(4,6,14,0.94)" : "rgba(4,6,14,0.97)");
   ctx.fillStyle = shade;
   ctx.fillRect(0, gradTop - 1, iw, ih - gradTop + 1);
 
@@ -812,32 +711,35 @@ interface SparkleSpec {
   phase: number;
 }
 
+// Positioned along the perimeter & lower area so the central portrait face/subject stays 100% clear.
 const HOLO_SPARKLES: readonly SparkleSpec[] = [
-  { x: 96, y: 150, size: 14, phase: 0.0 },
-  { x: 492, y: 190, size: 16, phase: 0.25 },
-  { x: 168, y: 310, size: 11, phase: 0.5 },
-  { x: 430, y: 375, size: 15, phase: 0.72 },
-  { x: 120, y: 500, size: 13, phase: 0.15 },
-  { x: 510, y: 540, size: 12, phase: 0.6 },
-  { x: 280, y: 210, size: 10, phase: 0.38 },
-  { x: 340, y: 630, size: 14, phase: 0.85 },
-  { x: 90, y: 690, size: 11, phase: 0.44 },
-  { x: 470, y: 710, size: 12, phase: 0.92 },
+  { x: 52, y: 175, size: 9, phase: 0.0 },
+  { x: 522, y: 215, size: 11, phase: 0.25 },
+  { x: 34, y: 315, size: 7, phase: 0.52 },
+  { x: 468, y: 310, size: 8, phase: 0.72 },
+  { x: 78, y: 520, size: 7, phase: 0.16 },
+  { x: 515, y: 510, size: 8, phase: 0.61 },
+  { x: 148, y: 650, size: 7, phase: 0.38 },
+  { x: 236, y: 690, size: 8, phase: 0.84 },
+  { x: 396, y: 680, size: 7, phase: 0.44 },
+  { x: 512, y: 645, size: 11, phase: 0.91 },
+  { x: 82, y: 745, size: 8, phase: 0.12 },
+  { x: 298, y: 795, size: 7, phase: 0.67 },
 ];
 
 const SECRET_SPARKLES: readonly SparkleSpec[] = [
-  { x: 88, y: 140, size: 17, phase: 0.05 },
-  { x: 504, y: 165, size: 18, phase: 0.3 },
-  { x: 220, y: 245, size: 13, phase: 0.55 },
-  { x: 405, y: 295, size: 16, phase: 0.78 },
-  { x: 135, y: 405, size: 15, phase: 0.18 },
-  { x: 485, y: 455, size: 17, phase: 0.65 },
-  { x: 300, y: 145, size: 14, phase: 0.42 },
-  { x: 270, y: 550, size: 16, phase: 0.88 },
-  { x: 105, y: 645, size: 14, phase: 0.48 },
-  { x: 495, y: 675, size: 15, phase: 0.95 },
-  { x: 365, y: 485, size: 12, phase: 0.12 },
-  { x: 195, y: 715, size: 13, phase: 0.7 },
+  { x: 48, y: 160, size: 10, phase: 0.05 },
+  { x: 518, y: 185, size: 12, phase: 0.3 },
+  { x: 42, y: 330, size: 8, phase: 0.55 },
+  { x: 506, y: 340, size: 9, phase: 0.78 },
+  { x: 66, y: 495, size: 8, phase: 0.18 },
+  { x: 514, y: 490, size: 10, phase: 0.65 },
+  { x: 130, y: 640, size: 8, phase: 0.42 },
+  { x: 255, y: 685, size: 9, phase: 0.88 },
+  { x: 410, y: 670, size: 8, phase: 0.48 },
+  { x: 516, y: 635, size: 11, phase: 0.95 },
+  { x: 92, y: 750, size: 9, phase: 0.12 },
+  { x: 320, y: 790, size: 8, phase: 0.7 },
 ];
 
 function drawFourPointStar(
@@ -845,28 +747,73 @@ function drawFourPointStar(
   cx: number,
   cy: number,
   r: number,
-  color: string,
+  haloColor: string,
   alpha: number,
 ): void {
-  if (alpha <= 0.02 || r <= 0.5) return;
+  if (alpha <= 0.04 || r <= 0.5) return;
   ctx.save();
   ctx.translate(cx, cy);
   ctx.globalAlpha = alpha;
-  ctx.fillStyle = color;
+
+  // Soft subtle halo behind the star.
+  const halo = ctx.createRadialGradient(0, 0, 0, 0, 0, r * 1.15);
+  halo.addColorStop(0, "rgba(255, 255, 255, 0.55)");
+  halo.addColorStop(0.45, haloColor);
+  halo.addColorStop(1, "rgba(255, 255, 255, 0)");
+  ctx.fillStyle = halo;
   ctx.beginPath();
-  const inner = r * 0.24;
-  ctx.moveTo(0, -r);
-  ctx.quadraticCurveTo(0, 0, r, 0);
-  ctx.quadraticCurveTo(0, 0, 0, r);
-  ctx.quadraticCurveTo(0, 0, -r, 0);
-  ctx.quadraticCurveTo(0, 0, 0, -r);
-  ctx.closePath();
+  ctx.arc(0, 0, r * 1.15, 0, Math.PI * 2);
   ctx.fill();
 
-  ctx.beginPath();
-  ctx.arc(0, 0, inner, 0, Math.PI * 2);
+  // Crisp needle-sharp 4-point white star core.
   ctx.fillStyle = "#FFFFFF";
+  ctx.beginPath();
+  const inner = r * 0.18;
+  ctx.moveTo(0, -r);
+  ctx.quadraticCurveTo(inner, -inner, r, 0);
+  ctx.quadraticCurveTo(inner, inner, 0, r);
+  ctx.quadraticCurveTo(-inner, inner, -r, 0);
+  ctx.quadraticCurveTo(-inner, -inner, 0, -r);
+  ctx.closePath();
   ctx.fill();
+  ctx.restore();
+}
+
+function drawAnimatedOuterBorder(
+  ctx: Ctx,
+  angle: number,
+  stops: string[],
+  isHolo: boolean,
+): void {
+  const iw = CARD_W - BORDER * 2;
+  const ih = CARD_H - BORDER * 2;
+  ctx.save();
+  ctx.beginPath();
+  roundRectSubPath(ctx, 0, 0, CARD_W, CARD_H, RADIUS);
+  roundRectSubPath(ctx, BORDER, BORDER, iw, ih, RADIUS - BORDER);
+  ctx.clip("evenodd");
+
+  const bx = Math.cos(angle) * (CARD_W * 0.65);
+  const by = Math.sin(angle) * (CARD_H * 0.65);
+  ctx.fillStyle = makeGradient(
+    ctx,
+    CARD_W * 0.5 - bx,
+    CARD_H * 0.5 - by,
+    CARD_W * 0.5 + bx,
+    CARD_H * 0.5 + by,
+    stops,
+  );
+  ctx.fillRect(0, 0, CARD_W, CARD_H);
+
+  // Outer specular bevel highlight.
+  roundRectPath(ctx, 1.5, 1.5, CARD_W - 3, CARD_H - 3, RADIUS - 1.5);
+  ctx.lineWidth = 2.5;
+  const bevel = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
+  bevel.addColorStop(0, "rgba(255,255,255,0.95)");
+  bevel.addColorStop(0.5, isHolo ? "rgba(255,255,255,0.45)" : "rgba(186,230,253,0.35)");
+  bevel.addColorStop(1, isHolo ? "rgba(148,163,184,0.45)" : "rgba(8,47,73,0.65)");
+  ctx.strokeStyle = bevel;
+  ctx.stroke();
   ctx.restore();
 }
 
@@ -875,55 +822,71 @@ function drawHoloFrameOverlay(ctx: Ctx, progress: number): void {
   const ih = CARD_H - BORDER * 2;
   const angle = progress * Math.PI * 2;
 
+  // 1. Pearlescent animated outer border shimmer (leaves photo untouched).
+  drawAnimatedOuterBorder(
+    ctx,
+    angle,
+    [
+      "#FFFFFF",
+      "#E0F2FE",
+      "#FCE7F3",
+      "#FEF9C3",
+      "#EDE9FE",
+      "#CFFAFE",
+      "#FFFFFF",
+    ],
+    true,
+  );
+
   ctx.save();
   ctx.translate(BORDER, BORDER);
   roundRectPath(ctx, 0, 0, iw, ih, RADIUS - BORDER);
   ctx.clip();
 
-  // Diagonal sweeping rainbow holographic sheen.
-  const shift = (progress * 2.4 - 0.7) * CARD_W;
+  // 2. Whisper-thin diagonal pearlescent foil glint (low alpha preserves 100% portrait detail).
+  const shift = (progress * 2.1 - 0.55) * CARD_W;
   const sheen = ctx.createLinearGradient(
-    shift - 220,
-    -100,
-    shift + 340,
-    CARD_H + 100,
+    shift - 135,
+    -60,
+    shift + 175,
+    CARD_H * 0.85,
   );
-  sheen.addColorStop(0.0, "rgba(56, 189, 248, 0)");
-  sheen.addColorStop(0.28, "rgba(56, 189, 248, 0.22)");
-  sheen.addColorStop(0.45, "rgba(168, 85, 247, 0.30)");
-  sheen.addColorStop(0.55, "rgba(255, 255, 255, 0.34)");
-  sheen.addColorStop(0.68, "rgba(236, 72, 153, 0.28)");
-  sheen.addColorStop(0.84, "rgba(250, 204, 21, 0.24)");
-  sheen.addColorStop(1.0, "rgba(16, 185, 129, 0)");
+  sheen.addColorStop(0.0, "rgba(186, 230, 253, 0)");
+  sheen.addColorStop(0.32, "rgba(186, 230, 253, 0.065)");
+  sheen.addColorStop(0.48, "rgba(255, 255, 255, 0.10)");
+  sheen.addColorStop(0.62, "rgba(251, 207, 232, 0.07)");
+  sheen.addColorStop(0.78, "rgba(254, 240, 138, 0.055)");
+  sheen.addColorStop(1.0, "rgba(196, 181, 253, 0)");
   ctx.globalCompositeOperation = "screen";
   ctx.fillStyle = sheen;
   ctx.fillRect(0, 0, iw, ih);
 
-  // Twinkling gold/white sparkles.
+  // 3. Delicate twinkling white 4-point stars along the margins.
+  ctx.globalCompositeOperation = "source-over";
   for (const sp of HOLO_SPARKLES) {
     const pulse = 0.5 + 0.5 * Math.sin(angle + sp.phase * Math.PI * 2);
+    const sharpPulse = Math.pow(pulse, 1.35);
     drawFourPointStar(
       ctx,
       sp.x,
       sp.y,
-      sp.size * (0.45 + 0.65 * pulse),
-      "#FEF08A",
-      0.2 + 0.8 * pulse,
+      sp.size * (0.45 + 0.6 * sharpPulse),
+      "rgba(254, 249, 195, 0.42)",
+      0.28 + 0.72 * sharpPulse,
     );
   }
 
-  // Shimmering rainbow border stroke.
-  ctx.globalCompositeOperation = "source-over";
+  // 4. Refined pearlescent inner bezel stroke.
   const bx = Math.cos(angle) * (CARD_W * 0.5);
   const by = Math.sin(angle) * (CARD_H * 0.5);
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 2.2;
   ctx.strokeStyle = makeGradient(
     ctx,
     CARD_W * 0.5 - bx,
     CARD_H * 0.5 - by,
     CARD_W * 0.5 + bx,
     CARD_H * 0.5 + by,
-    ["#38BDF8", "#A855F7", "#EC4899", "#FACC15", "#10B981"],
+    ["#FFFFFF", "#BAE6FD", "#FBCFE8", "#FEF08A", "#DDD6FE", "#FFFFFF"],
   );
   roundRectPath(ctx, 1, 1, iw - 2, ih - 2, RADIUS - BORDER);
   ctx.stroke();
@@ -935,73 +898,144 @@ function drawSecretFrameOverlay(ctx: Ctx, progress: number): void {
   const ih = CARD_H - BORDER * 2;
   const angle = progress * Math.PI * 2;
 
+  // 1. Prismatic ice-diamond animated outer border.
+  drawAnimatedOuterBorder(
+    ctx,
+    angle,
+    [
+      "#0C4A6E",
+      "#38BDF8",
+      "#E0F2FE",
+      "#FFFFFF",
+      "#C4B5FD",
+      "#22D3EE",
+      "#0C4A6E",
+    ],
+    false,
+  );
+
   ctx.save();
   ctx.translate(BORDER, BORDER);
   roundRectPath(ctx, 0, 0, iw, ih, RADIUS - BORDER);
   ctx.clip();
 
-  // Dual prismatic cyan-ice sweep.
+  // 2. Crisp, narrow diamond-cyan specular glint (keeps portrait crystal clear).
   ctx.globalCompositeOperation = "screen";
-  const shift1 = (progress * 2.5 - 0.75) * CARD_W;
+  const shift1 = (progress * 2.15 - 0.58) * CARD_W;
   const beam1 = ctx.createLinearGradient(
-    shift1 - 180,
-    0,
-    shift1 + 260,
-    CARD_H,
+    shift1 - 125,
+    -40,
+    shift1 + 165,
+    CARD_H * 0.85,
   );
   beam1.addColorStop(0.0, "rgba(34, 211, 238, 0)");
-  beam1.addColorStop(0.35, "rgba(34, 211, 238, 0.28)");
-  beam1.addColorStop(0.5, "rgba(255, 255, 255, 0.45)");
-  beam1.addColorStop(0.65, "rgba(165, 243, 252, 0.30)");
+  beam1.addColorStop(0.35, "rgba(103, 232, 249, 0.08)");
+  beam1.addColorStop(0.5, "rgba(255, 255, 255, 0.12)");
+  beam1.addColorStop(0.65, "rgba(196, 181, 253, 0.075)");
   beam1.addColorStop(1.0, "rgba(14, 165, 233, 0)");
   ctx.fillStyle = beam1;
   ctx.fillRect(0, 0, iw, ih);
 
-  // Subtle pulsing cyan aura along the edge.
-  const auraAlpha = 0.14 + 0.12 * Math.sin(angle);
+  // 3. Edge-only subtle cyan rim aura (zero opacity across the central 84% of the portrait).
+  const auraAlpha = 0.07 + 0.05 * Math.sin(angle);
   const aura = ctx.createRadialGradient(
     iw * 0.5,
     ih * 0.45,
-    iw * 0.2,
+    iw * 0.44,
     iw * 0.5,
     ih * 0.45,
-    ih * 0.65,
+    ih * 0.66,
   );
   aura.addColorStop(0, "rgba(34, 211, 238, 0)");
-  aura.addColorStop(1, `rgba(34, 211, 238, ${auraAlpha.toFixed(3)})`);
+  aura.addColorStop(1, `rgba(103, 232, 249, ${auraAlpha.toFixed(3)})`);
   ctx.fillStyle = aura;
   ctx.fillRect(0, 0, iw, ih);
 
-  // Prismatic diamond sparkles + rising motes.
+  // 4. Delicate diamond sparkles along the margins.
+  ctx.globalCompositeOperation = "source-over";
   for (const sp of SECRET_SPARKLES) {
     const pulse = 0.5 + 0.5 * Math.sin(angle + sp.phase * Math.PI * 2);
-    const driftY = ((progress + sp.phase) % 1) * -28;
+    const sharpPulse = Math.pow(pulse, 1.35);
+    const driftY = ((progress + sp.phase) % 1) * -14;
     drawFourPointStar(
       ctx,
       sp.x,
       sp.y + driftY,
-      sp.size * (0.4 + 0.7 * pulse),
-      "#A5F3FC",
-      0.25 + 0.75 * pulse,
+      sp.size * (0.45 + 0.6 * sharpPulse),
+      "rgba(165, 243, 252, 0.45)",
+      0.3 + 0.7 * sharpPulse,
     );
   }
 
-  // Animated electric cyan/ice/indigo border.
-  ctx.globalCompositeOperation = "source-over";
+  // 5. Animated crystal-cyan inner bezel stroke.
   const bx = Math.cos(angle) * (CARD_W * 0.5);
   const by = Math.sin(angle) * (CARD_H * 0.5);
-  ctx.lineWidth = 4.5;
+  ctx.lineWidth = 2.4;
   ctx.strokeStyle = makeGradient(
     ctx,
     CARD_W * 0.5 - bx,
     CARD_H * 0.5 - by,
     CARD_W * 0.5 + bx,
     CARD_H * 0.5 + by,
-    ["#22D3EE", "#FFFFFF", "#38BDF8", "#818CF8", "#22D3EE"],
+    ["#22D3EE", "#FFFFFF", "#7DD3FC", "#C4B5FD", "#22D3EE"],
   );
   roundRectPath(ctx, 1, 1, iw - 2, ih - 2, RADIUS - BORDER);
   ctx.stroke();
   ctx.restore();
+}
+
+/**
+ * Builds a unified 255-color rgb565 master palette sampled from the clean base
+ * portrait and all animated frames so static portrait pixels never flicker or
+ * posterize between frames, reserving 1 index for transparent rounded corners.
+ */
+function buildMasterGifPalette(
+  baseData: Uint8ClampedArray,
+  frames: Uint8ClampedArray[],
+): { opaquePalette: number[][]; fullPalette: number[][]; transparentIndex: number } {
+  const pixelCount = baseData.length >>> 2;
+  const baseStride = 3;
+  const frameStride = 11;
+  let samplePixels = 0;
+
+  for (let p = 0; p < pixelCount; p += baseStride) {
+    if ((baseData[p * 4 + 3] ?? 0) >= 128) samplePixels += 1;
+  }
+  for (const frame of frames) {
+    for (let p = 0; p < pixelCount; p += frameStride) {
+      if ((frame[p * 4 + 3] ?? 0) >= 128) samplePixels += 1;
+    }
+  }
+
+  const sampleRgba = new Uint8Array(Math.max(1, samplePixels) * 4);
+  let writeOffset = 0;
+
+  for (let p = 0; p < pixelCount; p += baseStride) {
+    const off = p * 4;
+    if ((baseData[off + 3] ?? 0) < 128) continue;
+    sampleRgba[writeOffset] = baseData[off] ?? 0;
+    sampleRgba[writeOffset + 1] = baseData[off + 1] ?? 0;
+    sampleRgba[writeOffset + 2] = baseData[off + 2] ?? 0;
+    sampleRgba[writeOffset + 3] = 255;
+    writeOffset += 4;
+  }
+
+  for (const frame of frames) {
+    for (let p = 0; p < pixelCount; p += frameStride) {
+      const off = p * 4;
+      if ((frame[off + 3] ?? 0) < 128) continue;
+      sampleRgba[writeOffset] = frame[off] ?? 0;
+      sampleRgba[writeOffset + 1] = frame[off + 1] ?? 0;
+      sampleRgba[writeOffset + 2] = frame[off + 2] ?? 0;
+      sampleRgba[writeOffset + 3] = 255;
+      writeOffset += 4;
+    }
+  }
+
+  const opaquePalette = quantize(sampleRgba, 255, { format: "rgb565" });
+  const transparentIndex = opaquePalette.length;
+  const fullPalette = [...opaquePalette, [0, 0, 0]];
+  return { opaquePalette, fullPalette, transparentIndex };
 }
 
 async function buildAnimatedCardGif(input: CardInput): Promise<Buffer> {
@@ -1009,12 +1043,13 @@ async function buildAnimatedCardGif(input: CardInput): Promise<Buffer> {
   const baseCtx = baseCanvas.getContext("2d");
   baseCtx.scale(ANIM_W / CARD_W, ANIM_H / CARD_H);
   await drawBaseCard(baseCtx, input);
+  const baseData = baseCtx.getImageData(0, 0, ANIM_W, ANIM_H).data;
 
   const frameCanvas = createCanvas(ANIM_W, ANIM_H);
   const frameCtx = frameCanvas.getContext("2d");
 
-  const gif = GIFEncoder();
   const isSecret = input.rarity === "secret";
+  const frames: Uint8ClampedArray[] = [];
 
   for (let i = 0; i < ANIM_FRAMES; i += 1) {
     const progress = i / ANIM_FRAMES;
@@ -1030,17 +1065,32 @@ async function buildAnimatedCardGif(input: CardInput): Promise<Buffer> {
     }
     frameCtx.restore();
 
-    const imageData = frameCtx.getImageData(0, 0, ANIM_W, ANIM_H);
-    const palette = quantize(imageData.data, 256, {
-      format: "rgba4444",
-      oneBitAlpha: true,
-    });
-    const indexed = applyPalette(imageData.data, palette, "rgba4444");
+    frames.push(frameCtx.getImageData(0, 0, ANIM_W, ANIM_H).data);
+  }
+
+  const { opaquePalette, fullPalette, transparentIndex } = buildMasterGifPalette(
+    baseData,
+    frames,
+  );
+
+  const gif = GIFEncoder();
+  const pixelCount = ANIM_W * ANIM_H;
+
+  for (let i = 0; i < frames.length; i += 1) {
+    const rgba = frames[i];
+    if (rgba === undefined) continue;
+    const indexed = applyPalette(rgba, opaquePalette, "rgb565");
+    for (let p = 0; p < pixelCount; p += 1) {
+      if ((rgba[p * 4 + 3] ?? 0) < 128) {
+        indexed[p] = transparentIndex;
+      }
+    }
     gif.writeFrame(indexed, ANIM_W, ANIM_H, {
-      palette,
+      palette: i === 0 ? fullPalette : null,
       delay: ANIM_DELAY_MS,
       repeat: 0,
       transparent: true,
+      transparentIndex,
       dispose: 2,
     });
   }
