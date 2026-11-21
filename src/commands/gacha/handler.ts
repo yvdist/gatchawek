@@ -23,6 +23,7 @@ import {
   cardImageUrl,
 } from "../../ui/gachaEmbed.js";
 import { parseGachaAgainCustomId } from "../../domain/gacha.js";
+import { reportError } from "../../observability.js";
 import type { WaitUntil } from "../registry.js";
 
 export function cryptoRandom(): number {
@@ -130,6 +131,7 @@ async function runPullTask(
     await followupPull(env, appId, token, userId, poolId, rand);
   } catch (e) {
     console.error("gacha pull failed:", e);
+    reportError("gacha pull failed", e);
     try {
       await patchOriginal(appId, token, env.DISCORD_BOT_TOKEN, {
         content: "D1 sibuk/kuota habis, coba lagi.",

@@ -24,6 +24,7 @@ import {
   WISH_PITY_AT,
   WISH_PITY_RATE,
 } from "../../domain/wish.js";
+import { reportError } from "../../observability.js";
 
 const BUSY = "D1 sibuk/kuota habis, coba lagi.";
 
@@ -98,6 +99,7 @@ export async function handleWish(
     );
   } catch (e) {
     console.error("wish failed:", e);
+    reportError("wish failed", e);
     return ephemeralResponse(BUSY);
   }
 }
@@ -120,6 +122,7 @@ export async function handleUnwish(
     return ephemeralResponse(`${cardLine(wish)} dihapus dari wishlist.`);
   } catch (e) {
     console.error("unwish failed:", e);
+    reportError("unwish failed", e);
     return ephemeralResponse(BUSY);
   }
 }
@@ -147,6 +150,7 @@ export async function handleWishlist(
     );
   } catch (e) {
     console.error("wishlist failed:", e);
+    reportError("wishlist failed", e);
     return ephemeralResponse(BUSY);
   }
 }
@@ -159,6 +163,7 @@ export async function handleWishAutocomplete(
     return choices(await searchWishableCards(createDb(env), typedKartu(interaction)));
   } catch (e) {
     console.error("wish autocomplete failed:", e);
+    reportError("wish autocomplete failed", e);
     return choices([]);
   }
 }
@@ -177,6 +182,7 @@ export async function handleUnwishAutocomplete(
     );
   } catch (e) {
     console.error("unwish autocomplete failed:", e);
+    reportError("unwish autocomplete failed", e);
     return choices([]);
   }
 }

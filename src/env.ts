@@ -19,4 +19,9 @@ export interface Env {
   GITHUB_ACTIONS_PAT?: string;
   /** Repo slug for dispatch (default yvdist/gatchawek). */
   GITHUB_REPO?: string;
+  /**
+   * Better Stack (Sentry-compatible) DSN for error tracking.
+   * Worker secret, never committed. Unset = Sentry no-ops locally.
+   */
+  SENTRY_DSN?: string;
 }
