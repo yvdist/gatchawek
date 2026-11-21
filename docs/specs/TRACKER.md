@@ -82,7 +82,7 @@
 
 ## Temuan & utang teknis
 
-- **Ringkasan Fase 0:** bot, D1, dan R2 sudah dipetakan dengan nama nyata (10 tabel lama + `user_cards` sebagai sumber kepemilikan; R2 key `<cardId>.<sha8>.webp` di root bucket; foto mentah hanya ada di `assets/raw/`, tidak di R2). Repo kini punya workspace `games/adu-batang` + `packages/{engine,shared,bots}`, `pnpm check` hijau (587 test), Worker game dengan binding D1/R2 + DO SQLite dan echo WebSocket yang terbukti di workerd, serta migrasi additive `0014_game_tables.sql` yang sudah jalan di D1 lokal.
+- **Ringkasan Fase 0:** bot, D1, dan R2 sudah dipetakan dengan nama nyata (15 tabel lama, `user_cards` sebagai sumber kepemilikan; R2 key `<cardId>.<sha8>.webp` di root bucket; foto mentah hanya ada di `assets/raw/`, tidak di R2). Repo kini punya workspace `games/adu-batang` + `packages/{engine,shared,bots}`, `pnpm check` hijau (587 test), Worker game dengan binding D1/R2 + DO SQLite dan echo WebSocket yang terbukti di workerd, serta migrasi additive `0014_game_tables.sql` yang sudah jalan di D1 lokal.
 - `tests/seed-idempotency.test.ts` (bot) **skip** di clone bersih karena butuh `assets/raw/` yang gitignored — perilaku lama, bukan regresi Fase 0; uji ulang sebelum rilis.
 - **Kuota baca D1** free tier (100k row read/hari) sudah pernah habis dan memblokir recon produksi hari ini (`code 7500`).
   Jumlah kartu D1 **produksi** belum terverifikasi; angka di `PROJECT_STATE.md` berasal dari manifest + lock file. Verifikasi ulang setelah 00:00 UTC.
