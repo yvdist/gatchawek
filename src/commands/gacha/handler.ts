@@ -23,7 +23,11 @@ import {
   cardImageUrl,
 } from "../../ui/gachaEmbed.js";
 import { parseGachaAgainCustomId } from "../../domain/gacha.js";
-import { buildWaShareText, buildWaShareUrl } from "../../domain/share.js";
+import {
+  buildWaShareText,
+  buildWaShareUrl,
+  pageOrigin,
+} from "../../domain/share.js";
 import { buildWaShareRow } from "../../ui/waShare.js";
 import { reportError } from "../../observability.js";
 import type { WaitUntil } from "../registry.js";
@@ -53,6 +57,7 @@ async function followupPull(
   userId: string,
   poolId: string,
   rand: () => number,
+  origin: string | undefined,
 ): Promise<void> {
   const db = createDb(env);
   const now = Math.floor(Date.now() / 1000);
@@ -68,7 +73,6 @@ async function followupPull(
   switch (outcome.status) {
     case "ok": {
       const imageUrl = cardImageUrl(env.PUBLIC_BASE_URL, outcome.card.imageFile);
-      const cleanBase = env.PUBLIC_BASE_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "");
       const shareUrl = buildWaShareUrl(
         buildWaShareText({
           memberName: outcome.card.memberName,
@@ -79,7 +83,7 @@ async function followupPull(
           serial: outcome.card.serial,
           rarity: outcome.card.rarity,
           imageUrl,
-          pageUrl: `https://${cleanBase}/kartu/${outcome.card.id}`,
+          pageUrl: `${pageOrigin(origin, env.PUBLIC_BASE_URL)}/kartu/${outcome.card.id}`,
         }),
       );
       await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
@@ -143,9 +147,10 @@ async function runPullTask(
   userId: string,
   poolId: string,
   rand: () => number,
+  origin: string | undefined,
 ): Promise<void> {
   try {
-    await followupPull(env, appId, token, userId, poolId, rand);
+    await followupPull(env, appId, token, userId, poolId, rand, origin);
   } catch (e) {
     console.error("gacha pull failed:", e);
     reportError("gacha pull failed", e);
@@ -163,6 +168,7 @@ export function handleGacha(
   interaction: APIChatInputApplicationCommandInteraction,
   env: Env,
   waitUntil: WaitUntil,
+  origin?: string,
 ): APIInteractionResponse {
   const userId = invokerId(interaction);
   const poolId = poolOption(interaction);
@@ -177,6 +183,7 @@ export function handleGacha(
       userId,
       poolId,
       cryptoRandom,
+      origin,
     ),
   );
   return deferredResponse();
@@ -186,6 +193,7 @@ export function handleGachaAgain(
   interaction: APIMessageComponentInteraction,
   env: Env,
   waitUntil: WaitUntil,
+  origin?: string,
 ): APIInteractionResponse {
   const target = parseGachaAgainCustomId(interaction.data.custom_id);
   if (target === null) {
@@ -205,6 +213,7 @@ export function handleGachaAgain(
       clicker,
       target.poolId,
       cryptoRandom,
+      origin,
     ),
   );
   return deferredResponse();

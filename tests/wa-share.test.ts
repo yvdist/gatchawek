@@ -233,6 +233,41 @@ describe("handleGacha WA share row", () => {
     await mf.dispose();
   });
 
+  it("links the share page on the host that answered, not the pinned base", async () => {
+    const calls: { url: string; body: unknown }[] = [];
+    const fetchMock = vi.fn(async (url: string, init: { body: string }) => {
+      calls.push({ url, body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      handleGacha(
+        slash("pejabat", "111"),
+        env,
+        waitUntil,
+        "https://gatchawek-temp.example.workers.dev",
+      );
+      await tasks[0];
+      const body = calls[0]?.body as {
+        components?: { components?: { url?: string }[] }[];
+      };
+      const shareUrl = body.components?.[1]?.components?.[0]?.url ?? "";
+      const decoded = decodeURIComponent(
+        shareUrl.replace(/^https:\/\/wa\.me\/\?text=/, ""),
+      );
+      // Page + image resolve on different hosts: the temp worker serves the
+      // page, the primary deployment owns the R2 bucket behind /cards/.
+      expect(decoded).toContain(
+        "https://gatchawek-temp.example.workers.dev/kartu/aa-01",
+      );
+      expect(decoded).toContain("https://example.test/cards/aa-01.x.webp");
+      expect(decoded).not.toContain("https://example.test/kartu/");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("appends a wa.me Link button carrying the card image URL", async () => {
     const calls: { url: string; body: unknown }[] = [];
     const fetchMock = vi.fn(async (url: string, init: { body: string }) => {

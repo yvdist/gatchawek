@@ -15,7 +15,11 @@ import {
   postFollowup,
 } from "../../discord/rest.js";
 import { pickHype, sanitizeCaption } from "../../domain/pamer.js";
-import { buildWaShareText, buildWaShareUrl } from "../../domain/share.js";
+import {
+  buildWaShareText,
+  buildWaShareUrl,
+  pageOrigin,
+} from "../../domain/share.js";
 import { buildWaShareRow } from "../../ui/waShare.js";
 import {
   getShowcaseCard,
@@ -50,6 +54,7 @@ async function runPamerTask(
   userId: string,
   cardId: string,
   caption: string | null,
+  origin: string | undefined,
 ): Promise<void> {
   try {
     const db = createDb(env);
@@ -62,7 +67,6 @@ async function runPamerTask(
       return;
     }
     const imageUrl = cardImageUrl(env.PUBLIC_BASE_URL, card.imageFile);
-    const cleanBase = env.PUBLIC_BASE_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "");
     const shareUrl = buildWaShareUrl(
       buildWaShareText({
         memberName: card.memberName,
@@ -73,7 +77,7 @@ async function runPamerTask(
         serial: card.serial,
         rarity: card.rarity,
         imageUrl,
-        pageUrl: `https://${cleanBase}/kartu/${card.id}`,
+        pageUrl: `${pageOrigin(origin, env.PUBLIC_BASE_URL)}/kartu/${card.id}`,
       }),
     );
     await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
@@ -114,6 +118,7 @@ export function handlePamer(
   interaction: APIChatInputApplicationCommandInteraction,
   env: Env,
   waitUntil: WaitUntil,
+  origin?: string,
 ): APIInteractionResponse {
   const userId = invokerId(interaction);
   const cardId = stringOption(interaction, "kartu");
@@ -129,6 +134,7 @@ export function handlePamer(
       userId,
       cardId,
       caption,
+      origin,
     ),
   );
   return deferredResponse();
