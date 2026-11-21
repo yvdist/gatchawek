@@ -505,6 +505,15 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     ]);
     const card = await getAdminCard(db, id);
     if (card === null) return c.text("Kartu tidak ditemukan", 404);
+    const before = {
+      memberName: card.memberName,
+      photoLabel: card.photoLabel,
+      rarity: card.rarity,
+      holoEnabled: card.holoEnabled,
+      poolId: card.poolId,
+      groupId: card.groupId,
+      imageKind: card.imageKind,
+    };
     const fail = (message: string): Response =>
       c.html(
         cardDetailPage({
@@ -551,8 +560,17 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const nowSec = Math.floor(Date.now() / 1000);
     const renderable = await listRenderableCards(db, [id], nowSec);
     if (renderable.length === 0) {
+      const visualChanged =
+        before.memberName !== memberName.trim() ||
+        (before.photoLabel ?? null) !== photoLabel ||
+        before.rarity !== rarityRaw ||
+        before.holoEnabled !== holoEnabled ||
+        before.poolId !== poolId ||
+        before.groupId !== groupId;
+      const staleFrame =
+        visualChanged && before.imageKind === "static";
       return c.redirect(
-        `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent("Perubahan kartu disimpan.")}${keep}`,
+        `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent(staleFrame ? "Perubahan kartu disimpan. Tampilan kartu (frame lama) belum ikut berubah — ganti image untuk render ulang." : "Perubahan kartu disimpan.")}${keep}`,
       );
     }
     const dispatched = await dispatchRender(

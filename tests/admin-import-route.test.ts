@@ -725,6 +725,32 @@ describe("admin /admin/import routes", () => {
     }
   });
 
+  it("warns that the old frame stays when Kelola changes a static card", async () => {
+    const fd = new FormData();
+    fd.append("memberName", "Static Kid");
+    fd.append("photoLabel", "#stillsmile");
+    fd.append("rarity", "rare");
+    fd.append("poolId", "ahli-ngebul");
+    fd.append("groupId", "default");
+    const res = await app.request(`/admin/cards/static-kid-01/update`, { method: "POST", headers: { Cookie: authCookie }, body: fd }, env);
+    expect(res.status).toBe(302);
+    expect(decodeURIComponent(res.headers.get("location") ?? "")).toContain("frame lama");
+  });
+
+  it("keeps the plain notice when Kelola changes nothing visual on a static card", async () => {
+    const fd = new FormData();
+    fd.append("memberName", "Static Kid");
+    fd.append("photoLabel", "#stillsmile");
+    fd.append("rarity", "rare");
+    fd.append("poolId", "ahli-ngebul");
+    fd.append("groupId", "default");
+    const res = await app.request(`/admin/cards/static-kid-01/update`, { method: "POST", headers: { Cookie: authCookie }, body: fd }, env);
+    expect(res.status).toBe(302);
+    const loc = decodeURIComponent(res.headers.get("location") ?? "");
+    expect(loc).toContain("Perubahan kartu disimpan.");
+    expect(loc).not.toContain("frame lama");
+  });
+
   it("rejects render requests without a selection", async () => {
     const res = await app.request(
       "/admin/cards/render-remote",
