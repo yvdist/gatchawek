@@ -25,9 +25,11 @@ import {
   setAdminCardImage,
   promoteCardLabelToMember,
   swapCardMemberLabel,
+  updateAdminCardDetails,
   type AdminCardKindFilter,
   type AdminQueueStatus,
 } from "../db/queries/admin.js";
+import { RARITY_KEYS } from "../domain/rarity.js";
 import { approveQueued, rejectQueued } from "../db/queries/inject.js";
 import {
   parseCardFilename,
@@ -123,12 +125,33 @@ async function uploadImageToDiscord(
 function parseKind(raw: string): AdminCardKindFilter {
   return raw === "all" || raw === "empty" || raw === "remote" || raw === "static"
     ? raw
-    : "todo";
+    : "all";
 }
 
 /** A same-panel card-list URL, or "" — guards every `from` against open redirects. */
 function safeListUrl(raw: unknown): string {
   return typeof raw === "string" && /^\/admin\/cards(\?[^#]*)?$/.test(raw) ? raw : "";
+}
+
+/** Resolve pool/group/rarity list filters from raw query params. Unknown ids are ignored. */
+function resolveCardFilters(
+  pools: { poolId: string }[],
+  poolGroups: { poolId: string; groupId: string }[],
+  poolRaw: string,
+  groupRaw: string,
+  rarityRaw: string,
+): { poolId: string; groupId: string; rarity: string } {
+  const poolId = pools.some((p) => p.poolId === poolRaw) ? poolRaw : "";
+  const groupOk =
+    groupRaw !== "" &&
+    poolGroups.some(
+      (g) => g.groupId === groupRaw && (poolId === "" || g.poolId === poolId),
+    );
+  const groupId = groupOk ? groupRaw : "";
+  const rarity = (RARITY_KEYS as readonly string[]).includes(rarityRaw)
+    ? rarityRaw
+    : "";
+  return { poolId, groupId, rarity };
 }
 
 // Single-user owner panel: cookie is HttpOnly + SameSite=Lax + Secure with
@@ -190,15 +213,32 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const kind = parseKind(c.req.query("kind") ?? "");
     const q = c.req.query("q") ?? "";
     const db = createDb(c.env);
+    const [pools, poolGroups] = await Promise.all([
+      listAdminPools(db),
+      listAdminPoolGroups(db),
+    ]);
+    const { poolId, groupId, rarity } = resolveCardFilters(
+      pools,
+      poolGroups,
+      c.req.query("pool") ?? "",
+      c.req.query("group") ?? "",
+      c.req.query("rarity") ?? "",
+    );
+    const filters = {
+      poolId: poolId === "" ? undefined : poolId,
+      groupId: groupId === "" ? undefined : groupId,
+      rarity: rarity === "" ? undefined : (rarity as (typeof RARITY_KEYS)[number]),
+    };
     const { rows, total } = await listAdminCards(db, {
       kind,
       q,
       limit: 100,
       offset: 0,
+      ...filters,
     });
-    const counts = await countAdminCardKinds(db, q);
+    const counts = await countAdminCardKinds(db, q, filters);
     return c.html(
-      cardsPage({ rows, total, kind, q, counts, base: c.env.PUBLIC_BASE_URL, renderMessage: (c.req.query("msg") ?? "") === "" ? null : (c.req.query("msg") ?? ""), renderOk: (c.req.query("ok") ?? "") === "1" }),
+      cardsPage({ rows, total, kind, q, poolId, groupId, rarity, pools, poolGroups, counts, base: c.env.PUBLIC_BASE_URL, renderMessage: (c.req.query("msg") ?? "") === "" ? null : (c.req.query("msg") ?? ""), renderOk: (c.req.query("ok") ?? "") === "1" }),
     );
   });
 
@@ -279,20 +319,35 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
 
   admin.get("/cards/:id", async (c) => {
     const id = c.req.param("id");
-    const card = await getAdminCard(createDb(c.env), id);
+    const db = createDb(c.env);
+    const card = await getAdminCard(db, id);
     if (card === null) return c.text("Kartu tidak ditemukan", 404);
     const message = c.req.query("msg") ?? null;
     // Return to the exact list view the owner came from, and step through it.
     const from = safeListUrl(c.req.query("from") ?? "");
+    const [pools, poolGroups] = await Promise.all([
+      listAdminPools(db),
+      listAdminPoolGroups(db),
+    ]);
     let prev: { id: string; name: string } | undefined;
     let next: { id: string; name: string } | undefined;
     if (from !== "") {
       const params = new URL(from, "https://panel.local").searchParams;
-      const { rows } = await listAdminCards(createDb(c.env), {
+      const { poolId, groupId, rarity } = resolveCardFilters(
+        pools,
+        poolGroups,
+        params.get("pool") ?? "",
+        params.get("group") ?? "",
+        params.get("rarity") ?? "",
+      );
+      const { rows } = await listAdminCards(db, {
         kind: parseKind(params.get("kind") ?? ""),
         q: params.get("q") ?? "",
         limit: 100,
         offset: 0,
+        poolId: poolId === "" ? undefined : poolId,
+        groupId: groupId === "" ? undefined : groupId,
+        rarity: rarity === "" ? undefined : (rarity as (typeof RARITY_KEYS)[number]),
       });
       const i = rows.findIndex((r) => r.id === id);
       const at = (j: number): { id: string; name: string } | undefined => {
@@ -311,6 +366,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         back: from === "" ? "/admin/cards" : from,
         prev,
         next,
+        pools,
+        poolGroups,
       }),
     );
   });
@@ -320,20 +377,27 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const db = createDb(c.env);
     const card = await getAdminCard(db, id);
     if (card === null) return c.text("Kartu tidak ditemukan", 404);
-    const fail = (message: string): Response =>
+    const [pools, poolGroups] = await Promise.all([
+      listAdminPools(db),
+      listAdminPoolGroups(db),
+    ]);
+    const fail = (message: string, from: string): Response =>
       c.html(
         cardDetailPage({
           card,
           base: c.env.PUBLIC_BASE_URL,
           message,
           ok: false,
+          back: from === "" ? "/admin/cards" : from,
+          pools,
+          poolGroups,
         }),
       );
     let form: Record<string, string | File>;
     try {
       form = await c.req.parseBody();
     } catch {
-      return fail("Form tidak terbaca.");
+      return fail("Form tidak terbaca.", "");
     }
     const file = form["file"];
     const url =
@@ -350,21 +414,21 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         file,
         `🗂️ admin upload untuk ${id} oleh owner`,
       );
-      if (!uploaded.ok) return fail(uploaded.error);
+      if (!uploaded.ok) return fail(uploaded.error, from);
       await setAdminCardImage(db, id, uploaded.url);
       return done("Image diperbarui (remote/CDN).");
     }
     if (url !== "") {
       if (!url.startsWith("https://")) {
-        return fail("URL harus diawali https://");
+        return fail("URL harus diawali https://", from);
       }
       if (url.length > MAX_MANUAL_URL_LEN) {
-        return fail("URL terlalu panjang (maks 500).");
+        return fail("URL terlalu panjang (maks 500).", from);
       }
       await setAdminCardImage(db, id, url);
       return done("Image diperbarui (remote/CDN).");
     }
-    return fail("Pilih file upload atau isi URL manual.");
+    return fail("Pilih file upload atau isi URL manual.", from);
   });
 
   admin.post("/cards/:id/enabled", async (c) => {
@@ -406,6 +470,71 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         : `Label dipromosikan menjadi nama member ("${outcome.memberName}"). Minta render ulang bila kartu static.`;
     const ok = outcome.status === "ok" ? "1" : "0";
     return c.redirect(`/admin/cards/${encodeURIComponent(id)}?ok=${ok}&msg=${encodeURIComponent(msg)}`);
+  });
+
+  admin.post("/cards/:id/update", async (c) => {
+    const id = c.req.param("id");
+    const db = createDb(c.env);
+    let form: Record<string, string | File>;
+    try {
+      form = await c.req.parseBody();
+    } catch {
+      return c.text("Form tidak terbaca.", 400);
+    }
+    const from = safeListUrl(form["from"]);
+    const back = from === "" ? "/admin/cards" : from;
+    const [pools, poolGroups] = await Promise.all([
+      listAdminPools(db),
+      listAdminPoolGroups(db),
+    ]);
+    const card = await getAdminCard(db, id);
+    if (card === null) return c.text("Kartu tidak ditemukan", 404);
+    const fail = (message: string): Response =>
+      c.html(
+        cardDetailPage({
+          card,
+          base: c.env.PUBLIC_BASE_URL,
+          message,
+          ok: false,
+          back,
+          pools,
+          poolGroups,
+        }),
+      );
+    const memberName =
+      typeof form["memberName"] === "string" ? form["memberName"] : "";
+    const photoLabelRaw = form["photoLabel"];
+    const photoLabel =
+      typeof photoLabelRaw === "string" && photoLabelRaw !== ""
+        ? photoLabelRaw
+        : null;
+    const rarityRaw =
+      typeof form["rarity"] === "string" ? form["rarity"] : "";
+    const poolId = typeof form["poolId"] === "string" ? form["poolId"] : "";
+    const groupId =
+      typeof form["groupId"] === "string" ? form["groupId"] : "";
+    const holoEnabled = form["holoEnabled"] === "1";
+    const outcome = await updateAdminCardDetails(db, id, {
+      memberName,
+      photoLabel,
+      rarity: rarityRaw as (typeof RARITY_KEYS)[number],
+      holoEnabled,
+      poolId,
+      groupId,
+    });
+    if (outcome.status === "not-found") {
+      return c.text("Kartu tidak ditemukan", 404);
+    }
+    if (outcome.status === "unknown-group") {
+      return fail("Pool/grup tidak ditemukan.");
+    }
+    if (outcome.status === "invalid") {
+      return fail(outcome.error);
+    }
+    const keep = from === "" ? "" : `&from=${encodeURIComponent(from)}`;
+    return c.redirect(
+      `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent("Perubahan kartu disimpan.")}${keep}`,
+    );
   });
 
   admin.get("/inject", async (c) => {

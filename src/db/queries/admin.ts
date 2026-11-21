@@ -8,8 +8,9 @@ import {
   userCards,
   type Rarity,
 } from "../schema.js";
-import { nativeBatch, type Db } from "../client.js";
+import { nativeBatch, type Batchable, type Db } from "../client.js";
 import { slugifyBase } from "../../domain/submissions.js";
+import { RARITY_KEYS, type RarityKey } from "../../domain/rarity.js";
 import type { QueueRow } from "./inject.js";
 
 export type CardImageKind = "static" | "remote" | "empty";
@@ -83,8 +84,27 @@ function escapeLike(s: string): string {
   // D1 requires a single-char ESCAPE; "/" never appears in ids/names here.
   return s.replace(/[%_/]/g, (c) => `/${c}`);
 }
+export interface AdminCardFilters {
+  poolId?: string;
+  groupId?: string;
+  rarity?: RarityKey;
+}
 
-function cardWhere(kind: AdminCardKindFilter, q: string): SQL {
+function normalizeCardFilters(f: { poolId?: string; groupId?: string; rarity?: string }): AdminCardFilters {
+  return {
+    poolId: typeof f.poolId === "string" && f.poolId !== "" ? f.poolId : undefined,
+    groupId: typeof f.groupId === "string" && f.groupId !== "" ? f.groupId : undefined,
+    rarity: asRarityKey(f.rarity),
+  };
+}
+
+function asRarityKey(raw: unknown): RarityKey | undefined {
+  return typeof raw === "string" && (RARITY_KEYS as readonly string[]).includes(raw)
+    ? (raw as RarityKey)
+    : undefined;
+}
+
+function cardWhere(kind: AdminCardKindFilter, q: string, f: AdminCardFilters = {}): SQL {
   const conds: SQL[] = [];
   // Remote photos in excluded pools are final (never rendered), so they count as done, not work.
   if (kind === "todo") {
@@ -99,6 +119,15 @@ function cardWhere(kind: AdminCardKindFilter, q: string): SQL {
     conds.push(
       sql`((${cards.imageFile} != '' AND ${cards.imageFile} NOT LIKE 'http%') OR (${isRemote} AND ${inExcludedPool()}))`,
     );
+  }
+  if (typeof f.poolId === "string" && f.poolId !== "") {
+    conds.push(sql`${cards.poolId} = ${f.poolId}`);
+  }
+  if (typeof f.groupId === "string" && f.groupId !== "") {
+    conds.push(sql`${cards.groupId} = ${f.groupId}`);
+  }
+  if (f.rarity !== undefined) {
+    conds.push(sql`${cards.rarity} = ${f.rarity}`);
   }
   const needle = q.trim().toLowerCase();
   if (needle !== "") {
@@ -169,11 +198,14 @@ export async function listAdminCards(
     q: string;
     limit: number;
     offset: number;
+    poolId?: string;
+    groupId?: string;
+    rarity?: string;
   },
 ): Promise<{ rows: AdminCardRow[]; total: number }> {
   const limit = clampLimit(opts.limit);
   const offset = clampOffset(opts.offset);
-  const where = cardWhere(opts.kind, opts.q);
+  const where = cardWhere(opts.kind, opts.q, normalizeCardFilters(opts));
   const nowSec = Math.floor(Date.now() / 1000);
   // The todo queue leads with cards players can't see at all, and parks in-flight renders last.
   const order =
@@ -198,12 +230,13 @@ const COUNTED_KINDS = ["todo", "empty", "remote", "static", "all"] as const;
 export async function countAdminCardKinds(
   db: Db,
   q: string,
+  f: AdminCardFilters = {},
 ): Promise<Record<AdminCardKindFilter, number>> {
   const joinMembers = sql`JOIN ${members} ON ${members.id} = ${cards.memberId}`;
   const res = await nativeBatch(
     db,
     COUNTED_KINDS.map(
-      (k) => sql`SELECT COUNT(*) AS n FROM ${cards} ${joinMembers} WHERE ${cardWhere(k, q)}`,
+      (k) => sql`SELECT COUNT(*) AS n FROM ${cards} ${joinMembers} WHERE ${cardWhere(k, q, f)}`,
     ),
   );
   const n = (i: number): number =>
@@ -683,4 +716,177 @@ export async function promoteCardLabelToMember(
     db.update(cards).set({ photoLabel: null }).where(eq(cards.id, cardId)),
   ]);
   return { status: "ok", memberName: newMemberName, photoLabel: null };
+}
+
+export interface UpdateAdminCardDetailsInput {
+  memberName: string;
+  photoLabel: string | null;
+  rarity: RarityKey;
+  holoEnabled: boolean;
+  poolId: string;
+  groupId: string;
+}
+
+export type UpdateAdminCardDetailsOutcome =
+  | { status: "ok" }
+  | { status: "not-found" }
+  | { status: "invalid"; error: string }
+  | { status: "unknown-group" };
+
+/**
+ * Kelola kartu dari halaman detail: ganti nama member (member-level),
+ * label foto, rarity, dan holo (kartu ini saja), plus pindah pool/grup
+ * (member-level, SEMUA kartu milik member ikut pindah).
+ * Id (`members.id`, `cards.id`, `memberId` slug, `photoNo`) SENGAJA tidak
+ * pernah diganti agar stabil — alasan sama seperti swapCardMemberLabel.
+ * Tidak menyentuh `image_file`, `enabled`, atau `render_requested_at`.
+ */
+export async function updateAdminCardDetails(
+  db: Db,
+  cardId: string,
+  input: UpdateAdminCardDetailsInput,
+): Promise<UpdateAdminCardDetailsOutcome> {
+  const nama = input.memberName.trim();
+  if (nama === "") {
+    return { status: "invalid", error: "Nama kartu wajib diisi." };
+  }
+  if (nama.length > 60) {
+    return { status: "invalid", error: "Nama maks 60 karakter." };
+  }
+  const label =
+    input.photoLabel === null || input.photoLabel.trim() === ""
+      ? null
+      : input.photoLabel.trim();
+  if (label !== null && label.length > 60) {
+    return { status: "invalid", error: "Label maks 60 karakter." };
+  }
+  const rarity = asRarityKey(input.rarity);
+  if (rarity === undefined) {
+    return { status: "invalid", error: "Rarity tidak valid." };
+  }
+  const current = await db
+    .select({ id: cards.id, memberId: cards.memberId })
+    .from(cards)
+    .where(eq(cards.id, cardId))
+    .limit(1);
+  const cardRow = current[0];
+  if (cardRow === undefined) return { status: "not-found" };
+  const [memberRow] = await db
+    .select({ id: members.id, poolId: members.poolId, groupId: members.groupId })
+    .from(members)
+    .where(eq(members.id, cardRow.memberId))
+    .limit(1);
+  if (memberRow === undefined) return { status: "not-found" };
+  const siblingCards = await db
+    .select({ id: cards.id, poolId: cards.poolId, serial: cards.serial })
+    .from(cards)
+    .where(eq(cards.memberId, cardRow.memberId))
+    .orderBy(asc(cards.id));
+  const [destGroup] = await db
+    .select({ id: groups.id, poolId: groups.poolId })
+    .from(groups)
+    .where(
+      and(
+        eq(groups.id, input.groupId),
+        eq(groups.poolId, input.poolId),
+        eq(groups.enabled, true),
+      ),
+    )
+    .limit(1);
+  if (destGroup === undefined) return { status: "unknown-group" };
+  const nameLower = nama.toLowerCase();
+  const movePool = memberRow.poolId !== destGroup.poolId;
+  const poolsToRefresh = movePool
+    ? [memberRow.poolId, destGroup.poolId]
+    : [destGroup.poolId];
+  const groupsToRefresh =
+    memberRow.groupId === input.groupId
+      ? [input.groupId]
+      : [memberRow.groupId, input.groupId];
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    let serialBase = 0;
+    if (movePool) {
+      const [serialRow] = await db
+        .select({ m: sql<number | null>`max(serial)` })
+        .from(cards)
+        .where(eq(cards.poolId, destGroup.poolId));
+      serialBase = serialRow?.m ?? 0;
+    }
+    const stmts: Batchable[] = [
+      db
+        .update(members)
+        .set({ name: nama, nameLower })
+        .where(eq(members.id, cardRow.memberId)),
+      db
+        .update(cards)
+        .set({
+          photoLabel: label,
+          rarity,
+          holoEnabled: input.holoEnabled,
+          poolId: destGroup.poolId,
+          groupId: input.groupId,
+          ...(movePool
+            ? {
+                serial:
+                  serialBase +
+                  siblingCards.findIndex((c) => c.id === cardId) +
+                  1,
+              }
+            : {}),
+        })
+        .where(eq(cards.id, cardId)),
+    ];
+    siblingCards.forEach((c, index) => {
+      if (c.id === cardId) return;
+      stmts.push(
+        db
+          .update(cards)
+          .set({
+            poolId: destGroup.poolId,
+            groupId: input.groupId,
+            ...(movePool ? { serial: serialBase + index + 1 } : {}),
+          })
+          .where(eq(cards.id, c.id)),
+      );
+    });
+    stmts.push(
+      db
+        .update(members)
+        .set({ poolId: destGroup.poolId, groupId: input.groupId })
+        .where(eq(members.id, cardRow.memberId)),
+    );
+    for (const groupId of groupsToRefresh) {
+      stmts.push(
+        db
+          .update(groups)
+          .set({
+            memberCount: sql`(SELECT COUNT(*) FROM ${members} WHERE ${members.groupId} = ${groupId} AND ${members.enabled} = 1)`,
+          })
+          .where(eq(groups.id, groupId)),
+      );
+    }
+    for (const poolId of poolsToRefresh) {
+      stmts.push(
+        db
+          .update(pools)
+          .set({
+            memberCount: sql`(SELECT COUNT(*) FROM ${members} WHERE ${members.poolId} = ${poolId} AND ${members.enabled} = 1)`,
+          })
+          .where(eq(pools.id, poolId)),
+      );
+    }
+    try {
+      await nativeBatch(db, stmts);
+    } catch (err) {
+      if (
+        err instanceof Error &&
+        err.message.includes("UNIQUE constraint failed")
+      ) {
+        continue;
+      }
+      throw err;
+    }
+    return { status: "ok" };
+  }
+  return { status: "invalid", error: "Gagal menyimpan perubahan kartu." };
 }

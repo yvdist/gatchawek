@@ -26,6 +26,7 @@ import {
   listRenderableCards,
   markRenderRequested,
   countAdminCardKinds,
+  updateAdminCardDetails,
   RENDER_PENDING_SEC,
 } from "../src/db/queries/admin.js";
 import { syncInjectChannel } from "../src/scheduled.js";
@@ -455,5 +456,44 @@ describe("render requests", () => {
     const { rows } = await listAdminCards(db, { kind: "remote", q: "ucup", limit: 50, offset: 0 });
     expect(rows[0]).toMatchObject({ id: "ucup-01", renderable: true, renderPending: true });
     expect(typeof rows[0]?.renderRequestedAt).toBe("number");
+  });
+});
+
+describe("admin card filters and manage mutation", () => {
+  it("filters the list by pool and keeps tab badges consistent", async () => {
+    const { rows, total } = await listAdminCards(db, { kind: "all", q: "", limit: 50, offset: 0, poolId: "pejabat" });
+    expect(total).toBeGreaterThan(0);
+    expect(rows.every((r) => r.poolId === "pejabat")).toBe(true);
+    const counts = await countAdminCardKinds(db, "", { poolId: "pejabat" });
+    expect(counts.all).toBe(total);
+  });
+
+  it("ignores invalid filter values instead of failing", async () => {
+    const { total } = await listAdminCards(db, { kind: "all", q: "", limit: 50, offset: 0, rarity: "bogus" });
+    const plain = await listAdminCards(db, { kind: "all", q: "", limit: 50, offset: 0 });
+    expect(total).toBe(plain.total);
+  });
+
+  it("renames the member and moves its cards across groups with fresh serials", async () => {
+    await db.insert(pools).values({ id: "dest", name: "Dest", emoji: "x", staminaMax: 10, regenIntervalSec: 100, resetCooldownSec: 3600, memberCount: 0, enabled: true });
+    await db.insert(groups).values({ id: "dest-g", poolId: "dest", name: "Dest G", badge: "DG", memberCount: 0, enabled: true });
+    const outcome = await updateAdminCardDetails(db, "teddy-01", { memberName: "Teddy Baru", photoLabel: "Pose Satu", rarity: "rare", holoEnabled: true, poolId: "dest", groupId: "dest-g" });
+    expect(outcome).toEqual({ status: "ok" });
+    const moved = await getAdminCard(db, "teddy-01");
+    expect(moved).toMatchObject({ memberName: "Teddy Baru", photoLabel: "Pose Satu", rarity: "rare", holoEnabled: true, poolId: "dest" });
+    const sibling = await getAdminCard(db, "teddy-02");
+    expect(sibling?.poolId).toBe("dest");
+    expect(sibling?.memberName).toBe("Teddy Baru");
+    expect(new Set([moved?.serial, sibling?.serial]).size).toBe(2);
+    const destPool = await db.select({ memberCount: pools.memberCount }).from(pools).where(eq(pools.id, "dest"));
+    expect(destPool[0]?.memberCount).toBe(1);
+  });
+
+  it("rejects bad input without writing", async () => {
+    await expect(updateAdminCardDetails(db, "rapih-01", { memberName: "  ", photoLabel: null, rarity: "common", holoEnabled: false, poolId: "pejabat", groupId: "g2" })).resolves.toEqual({ status: "invalid", error: "Nama kartu wajib diisi." });
+    await expect(updateAdminCardDetails(db, "rapih-01", { memberName: "Rapih", photoLabel: null, rarity: "common", holoEnabled: false, poolId: "pejabat", groupId: "missing" })).resolves.toEqual({ status: "unknown-group" });
+    await expect(updateAdminCardDetails(db, "nope-99", { memberName: "X", photoLabel: null, rarity: "common", holoEnabled: false, poolId: "pejabat", groupId: "g2" })).resolves.toEqual({ status: "not-found" });
+    const untouched = await getAdminCard(db, "rapih-01");
+    expect(untouched?.memberName).toBe("Rapih Amat");
   });
 });
