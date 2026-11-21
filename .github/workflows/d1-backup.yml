@@ -1,0 +1,51 @@
+name: D1 daily backup
+
+# 00:10 UTC = 07:10 WIB, right after the D1 daily quota reset, so a spent
+# budget from the evening before never blocks the dump.
+on:
+  schedule:
+    - cron: "10 0 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: d1-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      BUCKET: gatchawek-cards
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.21.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # `d1 export` reads through D1's export API, which is not metered by the
+      # row-read quota — a backup still works during a quota outage.
+      - name: Export D1 and upload to R2
+        run: |
+          set -euo pipefail
+          file="d1-$(date -u +%F).sql"
+          pnpm exec wrangler d1 export gatchawek --remote --output "$file" --skip-confirmation
+          # Schema-only dumps are useless: fail loudly if data tables are empty.
+          test -s "$file"
+          grep -q 'INSERT INTO "cards"' "$file"
+          grep -q 'INSERT INTO "user_cards"' "$file"
+          pnpm exec wrangler r2 object put "$BUCKET/backups/$file" --file "$file" --remote
+      - name: Keep a 30-day window
+        run: |
+          set -euo pipefail
+          old="d1-$(date -u -d '30 days ago' +%F).sql"
+          pnpm exec wrangler r2 object delete "$BUCKET/backups/$old" --remote || true

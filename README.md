@@ -52,6 +52,25 @@ URL quick tunnel **berubah tiap run** dan harus dipasang ulang di portal setiap 
 Alternatif: deploy Worker staging gratis (`pnpm deploy`) — Fase 0 tanpa D1 sehingga staging tidak butuh D1
 terpisah. Di Fase 1+, staging memakai D1 terpisah.
 
+### Backup database (data sudah real)
+
+`.github/workflows/d1-backup.yml` mengekspor D1 tiap **07:10 WIB** (00:10 UTC, tepat setelah kuota baca harian reset)
+ke R2 `gatchawek-cards/backups/d1-YYYY-MM-DD.sql`, jendela simpan 30 hari. Manual kapan pun: tab Actions →
+`D1 daily backup` → Run workflow. `d1 export` memakai API export D1 (bukan query biasa), jadi **tetap jalan walau
+kuota baca harian habis** — sudah terbukti saat insiden 2026-11-21.
+
+Restore: uji dulu ke database baru, jangan langsung timpa produksi.
+
+```bash
+pnpm exec wrangler d1 create gatchawek-restore
+pnpm exec wrangler d1 execute gatchawek-restore --remote --file d1-2026-11-21.sql
+pnpm exec wrangler d1 execute gatchawek-restore --remote --command "SELECT COUNT(*) FROM user_cards"
+```
+
+Dump-nya SQLite murni, jadi bisa diimpor juga ke SQLite/Turso kalau D1 sedang tidak bisa dipakai — tapi itu
+salinan beku: pemakaian baru di sana tidak otomatis balik ke D1. D1 Time Travel aktif otomatis (Free: 7 hari,
+Paid: 30 hari) untuk "undo" beberapa jam terakhir: `pnpm exec wrangler d1 time-travel info gatchawek`.
+
 ## Menambah grup baru
 
 ### Grup baru
