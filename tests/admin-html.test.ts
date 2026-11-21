@@ -180,7 +180,9 @@ describe("cardsPage queue and render cap", () => {
     expect(html).toContain("tile is-final");
     expect(html).toContain("foto asli");
     expect(html).not.toContain('value="p-01"');
-    expect(html).not.toContain("/admin/cards/render-remote");
+    // The bar stays put but offers nothing to pick: no checkbox, disabled submit.
+    expect(html).not.toContain('id="pickAll"');
+    expect(html).toContain("Tidak ada kartu yang perlu dirender");
   });
 
   it("offers bulk render on the default todo tab; pending cards get a time chip, not a checkbox", () => {
@@ -814,7 +816,7 @@ describe("importPage", () => {
     expect(importPage({ pools })).toContain('class="tablewrap"');
   });
 
-  it("shows bulk render controls only when renderable cards are on the page", () => {
+  it("keeps the bulk bar on screen and enables picking only for renderable cards", () => {
     const row = {
       id: "r-01",
       memberName: "M",
@@ -861,8 +863,11 @@ describe("importPage", () => {
       pools: [],
       poolGroups: [],
     });
-    expect(all).not.toContain("/admin/cards/render-remote");
-    expect(all).not.toContain('name="ids"');
+    // Nothing renderable: the bar survives with a hint instead of vanishing.
+    expect(all).toContain('action="/admin/cards/render-remote"');
+    expect(all).not.toContain('<input type="checkbox" name="ids"');
+    expect(all).not.toContain('id="pickAll"');
+    expect(all).toContain("Tidak ada kartu yang perlu dirender");
   });
 
   it("shows the render result banner when provided", () => {
@@ -916,8 +921,9 @@ describe("importPage", () => {
       pools: [],
       poolGroups: [],
     });
-    // Nothing renderable on the page, so no render form at all.
-    expect(html).not.toContain('action="/admin/cards/render-remote"');
+    // Nothing renderable on the page: no checkbox, and the bar says why.
     expect(html).not.toContain('value="p-01"');
+    expect(html).not.toContain('id="pickAll"');
+    expect(html).toContain("Tidak ada kartu yang perlu dirender");
   });
 });
