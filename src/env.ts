@@ -15,4 +15,8 @@ export interface Env {
   ADMIN_PASSWORD: string;
   /** HMAC key for admin session cookies (wrangler secret). */
   ADMIN_SECRET: string;
+  /** Fine-grained PAT (this repo, Actions read+write) for manual render dispatch. Absent = tombol nonaktif, cron tetap jalan. */
+  GITHUB_ACTIONS_PAT?: string;
+  /** Repo slug for dispatch (default yvdist/gatchawek). */
+  GITHUB_REPO?: string;
 }

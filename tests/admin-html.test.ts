@@ -62,6 +62,7 @@ describe("cardsPage", () => {
           memberName: "<script>alert(1)</script>",
           groupBadge: "G",
           poolName: "P",
+          poolId: "ahli-ngebul",
           photoNo: 1,
           rarity: "common",
           imageFile: "a.webp",
@@ -89,6 +90,7 @@ describe("cardsPage", () => {
             memberName: "M",
             groupBadge: "G",
             poolName: "P",
+            poolId: "ahli-ngebul",
             photoNo: 1,
             rarity: "common",
             imageFile,
@@ -172,19 +174,16 @@ describe("injectPage", () => {
 });
 
 describe("importPage", () => {
-  const poolGroups = [
+  const pools = [
     {
       poolId: "ahli-ngebul",
       poolName: "Ahli Ngebul",
       poolEmoji: "💨",
-      groupId: "default",
-      groupName: "Default",
-      groupBadge: "NGEBUL",
     },
   ];
 
   it("renders drag-and-drop import UI, template guide, and Holo/Secret options", () => {
-    const html = importPage({ poolGroups });
+    const html = importPage({ pools });
     expect(html).toContain('id="dropzone"');
     expect(html).toContain('enctype="multipart/form-data"');
     expect(html).toContain("(rarity) - nama grup - nama kartu.ext");
@@ -193,18 +192,19 @@ describe("importPage", () => {
     expect(html).toContain("(holo) - refi kaget.jpg");
     expect(html).toContain("★★★★★ Holo");
     expect(html).toContain("(secret)");
-    expect(html).toContain('value="ahli-ngebul:default"');
-    expect(html).toContain("Ahli Ngebul · Default (NGEBUL)");
+    expect(html).toContain('value="ahli-ngebul"');
+    expect(html).toContain("💨 Ahli Ngebul");
+    expect(html).not.toContain("ahli-ngebul:default");
   });
 
   it("escapes error messages, pool labels, and batch result filenames", () => {
-    const basePg = poolGroups[0];
-    if (basePg === undefined) throw new Error("expected fixture");
+    const basePool = pools[0];
+    if (basePool === undefined) throw new Error("expected fixture");
     const html = importPage({
-      poolGroups: [
+      pools: [
         {
-          ...basePg,
-          groupName: "<script>bad()</script>",
+          ...basePool,
+          poolName: "<script>bad()</script>",
         },
       ],
       error: "<img src=x onerror=alert(1)>",
@@ -222,14 +222,14 @@ describe("importPage", () => {
     expect(html).not.toContain("<svg onload=alert(1)>");
   });
 
-  it("disables submit when no active pool groups exist", () => {
-    const html = importPage({ poolGroups: [] });
-    expect(html).toContain("Belum ada pool/grup aktif");
+  it("disables submit when no active pools exist", () => {
+    const html = importPage({ pools: [] });
+    expect(html).toContain("Belum ada pool aktif");
     expect(html).toContain('id="submitBtn" disabled');
   });
 
   it("renders the shared dark shell with active nav and theme tokens", () => {
-    const html = importPage({ poolGroups });
+    const html = importPage({ pools });
     expect(html).toContain('class="topbar"');
     expect(html).toContain('aria-current="page"');
     expect(html).toContain("--bg:");
@@ -243,6 +243,7 @@ describe("importPage", () => {
           memberName: "M",
           groupBadge: "G",
           poolName: "P",
+          poolId: "ahli-ngebul",
           photoNo: 1,
           rarity: "secret",
           imageFile: "a.webp",
@@ -260,7 +261,7 @@ describe("importPage", () => {
   });
 
   it("keeps the dropzone contract with label, file input, and aria", () => {
-    const html = importPage({ poolGroups });
+    const html = importPage({ pools });
     expect(html).toContain('id="dropzone"');
     expect(html).toContain('aria-label="Seret dan lepas gambar ke sini atau klik untuk memilih file"');
     expect(html).toContain('for="fileInput"');
@@ -278,6 +279,82 @@ describe("importPage", () => {
     expect(forCards).toContain('class="tablewrap"');
     const forInject = injectPage({ rows: [], total: 0, status: "pending", ok: null });
     expect(forInject).toContain('class="tablewrap"');
-    expect(importPage({ poolGroups })).toContain('class="tablewrap"');
+    expect(importPage({ pools })).toContain('class="tablewrap"');
+  });
+
+  it("shows bulk render controls only on the remote tab", () => {
+    const row = {
+      id: "r-01",
+      memberName: "M",
+      groupBadge: "G",
+      poolName: "P",
+      poolId: "ahli-ngebul",
+      photoNo: 1,
+      rarity: "rare" as const,
+      imageFile: "https://cdn.example/x.jpg",
+      imageKind: "remote" as const,
+      enabled: true,
+      quantityOwned: 0,
+    };
+    const remote = cardsPage({
+      rows: [row],
+      total: 1,
+      kind: "remote",
+      q: "",
+      base: "example.test",
+    });
+    expect(remote).toContain('action="/admin/cards/render-remote"');
+    expect(remote).toContain('name="ids" value="r-01"');
+    expect(remote).toContain('id="renderBtn"');
+    expect(remote).toContain("Minta render (0)");
+    const all = cardsPage({
+      rows: [{ ...row, imageKind: "static", imageFile: "a.webp" }],
+      total: 1,
+      kind: "all",
+      q: "",
+      base: "example.test",
+    });
+    expect(all).not.toContain("/admin/cards/render-remote");
+    expect(all).not.toContain('name="ids"');
+  });
+
+  it("shows the render result banner when provided", () => {
+    const html = cardsPage({
+      rows: [],
+      total: 0,
+      kind: "remote",
+      q: "",
+      base: "example.test",
+      renderMessage: "Render 2 kartu diminta.",
+      renderOk: true,
+    });
+    expect(html).toContain("Render 2 kartu diminta.");
+    expect(html).toContain("is-ok");
+  });
+
+  it("hides the render checkbox for pejabat cards", () => {
+    const html = cardsPage({
+      rows: [
+        {
+          id: "p-01",
+          memberName: "M",
+          groupBadge: "G",
+          poolName: "Pejabat",
+          poolId: "pejabat",
+          photoNo: 1,
+          rarity: "rare",
+          imageFile: "https://cdn.example/x.jpg",
+          imageKind: "remote",
+          enabled: true,
+          quantityOwned: 0,
+        },
+      ],
+      total: 1,
+      kind: "remote",
+      q: "",
+      base: "example.test",
+    });
+    expect(html).toContain('action="/admin/cards/render-remote"');
+    expect(html).not.toContain('value="p-01"');
   });
 });

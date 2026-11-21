@@ -9,12 +9,15 @@ import {
 } from "./auth.js";
 import { createDb } from "../db/client.js";
 import {
+  ensureImportGroup,
   getAdminCard,
   getAdminCounts,
   importAdminCard,
   listAdminCards,
   listAdminPoolGroups,
+  listAdminPools,
   listAdminQueue,
+  listRenderableCards,
   setAdminCardEnabled,
   setAdminCardImage,
   type AdminCardKindFilter,
@@ -25,6 +28,7 @@ import {
   parseCardFilename,
   parseRarityAlias,
 } from "../domain/cardImport.js";
+import { planGroupForImport } from "../domain/importGroups.js";
 import type { Env } from "../env.js";
 import {
   cardDetailPage,
@@ -111,38 +115,6 @@ async function uploadImageToDiscord(
   return { ok: true, url: cdn, messageId, messageUrl };
 }
 
-/**
- * Resolve a per-file group segment against known pool groups. Prefers the
- * dropdown pool; allows cross-pool matches when the name is unique there.
- * Returns the matched `{ poolId, groupId }` or the reason it cannot resolve.
- */
-function resolveImportGroup(
-  poolGroups: { poolId: string; groupId: string; groupName: string }[],
-  rawGroup: string | null,
-  preferredPoolId: string,
-): { poolId: string; groupId: string } | "unknown" | "ambiguous" {
-  const norm = (raw: string): string =>
-    raw.trim().toLowerCase().replace(/\s+/g, " ");
-  if (rawGroup === null) return "unknown";
-  const want = norm(rawGroup);
-  if (want === "") return "unknown";
-  const matches = poolGroups.filter(
-    (pg) => norm(pg.groupName) === want || norm(pg.groupId) === want,
-  );
-  if (matches.length === 0) return "unknown";
-  const inPool = matches.filter((pg) => pg.poolId === preferredPoolId);
-  if (inPool.length === 1) {
-    const hit = inPool[0] as { poolId: string; groupId: string };
-    return { poolId: hit.poolId, groupId: hit.groupId };
-  }
-  if (inPool.length > 1) return "ambiguous";
-  if (matches.length === 1) {
-    const hit = matches[0] as { poolId: string; groupId: string };
-    return { poolId: hit.poolId, groupId: hit.groupId };
-  }
-  return "ambiguous";
-}
-
 // Single-user owner panel: cookie is HttpOnly + SameSite=Lax + Secure with
 // POST-only mutations, proportional to this threat model (no CSRF token).
 
@@ -213,7 +185,63 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       offset: 0,
     });
     return c.html(
-      cardsPage({ rows, total, kind, q, base: c.env.PUBLIC_BASE_URL }),
+      cardsPage({ rows, total, kind, q, base: c.env.PUBLIC_BASE_URL, renderMessage: (c.req.query("msg") ?? "") === "" ? null : (c.req.query("msg") ?? ""), renderOk: (c.req.query("ok") ?? "") === "1" }),
+    );
+  });
+
+  admin.post("/cards/render-remote", async (c) => {
+    const fail = (message: string): Response =>
+      c.redirect(
+        `/admin/cards?kind=remote&ok=0&msg=${encodeURIComponent(message)}`,
+      );
+    const pat = c.env.GITHUB_ACTIONS_PAT;
+    if (pat === undefined || pat === "") {
+      return fail(
+        "Render manual belum dikonfigurasi (GitHub PAT kosong). Cron 15 menit tetap berjalan.",
+      );
+    }
+    let formData: FormData;
+    try {
+      formData = await c.req.formData();
+    } catch {
+      return fail("Form tidak terbaca.");
+    }
+    const rawIds = formData
+      .getAll("ids")
+      .map((v) => (typeof v === "string" ? v.trim() : ""))
+      .filter((v) => v !== "");
+    if (rawIds.length === 0) return fail("Pilih minimal 1 kartu remote.");
+    if (rawIds.length > 50) return fail("Maksimal 50 kartu per render.");
+    const renderable = await listRenderableCards(createDb(c.env), rawIds);
+    if (renderable.length === 0) {
+      return fail("Tidak ada kartu remote valid dari pilihan.");
+    }
+    const skipped = rawIds.length - renderable.length;
+    const repo =
+      c.env.GITHUB_REPO === undefined || c.env.GITHUB_REPO === ""
+        ? "yvdist/gatchawek"
+        : c.env.GITHUB_REPO;
+    const res = await fetch(
+      `https://api.github.com/repos/${repo}/actions/workflows/render-remote.yml/dispatches`,
+      {
+        method: "POST",
+        headers: {
+          Accept: "application/vnd.github+json",
+          Authorization: `Bearer ${pat}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ref: "main",
+          inputs: { ids: renderable.map((r) => r.id).join(",") },
+        }),
+      },
+    );
+    if (!res.ok) {
+      return fail(`GitHub dispatch gagal (${String(res.status)}). Coba lagi.`);
+    }
+    const skipNote = skipped > 0 ? ` (${String(skipped)} dilewati)` : "";
+    return c.redirect(
+      `/admin/cards?kind=remote&ok=1&msg=${encodeURIComponent(`Render ${String(renderable.length)} kartu diminta${skipNote}. Cek lagi ~15 menit.`)}`,
     );
   });
 
@@ -338,8 +366,8 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
   });
 
   admin.get("/import", async (c) => {
-    const poolGroups = await listAdminPoolGroups(createDb(c.env));
-    return c.html(importPage({ poolGroups }));
+    const pools = await listAdminPools(createDb(c.env));
+    return c.html(importPage({ pools }));
   });
 
   admin.post("/import", async (c) => {
@@ -347,6 +375,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       "application/json",
     );
     const db = createDb(c.env);
+    const pools = await listAdminPools(db);
     const poolGroups = await listAdminPoolGroups(db);
     let formData: FormData;
     try {
@@ -355,23 +384,26 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       const msg = "Form tidak terbaca.";
       return wantsJson
         ? c.json({ ok: false, error: msg, results: [] }, 400)
-        : c.html(importPage({ poolGroups, error: msg }), 400);
+        : c.html(importPage({ pools, error: msg }), 400);
     }
 
     const poolGroupRaw = formData.get("poolGroup");
-    const poolGroupStr =
+    const poolId =
       typeof poolGroupRaw === "string" ? poolGroupRaw.trim() : "";
-    const sep = poolGroupStr.indexOf(":");
-    const poolId = sep > 0 ? poolGroupStr.slice(0, sep) : "";
-    const groupId = sep > 0 ? poolGroupStr.slice(sep + 1) : "";
-    const target = poolGroups.find(
-      (pg) => pg.poolId === poolId && pg.groupId === groupId,
-    );
-    if (target === undefined) {
-      const msg = "Pilih target pool dan grup yang valid.";
+    const pool = pools.find((p) => p.poolId === poolId);
+    if (pool === undefined) {
+      const msg = "Pilih target pool yang valid.";
       return wantsJson
         ? c.json({ ok: false, error: msg, results: [] }, 400)
-        : c.html(importPage({ poolGroups, error: msg }), 400);
+        : c.html(importPage({ pools, error: msg }), 400);
+    }
+    const fallback =
+      poolGroups.find((pg) => pg.poolId === pool.poolId) ?? null;
+    if (fallback === null) {
+      const msg = "Pool belum punya grup aktif.";
+      return wantsJson
+        ? c.json({ ok: false, error: msg, results: [] }, 400)
+        : c.html(importPage({ pools, error: msg }), 400);
     }
 
     const rawFiles = [
@@ -382,7 +414,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       const msg = "Pilih minimal 1 file gambar.";
       return wantsJson
         ? c.json({ ok: false, error: msg, results: [] }, 400)
-        : c.html(importPage({ poolGroups, error: msg }), 400);
+        : c.html(importPage({ pools, error: msg }), 400);
     }
 
     const namaList = formData
@@ -396,6 +428,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       .map((v) => (typeof v === "string" ? v : ""));
 
     const results: ImportBatchItemResult[] = [];
+    const createdInBatch = new Set<string>();
     const baseNow = Date.now();
     for (let i = 0; i < rawFiles.length; i += 1) {
       const file = rawFiles[i];
@@ -431,27 +464,59 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         });
         continue;
       }
-      let destPoolId = target.poolId;
-      let destGroupId = target.groupId;
+      let destPoolId = fallback.poolId;
+      let destGroupId = fallback.groupId;
+      let createdGroupName: string | null = null;
       if (parsed.rawGroup !== null) {
-        const resolved = resolveImportGroup(
-          poolGroups,
+        const planned = planGroupForImport(
           parsed.rawGroup,
-          target.poolId,
+          poolGroups,
+          pool.poolId,
         );
-        if (resolved === "unknown" || resolved === "ambiguous") {
+        if (planned === "ambiguous") {
           results.push({
             filename: file.name,
             ok: false,
-            message:
-              resolved === "ambiguous"
-                ? `Grup "${parsed.rawGroup}" ambigu, pilih lebih spesifik.`
-                : `Grup "${parsed.rawGroup}" tidak dikenal.`,
+            message: `Grup "${parsed.rawGroup}" ambigu, pilih lebih spesifik.`,
           });
           continue;
         }
-        destPoolId = resolved.poolId;
-        destGroupId = resolved.groupId;
+        if (planned === "use-dropdown") {
+          // Legacy 2-segment form: keep the dropdown target.
+        } else if ("create" in planned) {
+          const clash = poolGroups.find(
+            (pg) =>
+              pg.poolId === planned.create.poolId &&
+              pg.groupId === planned.create.groupId,
+          );
+          if (clash !== undefined) {
+            results.push({
+              filename: file.name,
+              ok: false,
+              message: `Grup "${parsed.rawGroup}" ambigu, pilih lebih spesifik.`,
+            });
+            continue;
+          }
+          const createdKey = `${planned.create.poolId}:${planned.create.groupId}`;
+          if (!createdInBatch.has(createdKey)) {
+            await ensureImportGroup(db, planned.create);
+            poolGroups.push({
+              poolId: planned.create.poolId,
+              poolName: pool.poolName,
+              poolEmoji: pool.poolEmoji,
+              groupId: planned.create.groupId,
+              groupName: planned.create.name,
+              groupBadge: planned.create.badge,
+            });
+            createdInBatch.add(createdKey);
+          }
+          destPoolId = planned.create.poolId;
+          destGroupId = planned.create.groupId;
+          createdGroupName = planned.create.name;
+        } else if ("use" in planned) {
+          destPoolId = planned.use.poolId;
+          destGroupId = planned.use.groupId;
+        }
       }
       const uploaded = await uploadImageToDiscord(
         c.env,
@@ -482,7 +547,10 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         results.push({
           filename: file.name,
           ok: true,
-          message: `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)})`,
+          message:
+            createdGroupName === null
+              ? `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)})`
+              : `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)}) · grup baru ${createdGroupName}`,
           cardId: outcome.cardId,
           serial: outcome.serial,
         });
@@ -517,7 +585,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     if (wantsJson) {
       return c.json({ ok: allOk, results });
     }
-    return c.html(importPage({ poolGroups, results, error: null }));
+    return c.html(importPage({ pools, results, error: null }));
   });
 
   // Mounted under /admin by the caller.

@@ -11,7 +11,15 @@ export const ANIM_H = 600;
 const ANIM_FRAMES = 12;
 const ANIM_DELAY_MS = 75;
 const RADIUS = 36;
-const BORDER = 8;
+const BORDER = 14;
+
+export function isAnimatedRarity(rarity: string): boolean {
+  return rarity === "holo" || rarity === "secret";
+}
+
+export function cardFileExtension(rarity: string): "gif" | "webp" {
+  return isAnimatedRarity(rarity) ? "gif" : "webp";
+}
 
 export interface CardInput {
   cardId: string;
@@ -28,48 +36,113 @@ export interface CardInput {
   focusY: number;
 }
 
-export function isAnimatedRarity(rarity: string): boolean {
-  return rarity === "holo" || rarity === "secret";
+interface TierStyle {
+  label: string;
+  stars: string;
+  stops: string[];
+  accent: string;
+  accent2: string;
+  glow: string;
+  sheenStops: string[];
+  sheenAlpha: number;
 }
 
-export function cardFileExtension(rarity: string): "gif" | "webp" {
-  return isAnimatedRarity(rarity) ? "gif" : "webp";
-}
-
-const RARITY_STOPS: Record<string, string[]> = {
-  common: ["#9CA3AF", "#E5E7EB"],
-  rare: ["#F472B6", "#A855F7", "#22D3EE"],
-  super_rare: ["#F59E0B", "#FDE68A"],
-  ultra_rare: ["#F43F5E", "#F59E0B", "#10B981", "#3B82F6", "#A855F7"],
-  holo: ["#38BDF8", "#A855F7", "#EC4899", "#F59E0B", "#10B981"],
-  secret: ["#22D3EE", "#A5F3FC", "#0EA5E9"],
+const DEFAULT_TIER: TierStyle = {
+  label: "Common",
+  stars: "★",
+  stops: ["#475569", "#CBD5E1", "#F8FAFC", "#94A3B8", "#334155"],
+  accent: "#E2E8F0",
+  accent2: "#94A3B8",
+  glow: "rgba(226,232,240,0.45)",
+  sheenStops: [
+    "rgba(255,255,255,0)",
+    "rgba(255,255,255,0.22)",
+    "rgba(255,255,255,0)",
+  ],
+  sheenAlpha: 0.22,
 };
 
-const RARITY_COLOR: Record<string, string> = {
-  common: "#9CA3AF",
-  rare: "#A855F7",
-  super_rare: "#F59E0B",
-  ultra_rare: "#EC4899",
-  holo: "#FFD700",
-  secret: "#22D3EE",
-};
-
-const RARITY_LABEL: Record<string, string> = {
-  common: "Common",
-  rare: "Rare",
-  super_rare: "Super Rare",
-  ultra_rare: "Ultra Rare",
-  holo: "Holo",
-  secret: "Secret",
-};
-
-const RARITY_STARS: Record<string, string> = {
-  common: "★",
-  rare: "★★",
-  super_rare: "★★★",
-  ultra_rare: "★★★★",
-  holo: "★★★★★",
-  secret: "★★★★★★",
+const TIERS: Record<string, TierStyle> = {
+  common: DEFAULT_TIER,
+  rare: {
+    label: "Rare",
+    stars: "★★",
+    stops: ["#6D28D9", "#A855F7", "#F472B6", "#22D3EE", "#4C1D95"],
+    accent: "#D8B4FE",
+    accent2: "#22D3EE",
+    glow: "rgba(168,85,247,0.75)",
+    sheenStops: [
+      "rgba(34,211,238,0)",
+      "rgba(192,132,252,0.5)",
+      "rgba(34,211,238,0.4)",
+      "rgba(34,211,238,0)",
+    ],
+    sheenAlpha: 0.28,
+  },
+  super_rare: {
+    label: "Super Rare",
+    stars: "★★★",
+    stops: ["#78350F", "#D97706", "#FDE047", "#FFFFFF", "#F59E0B", "#92400E"],
+    accent: "#FDE047",
+    accent2: "#F59E0B",
+    glow: "rgba(245,158,11,0.85)",
+    sheenStops: [
+      "rgba(245,158,11,0)",
+      "rgba(254,240,138,0.65)",
+      "rgba(255,255,255,0.5)",
+      "rgba(245,158,11,0)",
+    ],
+    sheenAlpha: 0.34,
+  },
+  ultra_rare: {
+    label: "Ultra Rare",
+    stars: "★★★★",
+    stops: ["#BE123C", "#F43F5E", "#F59E0B", "#10B981", "#3B82F6", "#A855F7"],
+    accent: "#F9A8D4",
+    accent2: "#FDE047",
+    glow: "rgba(244,63,94,0.9)",
+    sheenStops: [
+      "rgba(244,63,94,0)",
+      "rgba(251,191,36,0.55)",
+      "rgba(255,255,255,0.5)",
+      "rgba(52,211,153,0.45)",
+      "rgba(168,85,247,0)",
+    ],
+    sheenAlpha: 0.4,
+  },
+  holo: {
+    label: "Holo",
+    stars: "★★★★★",
+    stops: ["#06B6D4", "#8B5CF6", "#EC4899", "#FACC15", "#10B981", "#38BDF8", "#FFFFFF"],
+    accent: "#FDE047",
+    accent2: "#38BDF8",
+    glow: "rgba(250,204,21,0.95)",
+    sheenStops: [
+      "rgba(56,189,248,0)",
+      "rgba(253,224,71,0.7)",
+      "rgba(255,255,255,0.75)",
+      "rgba(236,72,153,0.6)",
+      "rgba(52,211,153,0.6)",
+      "rgba(168,85,247,0)",
+    ],
+    sheenAlpha: 0.48,
+  },
+  secret: {
+    label: "Secret",
+    stars: "★★★★★★",
+    stops: ["#082F49", "#0EA5E9", "#67E8F9", "#FFFFFF", "#A78BFA", "#22D3EE", "#0F172A"],
+    accent: "#A5F3FC",
+    accent2: "#C4B5FD",
+    glow: "rgba(34,211,238,1)",
+    sheenStops: [
+      "rgba(14,165,233,0)",
+      "rgba(165,243,252,0.8)",
+      "rgba(255,255,255,0.85)",
+      "rgba(196,181,253,0.7)",
+      "rgba(34,211,238,0)",
+    ],
+    sheenAlpha: 0.54,
+  },
 };
 
 let fontsRegistered = false;
@@ -102,27 +175,34 @@ export function registerFonts(fontsDir: string): boolean {
 
 type Ctx = ReturnType<ReturnType<typeof createCanvas>["getContext"]>;
 
-function roundRectPath(ctx: Ctx, w: number, h: number, r: number): void {
+function roundRectPath(
+  ctx: Ctx,
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  r: number,
+): void {
   ctx.beginPath();
-  ctx.moveTo(r, 0);
-  ctx.lineTo(w - r, 0);
-  ctx.arcTo(w, 0, w, r, r);
-  ctx.lineTo(w, h - r);
-  ctx.arcTo(w, h, w - r, h, r);
-  ctx.lineTo(r, h);
-  ctx.arcTo(0, h, 0, h - r, r);
-  ctx.lineTo(0, r);
-  ctx.arcTo(0, 0, r, 0, r);
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
   ctx.closePath();
 }
 
-function gradientFor(
+function makeGradient(
   ctx: Ctx,
+  x0: number,
+  y0: number,
+  x1: number,
+  y1: number,
   stops: string[],
-  x0 = 0,
-  y0 = 0,
-  x1 = CARD_W,
-  y1 = CARD_H,
 ): CanvasGradient {
   const grad = ctx.createLinearGradient(x0, y0, x1, y1);
   stops.forEach((color, i) => {
@@ -131,23 +211,391 @@ function gradientFor(
   return grad;
 }
 
-async function drawBaseCard(ctx: Ctx, input: CardInput): Promise<void> {
-  // Border: rounded-rect gradient slab, inner photo clipped inside.
-  const stops =
-    RARITY_STOPS[input.rarity] ?? RARITY_STOPS["common"] ?? ["#9CA3AF"];
-  ctx.fillStyle = gradientFor(ctx, stops);
-  roundRectPath(ctx, CARD_W, CARD_H, RADIUS);
+function drawAnamorphicFlare(
+  ctx: Ctx,
+  cx: number,
+  cy: number,
+  width: number,
+  color: string,
+  alpha: number,
+): void {
+  ctx.save();
+  ctx.translate(cx, cy);
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = alpha;
+
+  const hg = ctx.createLinearGradient(-width, 0, width, 0);
+  hg.addColorStop(0, "rgba(255,255,255,0)");
+  hg.addColorStop(0.35, color);
+  hg.addColorStop(0.5, "#FFFFFF");
+  hg.addColorStop(0.65, color);
+  hg.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = hg;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, width, 2.5, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  const inner = BORDER;
-  const iw = CARD_W - inner * 2;
-  const ih = CARD_H - inner * 2;
+  const vg = ctx.createLinearGradient(0, -width * 0.28, 0, width * 0.28);
+  vg.addColorStop(0, "rgba(255,255,255,0)");
+  vg.addColorStop(0.5, "#FFFFFF");
+  vg.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = vg;
+  ctx.beginPath();
+  ctx.ellipse(0, 0, 2, width * 0.28, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
+function drawGradeMotif(
+  ctx: Ctx,
+  rarity: string,
+  iw: number,
+  ih: number,
+  tier: TierStyle,
+): void {
+  if (rarity === "common") {
+    const m = 16;
+    const len = 26;
+    ctx.save();
+    ctx.strokeStyle = "rgba(226,232,240,0.6)";
+    ctx.lineWidth = 1.5;
+    for (const [cx, cy, sx, sy] of [
+      [m, m, 1, 1],
+      [iw - m, m, -1, 1],
+      [m, ih - m, 1, -1],
+      [iw - m, ih - m, -1, -1],
+    ] as const) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + sy * len);
+      ctx.lineTo(cx, cy);
+      ctx.lineTo(cx + sx * len, cy);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+
+  if (rarity === "rare") {
+    ctx.save();
+    ctx.shadowColor = tier.glow;
+    ctx.shadowBlur = 12;
+    ctx.strokeStyle = makeGradient(ctx, 0, 120, 0, ih - 180, [
+      "rgba(34,211,238,0)",
+      tier.accent2,
+      tier.accent,
+      "rgba(168,85,247,0)",
+    ]);
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(14, 150);
+    ctx.lineTo(14, ih - 210);
+    ctx.moveTo(iw - 14, 150);
+    ctx.lineTo(iw - 14, ih - 210);
+    ctx.stroke();
+
+    ctx.strokeStyle = tier.accent2;
+    ctx.lineWidth = 2;
+    for (const [cx, cy, sx, sy] of [
+      [14, 14, 1, 1],
+      [iw - 14, 14, -1, 1],
+      [14, ih - 14, 1, -1],
+      [iw - 14, ih - 14, -1, -1],
+    ] as const) {
+      ctx.beginPath();
+      ctx.moveTo(cx, cy + sy * 36);
+      ctx.lineTo(cx, cy + sy * 12);
+      ctx.lineTo(cx + sx * 12, cy);
+      ctx.lineTo(cx + sx * 36, cy);
+      ctx.stroke();
+    }
+    ctx.restore();
+    return;
+  }
+
+  if (rarity === "super_rare") {
+    ctx.save();
+    ctx.shadowColor = tier.glow;
+    ctx.shadowBlur = 12;
+    ctx.strokeStyle = tier.accent;
+    ctx.lineWidth = 1.8;
+    roundRectPath(ctx, 12, 12, iw - 24, ih - 24, RADIUS - BORDER - 8);
+    ctx.stroke();
+
+    for (const [cx, cy, sx, sy] of [
+      [12, 12, 1, 1],
+      [iw - 12, 12, -1, 1],
+      [12, ih - 12, 1, -1],
+      [iw - 12, ih - 12, -1, -1],
+    ] as const) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(sx, sy);
+      ctx.beginPath();
+      ctx.moveTo(0, 48);
+      ctx.lineTo(14, 48);
+      ctx.lineTo(14, 14);
+      ctx.lineTo(48, 14);
+      ctx.lineTo(48, 0);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    ctx.fillStyle = "#FEF08A";
+    ctx.beginPath();
+    ctx.moveTo(iw / 2, 16);
+    ctx.lineTo(iw / 2 + 12, 28);
+    ctx.lineTo(iw / 2, 40);
+    ctx.lineTo(iw / 2 - 12, 28);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+    return;
+  }
+
+  if (rarity === "ultra_rare") {
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    const shards: Array<[number, number, number, number, number, number, string]> = [
+      [0, 120, 110, 260, 0, 340, "rgba(244,63,94,0.22)"],
+      [iw, 180, iw - 125, 310, iw, 420, "rgba(59,130,246,0.22)"],
+      [0, 420, 95, 520, 0, 610, "rgba(251,191,36,0.18)"],
+      [iw, 480, iw - 105, 580, iw, 670, "rgba(168,85,247,0.22)"],
+    ];
+    for (const [x1, y1, x2, y2, x3, y3, col] of shards) {
+      ctx.fillStyle = col;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.lineTo(x3, y3);
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255,255,255,0.28)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.shadowColor = tier.glow;
+    ctx.shadowBlur = 14;
+    for (const [cx, cy, sx, sy] of [
+      [10, 10, 1, 1],
+      [iw - 10, 10, -1, 1],
+      [10, ih - 10, 1, -1],
+      [iw - 10, ih - 10, -1, -1],
+    ] as const) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(sx, sy);
+      ctx.fillStyle = "rgba(15, 23, 42, 0.85)";
+      ctx.strokeStyle = makeGradient(ctx, 0, 0, 56, 56, tier.stops);
+      ctx.lineWidth = 2.2;
+      ctx.beginPath();
+      ctx.moveTo(0, 54);
+      ctx.lineTo(0, 12);
+      ctx.lineTo(12, 0);
+      ctx.lineTo(54, 0);
+      ctx.lineTo(38, 16);
+      ctx.lineTo(16, 16);
+      ctx.lineTo(16, 38);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+    ctx.restore();
+    return;
+  }
+
+  if (rarity === "holo") {
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.lineWidth = 1.3;
+    for (let i = 0; i < 16; i += 1) {
+      const yBase = 80 + i * 38;
+      ctx.strokeStyle = makeGradient(ctx, 0, yBase, iw, yBase + 60, [
+        "rgba(56,189,248,0)",
+        "rgba(253,224,71,0.22)",
+        "rgba(236,72,153,0.22)",
+        "rgba(52,211,153,0.22)",
+        "rgba(56,189,248,0)",
+      ]);
+      ctx.beginPath();
+      ctx.moveTo(0, yBase);
+      ctx.bezierCurveTo(
+        iw * 0.33,
+        yBase - 34,
+        iw * 0.66,
+        yBase + 34,
+        iw,
+        yBase - 12,
+      );
+      ctx.stroke();
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.shadowColor = tier.glow;
+    ctx.shadowBlur = 16;
+    ctx.strokeStyle = makeGradient(ctx, 0, 0, iw, ih, tier.stops);
+    ctx.lineWidth = 2.2;
+    roundRectPath(ctx, 10, 10, iw - 20, ih - 20, RADIUS - BORDER - 6);
+    ctx.stroke();
+
+    for (const [cx, cy, sx, sy] of [
+      [10, 10, 1, 1],
+      [iw - 10, 10, -1, 1],
+      [10, ih - 10, 1, -1],
+      [iw - 10, ih - 10, -1, -1],
+    ] as const) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(sx, sy);
+      ctx.fillStyle = makeGradient(ctx, 0, 0, 60, 60, tier.stops);
+      ctx.beginPath();
+      ctx.moveTo(0, 64);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(64, 0);
+      ctx.lineTo(48, 12);
+      ctx.lineTo(18, 12);
+      ctx.lineTo(12, 18);
+      ctx.lineTo(12, 48);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+
+    drawAnamorphicFlare(ctx, iw - 86, 53, 180, "#FDE047", 0.85);
+    return;
+  }
+
+  if (rarity === "secret") {
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    for (let i = 0; i < 3; i += 1) {
+      const y0 = 150 + i * 140;
+      const g = ctx.createLinearGradient(0, y0 - 80, iw, y0 + 80);
+      g.addColorStop(0, "rgba(34,211,238,0)");
+      g.addColorStop(0.35, "rgba(103,232,249,0.22)");
+      g.addColorStop(0.65, "rgba(167,139,250,0.22)");
+      g.addColorStop(1, "rgba(34,211,238,0)");
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(0, y0);
+      ctx.bezierCurveTo(iw * 0.3, y0 - 90, iw * 0.7, y0 + 90, iw, y0 - 20);
+      ctx.lineTo(iw, y0 + 55);
+      ctx.bezierCurveTo(iw * 0.7, y0 + 145, iw * 0.3, y0 - 35, 0, y0 + 55);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.restore();
+
+    ctx.save();
+    ctx.globalCompositeOperation = "screen";
+    ctx.strokeStyle = "rgba(165,243,252,0.32)";
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(iw / 2, ih * 0.36, 210, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = "rgba(196,181,253,0.26)";
+    ctx.beginPath();
+    ctx.arc(iw / 2, ih * 0.36, 232, -Math.PI * 0.85, -Math.PI * 0.15);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(iw / 2, ih * 0.36, 232, Math.PI * 0.15, Math.PI * 0.85);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.shadowColor = tier.glow;
+    ctx.shadowBlur = 18;
+    ctx.strokeStyle = makeGradient(ctx, 0, 0, iw, ih, tier.stops);
+    ctx.lineWidth = 2.4;
+    roundRectPath(ctx, 10, 10, iw - 20, ih - 20, RADIUS - BORDER - 6);
+    ctx.stroke();
+
+    ctx.fillStyle = "#E0F2FE";
+    ctx.beginPath();
+    ctx.moveTo(iw / 2, 12);
+    ctx.lineTo(iw / 2 + 16, 26);
+    ctx.lineTo(iw / 2, 40);
+    ctx.lineTo(iw / 2 - 16, 26);
+    ctx.closePath();
+    ctx.fill();
+
+    for (const [cx, cy, sx, sy] of [
+      [10, 10, 1, 1],
+      [iw - 10, 10, -1, 1],
+      [10, ih - 10, 1, -1],
+      [iw - 10, ih - 10, -1, -1],
+    ] as const) {
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(sx, sy);
+      ctx.fillStyle = makeGradient(ctx, 0, 0, 68, 68, tier.stops);
+      ctx.beginPath();
+      ctx.moveTo(0, 72);
+      ctx.lineTo(0, 0);
+      ctx.lineTo(72, 0);
+      ctx.lineTo(52, 14);
+      ctx.lineTo(22, 14);
+      ctx.lineTo(14, 22);
+      ctx.lineTo(14, 52);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+    ctx.restore();
+
+    drawAnamorphicFlare(ctx, iw - 92, 53, 210, "#67E8F9", 0.95);
+    drawAnamorphicFlare(ctx, 78, 53, 120, "#C4B5FD", 0.65);
+  }
+}
+
+async function drawBaseCard(ctx: Ctx, input: CardInput): Promise<void> {
+  const tier = TIERS[input.rarity] ?? DEFAULT_TIER;
+
+  // 1. Sculpted outer metallic/iridescent frame.
+  roundRectPath(ctx, 0, 0, CARD_W, CARD_H, RADIUS);
+  ctx.fillStyle = makeGradient(ctx, 0, 0, CARD_W, CARD_H, tier.stops);
+  ctx.fill();
+
+  // Top-left bright bevel rim & bottom-right deep shadow bevel.
   ctx.save();
-  ctx.translate(inner, inner);
-  roundRectPath(ctx, iw, ih, RADIUS - BORDER);
+  roundRectPath(ctx, 1.5, 1.5, CARD_W - 3, CARD_H - 3, RADIUS - 1.5);
+  ctx.lineWidth = 3;
+  const bevel = ctx.createLinearGradient(0, 0, CARD_W, CARD_H);
+  bevel.addColorStop(0, "rgba(255,255,255,0.9)");
+  bevel.addColorStop(0.35, "rgba(255,255,255,0.22)");
+  bevel.addColorStop(0.65, "rgba(0,0,0,0.28)");
+  bevel.addColorStop(1, "rgba(0,0,0,0.68)");
+  ctx.strokeStyle = bevel;
+  ctx.stroke();
+  ctx.restore();
+
+  // Dark recessed frame channel.
+  ctx.save();
+  roundRectPath(
+    ctx,
+    BORDER - 3,
+    BORDER - 3,
+    CARD_W - (BORDER - 3) * 2,
+    CARD_H - (BORDER - 3) * 2,
+    RADIUS - BORDER + 3,
+  );
+  ctx.fillStyle = "rgba(8, 10, 18, 0.88)";
+  ctx.fill();
+  ctx.restore();
+
+  const iw = CARD_W - BORDER * 2;
+  const ih = CARD_H - BORDER * 2;
+  ctx.save();
+  ctx.translate(BORDER, BORDER);
+  roundRectPath(ctx, 0, 0, iw, ih, RADIUS - BORDER);
   ctx.clip();
 
-  // Photo cover-crop 2:3 centered on focus point.
+  // 2. Photo cover-crop 2:3 centered on focus point.
   const photo = await loadImage(input.rawPath);
   const scale = Math.max(iw / photo.width, ih / photo.height);
   const dw = photo.width * scale;
@@ -158,72 +606,184 @@ async function drawBaseCard(ctx: Ctx, input: CardInput): Promise<void> {
   const dy = Math.min(0, Math.max(ih - dh, (ih - dh) * fy));
   ctx.drawImage(photo, dx, dy, dw, dh);
 
-  // Bottom 35% black gradient.
-  const gradTop = ih * 0.65;
+  // 3. Recessed inner shadow around photo frame seam.
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.92)";
+  ctx.shadowBlur = 30;
+  ctx.lineWidth = 14;
+  ctx.strokeStyle = "rgba(0,0,0,0.72)";
+  roundRectPath(ctx, -6, -6, iw + 12, ih + 12, RADIUS - BORDER + 4);
+  ctx.stroke();
+  ctx.restore();
+
+  // 4. Diagonal glossy light sweep & studio corner reflection.
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  ctx.globalAlpha = tier.sheenAlpha;
+  ctx.translate(iw * 0.5, ih * 0.36);
+  ctx.rotate(-0.58);
+  const beam = ctx.createLinearGradient(0, -240, 0, 240);
+  tier.sheenStops.forEach((c, i) => {
+    beam.addColorStop(
+      tier.sheenStops.length === 1 ? 0.5 : i / (tier.sheenStops.length - 1),
+      c,
+    );
+  });
+  ctx.fillStyle = beam;
+  ctx.fillRect(-iw * 1.2, -240, iw * 2.4, 480);
+  ctx.restore();
+
+  ctx.save();
+  ctx.globalCompositeOperation = "screen";
+  const gloss = ctx.createRadialGradient(
+    iw * 0.14,
+    ih * 0.06,
+    10,
+    iw * 0.14,
+    ih * 0.06,
+    iw * 0.82,
+  );
+  gloss.addColorStop(0, "rgba(255,255,255,0.22)");
+  gloss.addColorStop(0.5, "rgba(255,255,255,0.05)");
+  gloss.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gloss;
+  ctx.fillRect(0, 0, iw, ih * 0.65);
+  ctx.restore();
+
+  // 5. Deep cinematic bottom vignette.
+  const gradTop = ih * 0.5;
   const shade = ctx.createLinearGradient(0, gradTop, 0, ih);
-  shade.addColorStop(0, "rgba(0,0,0,0)");
-  shade.addColorStop(1, "rgba(0,0,0,0.85)");
+  shade.addColorStop(0, "rgba(4,6,14,0)");
+  shade.addColorStop(0.42, "rgba(4,6,14,0.5)");
+  shade.addColorStop(0.75, "rgba(4,6,14,0.88)");
+  shade.addColorStop(1, "rgba(4,6,14,0.97)");
   ctx.fillStyle = shade;
   ctx.fillRect(0, gradTop - 1, iw, ih - gradTop + 1);
 
-  const pad = 36;
+  // 6. Grade-specific bespoke motif & framing.
+  drawGradeMotif(ctx, input.rarity, iw, ih, tier);
+
+  const pad = 34;
   const nameFont = fontsRegistered ? "Inter Bold" : "sans-serif";
   const bodyFont = fontsRegistered ? "Inter" : "sans-serif";
 
-  // Pills.
-  ctx.font = `700 24px ${nameFont}, sans-serif`;
+  // 7. Glassmorphic top pills with strong 3D shadow + glowing border.
+  ctx.font = `700 22px ${nameFont}, sans-serif`;
   const badgeW = ctx.measureText(input.badge).width + 36;
-  const stars = RARITY_STARS[input.rarity] ?? "★";
-  const starsW = ctx.measureText(stars).width + 36;
-  const pillY = 28;
-  const pillH = 48;
-  ctx.fillStyle = "rgba(0,0,0,0.55)";
-  ctx.beginPath();
-  ctx.roundRect(pad, pillY, badgeW, pillH, 24);
-  ctx.fill();
-  ctx.beginPath();
-  ctx.roundRect(iw - pad - starsW, pillY, starsW, pillH, 24);
-  ctx.fill();
-  ctx.fillStyle = "#FFFFFF";
-  ctx.textBaseline = "middle";
-  ctx.fillText(input.badge, pad + 18, pillY + pillH / 2 + 1);
-  ctx.fillText(stars, iw - pad - starsW + 18, pillY + pillH / 2 + 1);
+  const starsW = ctx.measureText(tier.stars).width + 36;
+  const pillY = 30;
+  const pillH = 46;
 
-  // Text block.
-  const labelColor = RARITY_COLOR[input.rarity] ?? "#9CA3AF";
-  ctx.textBaseline = "alphabetic";
-  ctx.fillStyle = "#FFFFFF";
-  ctx.font = `700 56px ${nameFont}, sans-serif`;
+  for (const [px, pw, text, textColor] of [
+    [pad, badgeW, input.badge, "#FFFFFF"],
+    [iw - pad - starsW, starsW, tier.stars, tier.accent],
+  ] as const) {
+    ctx.save();
+    ctx.shadowColor = "rgba(0,0,0,0.88)";
+    ctx.shadowBlur = 18;
+    ctx.shadowOffsetY = 6;
+    roundRectPath(ctx, px, pillY, pw, pillH, 23);
+    ctx.fillStyle = "rgba(8, 10, 18, 0.84)";
+    ctx.fill();
+    ctx.restore();
+
+    ctx.save();
+    roundRectPath(ctx, px, pillY, pw, pillH, 23);
+    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = makeGradient(ctx, px, pillY, px + pw, pillY + pillH, tier.stops);
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.fillStyle = textColor;
+    ctx.textBaseline = "middle";
+    ctx.shadowColor = tier.glow;
+    ctx.shadowBlur = 12;
+    ctx.fillText(text, px + 18, pillY + pillH / 2 + 1);
+    ctx.restore();
+  }
+
+  // 8. Luxury Nameplate & Typography with realistic multi-pass shadow.
   const title = input.photoLabel ?? input.memberName;
   const subtitle = input.photoLabel ?? input.fullName;
-  ctx.fillText(title, pad, ih - 118, iw - pad * 2);
+  ctx.save();
+  ctx.textBaseline = "alphabetic";
+  ctx.shadowColor = "rgba(0,0,0,0.95)";
+  ctx.shadowBlur = 22;
+  ctx.shadowOffsetY = 6;
+  ctx.fillStyle = "#FFFFFF";
+  ctx.font = `700 54px ${nameFont}, sans-serif`;
+  ctx.fillText(title, pad, ih - 126, iw - pad * 2);
   if (subtitle !== null && subtitle !== "") {
     ctx.font = `400 22px ${bodyFont}, sans-serif`;
-    ctx.fillStyle = "rgba(255,255,255,0.85)";
+    ctx.fillStyle = "rgba(255,255,255,0.88)";
     ctx.fillText(
       input.photoLabel !== null ? input.memberName : subtitle,
       pad,
-      ih - 86,
+      ih - 92,
       iw - pad * 2,
     );
   }
-  ctx.font = `700 20px ${nameFont}, sans-serif`;
-  ctx.fillStyle = labelColor;
-  const label = `${RARITY_LABEL[input.rarity] ?? input.rarity} · Foto ${input.photoNo}/${input.photoTotal}`;
-  ctx.fillText(label, pad, ih - 52, iw - pad * 2 - 160);
+  ctx.restore();
 
-  // Serial bottom-right.
-  ctx.fillStyle = "rgba(255,255,255,0.9)";
-  ctx.font = `700 20px ${nameFont}, sans-serif`;
+  // Glowing gradient accent divider.
+  ctx.save();
+  ctx.shadowColor = tier.glow;
+  ctx.shadowBlur = 12;
+  ctx.fillStyle = makeGradient(ctx, pad, ih - 74, iw - pad, ih - 74, tier.stops);
+  ctx.fillRect(pad, ih - 74, iw - pad * 2, 3);
+  ctx.restore();
+
+  // Rarity label bottom-left.
+  ctx.save();
+  ctx.textBaseline = "alphabetic";
+  ctx.shadowColor = tier.glow;
+  ctx.shadowBlur = 10;
+  ctx.font = `700 21px ${nameFont}, sans-serif`;
+  ctx.fillStyle = tier.accent;
+  ctx.fillText(
+    `${tier.label} · Foto ${input.photoNo}/${input.photoTotal}`,
+    pad,
+    ih - 39,
+    iw - pad * 2 - 150,
+  );
+  ctx.restore();
+
+  // Metallic Serial Pill bottom-right.
   const serialText = `No. ${input.serial}`;
-  const serialW = ctx.measureText(serialText).width;
-  ctx.fillText(serialText, iw - pad - serialW, ih - 52);
-
-  // Concentric ring over the clip seam.
-  ctx.lineWidth = BORDER;
-  ctx.strokeStyle = gradientFor(ctx, stops);
-  roundRectPath(ctx, iw, ih, RADIUS - BORDER);
+  ctx.font = `700 19px ${nameFont}, sans-serif`;
+  const serialW = ctx.measureText(serialText).width + 24;
+  const serialX = iw - pad - serialW;
+  const serialY = ih - 62;
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.82)";
+  ctx.shadowBlur = 10;
+  ctx.shadowOffsetY = 3;
+  roundRectPath(ctx, serialX, serialY, serialW, 32, 16);
+  ctx.fillStyle = "rgba(10, 12, 22, 0.86)";
+  ctx.fill();
+  ctx.lineWidth = 1.4;
+  ctx.strokeStyle = makeGradient(
+    ctx,
+    serialX,
+    serialY,
+    serialX + serialW,
+    serialY + 32,
+    tier.stops,
+  );
   ctx.stroke();
+  ctx.fillStyle = "#FFFFFF";
+  ctx.textBaseline = "middle";
+  ctx.fillText(serialText, serialX + 12, serialY + 17);
+  ctx.restore();
+
+  // Inner metallic bezel ring.
+  ctx.save();
+  ctx.lineWidth = 2.5;
+  ctx.strokeStyle = makeGradient(ctx, 0, 0, iw, ih, tier.stops);
+  roundRectPath(ctx, 1, 1, iw - 2, ih - 2, RADIUS - BORDER);
+  ctx.stroke();
+  ctx.restore();
 
   ctx.restore();
 }
@@ -294,14 +854,13 @@ function drawFourPointStar(
 }
 
 function drawHoloFrameOverlay(ctx: Ctx, progress: number): void {
-  const inner = BORDER;
-  const iw = CARD_W - inner * 2;
-  const ih = CARD_H - inner * 2;
+  const iw = CARD_W - BORDER * 2;
+  const ih = CARD_H - BORDER * 2;
   const angle = progress * Math.PI * 2;
 
   ctx.save();
-  ctx.translate(inner, inner);
-  roundRectPath(ctx, iw, ih, RADIUS - BORDER);
+  ctx.translate(BORDER, BORDER);
+  roundRectPath(ctx, 0, 0, iw, ih, RADIUS - BORDER);
   ctx.clip();
 
   // Diagonal sweeping rainbow holographic sheen.
@@ -340,29 +899,28 @@ function drawHoloFrameOverlay(ctx: Ctx, progress: number): void {
   ctx.globalCompositeOperation = "source-over";
   const bx = Math.cos(angle) * (CARD_W * 0.5);
   const by = Math.sin(angle) * (CARD_H * 0.5);
-  ctx.lineWidth = BORDER * 1.4;
-  ctx.strokeStyle = gradientFor(
+  ctx.lineWidth = 4;
+  ctx.strokeStyle = makeGradient(
     ctx,
-    ["#38BDF8", "#A855F7", "#EC4899", "#FACC15", "#10B981"],
     CARD_W * 0.5 - bx,
     CARD_H * 0.5 - by,
     CARD_W * 0.5 + bx,
     CARD_H * 0.5 + by,
+    ["#38BDF8", "#A855F7", "#EC4899", "#FACC15", "#10B981"],
   );
-  roundRectPath(ctx, iw, ih, RADIUS - BORDER);
+  roundRectPath(ctx, 1, 1, iw - 2, ih - 2, RADIUS - BORDER);
   ctx.stroke();
   ctx.restore();
 }
 
 function drawSecretFrameOverlay(ctx: Ctx, progress: number): void {
-  const inner = BORDER;
-  const iw = CARD_W - inner * 2;
-  const ih = CARD_H - inner * 2;
+  const iw = CARD_W - BORDER * 2;
+  const ih = CARD_H - BORDER * 2;
   const angle = progress * Math.PI * 2;
 
   ctx.save();
-  ctx.translate(inner, inner);
-  roundRectPath(ctx, iw, ih, RADIUS - BORDER);
+  ctx.translate(BORDER, BORDER);
+  roundRectPath(ctx, 0, 0, iw, ih, RADIUS - BORDER);
   ctx.clip();
 
   // Dual prismatic cyan-ice sweep.
@@ -415,16 +973,16 @@ function drawSecretFrameOverlay(ctx: Ctx, progress: number): void {
   ctx.globalCompositeOperation = "source-over";
   const bx = Math.cos(angle) * (CARD_W * 0.5);
   const by = Math.sin(angle) * (CARD_H * 0.5);
-  ctx.lineWidth = BORDER * 1.6;
-  ctx.strokeStyle = gradientFor(
+  ctx.lineWidth = 4.5;
+  ctx.strokeStyle = makeGradient(
     ctx,
-    ["#22D3EE", "#FFFFFF", "#38BDF8", "#818CF8", "#22D3EE"],
     CARD_W * 0.5 - bx,
     CARD_H * 0.5 - by,
     CARD_W * 0.5 + bx,
     CARD_H * 0.5 + by,
+    ["#22D3EE", "#FFFFFF", "#38BDF8", "#818CF8", "#22D3EE"],
   );
-  roundRectPath(ctx, iw, ih, RADIUS - BORDER);
+  roundRectPath(ctx, 1, 1, iw - 2, ih - 2, RADIUS - BORDER);
   ctx.stroke();
   ctx.restore();
 }
