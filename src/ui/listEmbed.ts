@@ -5,8 +5,8 @@ import {
   type APIButtonComponentWithCustomId,
   type APIEmbed,
 } from "discord-api-types/v10";
-import { RARITY_STARS } from "../domain/rarity.js";
-import { listPageCustomId } from "../domain/list.js";
+import { isHiddenRarity, RARITY_STARS } from "../domain/rarity.js";
+import { censorName, listPageCustomId } from "../domain/list.js";
 import type { ListCardRow, ListFilters } from "../db/queries/list.js";
 
 export interface ListEmbedArgs {
@@ -41,14 +41,20 @@ function buildTitle(args: ListEmbedArgs): string {
 function formatCardLine(card: ListCardRow, filters: ListFilters): string {
   const stars = RARITY_STARS[card.rarity];
   const holo = card.holoEnabled ? " ✦" : "";
-  const label = card.photoLabel !== null && card.photoLabel !== "" ? ` · *${card.photoLabel}*` : "";
+  // Holo/secret names are censored; backticks keep Discord from eating the stars.
+  const hidden = isHiddenRarity(card.rarity);
+  const name = hidden ? `\`${censorName(card.memberName)}\`` : `**${card.memberName}**`;
+  const label =
+    card.photoLabel !== null && card.photoLabel !== ""
+      ? ` · ${hidden ? `\`${censorName(card.photoLabel)}\`` : `*${card.photoLabel}*`}`
+      : "";
   const scopePrefix =
     filters.poolId === null
       ? `${card.poolEmoji} ${card.groupBadge} `
       : filters.groupId === null
         ? `${card.groupBadge} `
         : "";
-  return `${scopePrefix}${stars}${holo} **${card.memberName}** · Foto ${card.photoNo}${label} \`#${card.serial}\``;
+  return `${scopePrefix}${stars}${holo} ${name} · Foto ${card.photoNo}${label} \`#${card.serial}\``;
 }
 
 export function buildListEmbed(args: ListEmbedArgs): APIEmbed {

@@ -21,6 +21,8 @@ import {
   parseListPageCustomId,
 } from "../src/domain/list.js";
 import { getListPage } from "../src/db/queries/list.js";
+import { censorName } from "../src/domain/list.js";
+import { buildListEmbed } from "../src/ui/listEmbed.js";
 import {
   handleList,
   handleListAutocomplete,
@@ -167,6 +169,12 @@ describe("domain/list", () => {
     expect(isListButtonOwner("u1", "u1")).toBe(true);
     expect(isListButtonOwner("u2", "u1")).toBe(false);
     expect(isListButtonOwner(null, "u1")).toBe(false);
+  });
+
+  it("censors every non-space character and keeps spaces", () => {
+    expect(censorName("Ghost")).toBe("*****");
+    expect(censorName("Aynid Morbulet")).toBe("***** ********");
+    expect(censorName("")).toBe("");
   });
 
   it("round-trips list page custom_id", () => {
@@ -331,21 +339,31 @@ describe("/list queries and interactions", () => {
     ]);
   });
 
-  it("never returns secret or disabled cards across all pools, by pool, or by group", async () => {
+  it("lists holo and secret cards too, but never disabled ones", async () => {
     const db = createDb(env);
 
     const all = await getListPage(db, { poolId: null, groupId: null }, 0);
     expect(all.status).toBe("ok");
     if (all.status === "ok") {
-      expect(all.totalCards).toBe(3);
-      expect(all.cards.map((c) => c.cardId)).toEqual(["c1", "c3", "c4"]);
+      expect(all.totalCards).toBe(5);
+      expect(all.cards.map((c) => c.cardId)).toEqual([
+        "c1",
+        "c2-secret",
+        "c3",
+        "c4",
+        "c6-secret-only",
+      ]);
     }
 
     const byPool = await getListPage(db, { poolId: "pejabat", groupId: null }, 0);
     expect(byPool.status).toBe("ok");
     if (byPool.status === "ok") {
-      expect(byPool.totalCards).toBe(2);
-      expect(byPool.cards.map((c) => c.cardId)).toEqual(["c1", "c3"]);
+      expect(byPool.totalCards).toBe(3);
+      expect(byPool.cards.map((c) => c.cardId)).toEqual([
+        "c1",
+        "c2-secret",
+        "c3",
+      ]);
     }
 
     const byGroupOnly = await getListPage(db, { poolId: null, groupId: "jomok" }, 0);
@@ -360,7 +378,41 @@ describe("/list queries and interactions", () => {
       { poolId: null, groupId: "secret-only" },
       0,
     );
-    expect(secretOnlyGroup.status).toBe("empty");
+    expect(secretOnlyGroup.status).toBe("ok");
+    if (secretOnlyGroup.status === "ok") {
+      expect(secretOnlyGroup.totalCards).toBe(1);
+      expect(secretOnlyGroup.cards.map((c) => c.cardId)).toEqual([
+        "c6-secret-only",
+      ]);
+    }
+  });
+
+  it("censors holo and secret names in the rendered lines", async () => {
+    const db = createDb(env);
+    const all = await getListPage(db, { poolId: null, groupId: null }, 0);
+    expect(all.status).toBe("ok");
+    if (all.status !== "ok") return;
+    const embed = buildListEmbed({
+      viewerId: "u1",
+      cards: all.cards,
+      totalCards: all.totalCards,
+      page: all.page,
+      totalPages: all.totalPages,
+      poolName: all.poolName,
+      poolEmoji: all.poolEmoji,
+      groupName: all.groupName,
+      groupBadge: all.groupBadge,
+      filters: { poolId: null, groupId: null },
+    });
+    const description = embed.description ?? "";
+    expect(description).not.toContain("Rahasia Negara");
+    expect(description).not.toContain("Kaget");
+    expect(description).not.toContain("Top Secret");
+    expect(description).not.toContain("Ghost");
+    // Secret card line keeps the stars and a censored, same-length name.
+    expect(description).toContain("`*****`");
+    // Visible cards stay readable.
+    expect(description).toContain("Siti");
   });
 
   it("rejects unknown pool or mismatched pool+group", async () => {
@@ -373,7 +425,7 @@ describe("/list queries and interactions", () => {
     ).toEqual({ status: "unknown-group" });
   });
 
-  it("autocompletes pools and excludes secret-only groups", async () => {
+  it("autocompletes pools and secret-only groups", async () => {
     const poolRes = await handleListAutocomplete(
       autocompleteInteraction([{ name: "pool", value: "", focused: true }]),
       env,
@@ -402,7 +454,10 @@ describe("/list queries and interactions", () => {
       groupRes.type ===
       InteractionResponseType.ApplicationCommandAutocompleteResult
     ) {
-      expect(groupRes.data.choices.map((c) => c.value)).toEqual(["jomok"]);
+      expect(groupRes.data.choices.map((c) => c.value)).toEqual([
+        "jomok",
+        "secret-only",
+      ]);
     }
   });
 

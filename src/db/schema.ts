@@ -290,3 +290,30 @@ export const battles = sqliteTable(
     index("battles_target_idx").on(t.targetId, t.status),
   ],
 );
+
+export const gives = sqliteTable(
+  "gives",
+  {
+    id: text("id").primaryKey(),
+    mode: text("mode", { enum: ["public", "direct"] }).notNull(),
+    giverId: text("giver_id")
+      .notNull()
+      .references(() => users.id),
+    targetId: text("target_id").references(() => users.id),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => cards.id),
+    status: text("status", {
+      enum: ["open", "claimed", "rejected", "cancelled", "expired", "failed"],
+    }).notNull(),
+    claimerId: text("claimer_id"),
+    settleToken: text("settle_token"),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    resolvedAt: integer("resolved_at"),
+  },
+  (t) => [
+    index("gives_giver_idx").on(t.giverId, t.status),
+    index("gives_target_idx").on(t.targetId, t.status),
+  ],
+);

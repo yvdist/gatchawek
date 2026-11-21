@@ -25,8 +25,10 @@ import {
 } from "../src/commands/help/handler.js";
 import {
   handleKoleksi,
+  handleKoleksiCardSelect,
   handleKoleksiGrupAutocomplete,
   handleKoleksiPage,
+  handleKoleksiPamerClick,
 } from "../src/commands/koleksi/handler.js";
 import type { WaitUntil } from "../src/commands/registry.js";
 import type { Env } from "../src/env.js";
@@ -84,6 +86,18 @@ function component(
       flags: 0,
       components: [],
     },
+  } as unknown as APIMessageComponentInteraction;
+}
+
+function selectComponent(
+  customId: string,
+  clickerId: string,
+  values: string[],
+): APIMessageComponentInteraction {
+  const base = component(customId, clickerId);
+  return {
+    ...base,
+    data: { component_type: 3, custom_id: customId, values },
   } as unknown as APIMessageComponentInteraction;
 }
 
@@ -322,9 +336,23 @@ describe("handleKoleksi followup prod replica", () => {
         settled.filter((r) => r.status === "rejected"),
       ).toHaveLength(0);
       expect(calls).toHaveLength(1);
-      const body = calls[0]?.body as { embeds?: { description?: string }[] };
+      const body = calls[0]?.body as {
+        embeds?: { description?: string }[];
+        components?: {
+          components?: { custom_id?: string; options?: { value: string }[] }[];
+        }[];
+      };
       expect(body.embeds?.[0]?.description).toContain("Anna");
       expect(body.embeds?.[0]?.description).toContain("Budi");
+      // Per-photo rarity stars in the text line.
+      expect(body.embeds?.[0]?.description).toContain("★");
+      // One dropdown holding both owned cards of this page.
+      const select = body.components?.[0]?.components?.[0];
+      expect(select?.custom_id).toBe("koleksi:d:u1:0");
+      expect(select?.options?.map((o) => o.value)).toEqual([
+        "anna-01",
+        "budi-01",
+      ]);
     } finally {
       vi.unstubAllGlobals();
       await db
@@ -361,8 +389,11 @@ describe("handleKoleksi followup ok", () => {
       };
       expect(body.flags).toBeUndefined();
       expect(body.embeds?.[0]?.description).toContain("Anna");
-      // Single page in fixture: no nav row (duplicate custom_ids).
-      expect(body.components ?? []).toHaveLength(0);
+      // Single page in fixture: one card select, no nav row (duplicate custom_ids).
+      expect(body.components ?? []).toHaveLength(1);
+      expect(body.components?.[0]?.components?.[0]?.custom_id).toBe(
+        "koleksi:d:u1:0",
+      );
     } finally {
       vi.unstubAllGlobals();
     }
@@ -385,7 +416,12 @@ describe("handleKoleksi nav buttons", () => {
       const body = calls[0]?.body as {
         components?: { components?: { custom_id?: string }[] }[];
       };
-      expect(body.components ?? []).toHaveLength(0);
+      // Only the card select row: no Prev/Next on a single page.
+      expect(body.components ?? []).toHaveLength(1);
+      const ids = (body.components ?? []).map(
+        (row) => row.components?.[0]?.custom_id ?? "",
+      );
+      expect(ids.every((id) => !id.startsWith("koleksi:p:"))).toBe(true);
     } finally {
       vi.unstubAllGlobals();
     }
@@ -441,7 +477,9 @@ describe("handleKoleksi nav multi-page", () => {
       const body = calls[0]?.body as {
         components?: { components?: { custom_id?: string }[] }[];
       };
-      const buttons = body.components?.[0]?.components ?? [];
+      const rows = body.components ?? [];
+      expect(rows.length).toBeGreaterThan(1);
+      const buttons = rows[rows.length - 1]?.components ?? [];
       expect(buttons).toHaveLength(2);
       expect(buttons[0]?.custom_id).not.toBe(buttons[1]?.custom_id);
     } finally {
@@ -576,8 +614,126 @@ describe("handleKoleksi followup", () => {
       expect(body.flags).toBe(64);
       expect(body.embeds?.[0]?.title).toContain("Koleksi");
       expect(body.embeds?.[0]?.footer?.text).toContain("1/1");
-      // Single page: nav omitted instead of two disabled same-page buttons.
-      expect(body.components ?? []).toHaveLength(0);
+      // Single page: select only, nav omitted instead of two same-page buttons.
+      expect(body.components ?? []).toHaveLength(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("handleKoleksiCardSelect", () => {
+  const stubEnv: Env = {
+    DISCORD_PUBLIC_KEY: "x",
+    DB: null as never,
+    PUBLIC_BASE_URL: "example.test",
+    DISCORD_BOT_TOKEN: "token",
+  };
+
+  it("rejects a non-owner select click ephemerally without touching waitUntil", () => {
+    const { tasks, waitUntil } = captureTasks();
+    const res = handleKoleksiCardSelect(
+      selectComponent("koleksi:d:999:0", "111", ["anna-01"]),
+      stubEnv,
+      waitUntil,
+    );
+    expect(tasks).toHaveLength(0);
+    expect(res.type).toBe(InteractionResponseType.ChannelMessageWithSource);
+    if (res.type !== InteractionResponseType.ChannelMessageWithSource) return;
+    expect(res.data.flags).toBe(64);
+    expect(res.data.content).toContain("999");
+  });
+
+  it("asks for a dropdown pick when the click carries no value", () => {
+    const { tasks, waitUntil } = captureTasks();
+    const res = handleKoleksiCardSelect(
+      component("koleksi:d:111:0", "111"),
+      stubEnv,
+      waitUntil,
+    );
+    expect(tasks).toHaveLength(0);
+    expect(res.type).toBe(InteractionResponseType.ChannelMessageWithSource);
+  });
+
+  it("defers privately, then patches the card view with a pamer button", async () => {
+    const calls: { url: string; body: unknown }[] = [];
+    const fetchMock = vi.fn(async (url: string, init: { body: string }) => {
+      calls.push({ url, body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      const res = handleKoleksiCardSelect(
+        selectComponent("koleksi:d:u1:0", "u1", ["anna-01"]),
+        env,
+        waitUntil,
+      );
+      expect(res).toEqual({
+        type: InteractionResponseType.DeferredChannelMessageWithSource,
+        data: { flags: 64 },
+      });
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      expect(calls).toHaveLength(1);
+      expect(calls[0]?.url).toContain("/messages/@original");
+      const body = calls[0]?.body as {
+        embeds?: { title?: string; image?: { url?: string } }[];
+        components?: { components?: { custom_id?: string }[] }[];
+      };
+      expect(body.embeds?.[0]?.title).toContain("Anna");
+      expect(body.embeds?.[0]?.image?.url).toContain("/cards/a.webp");
+      expect(body.components?.[0]?.components?.[0]?.custom_id).toBe(
+        "koleksi:pr:u1:anna-01",
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe("handleKoleksiPamerClick", () => {
+  it("rejects a non-owner pamer click ephemerally", () => {
+    const stubEnv: Env = {
+      DISCORD_PUBLIC_KEY: "x",
+      DB: null as never,
+      PUBLIC_BASE_URL: "example.test",
+      DISCORD_BOT_TOKEN: "token",
+    };
+    const { tasks, waitUntil } = captureTasks();
+    const res = handleKoleksiPamerClick(
+      component("koleksi:pr:999:anna-01", "111"),
+      stubEnv,
+      waitUntil,
+    );
+    expect(tasks).toHaveLength(0);
+    expect(res.type).toBe(InteractionResponseType.ChannelMessageWithSource);
+  });
+
+  it("posts a public pamer embed for the owner", async () => {
+    const calls: { url: string; body: unknown }[] = [];
+    const fetchMock = vi.fn(async (url: string, init: { body: string }) => {
+      calls.push({ url, body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const { tasks, waitUntil } = captureTasks();
+      const res = handleKoleksiPamerClick(
+        component("koleksi:pr:u1:anna-01", "u1"),
+        env,
+        waitUntil,
+      );
+      expect(res.type).toBe(InteractionResponseType.DeferredMessageUpdate);
+      await Promise.all(tasks.map((t) => t.catch(() => {})));
+      expect(calls).toHaveLength(1);
+      expect(calls[0]?.url).toContain("?wait=true");
+      const body = calls[0]?.body as {
+        flags?: number;
+        embeds?: { title?: string; description?: string }[];
+      };
+      expect(body.flags).toBeUndefined();
+      expect(body.embeds?.[0]?.title).toContain("Pamer");
+      expect(body.embeds?.[0]?.description).toContain("<@u1>");
     } finally {
       vi.unstubAllGlobals();
     }

@@ -2,6 +2,11 @@
 
 export const LIST_PAGE_SIZE = 15;
 
+/** Every non-space character → `*`, spaces kept (length stays readable). */
+export function censorName(name: string): string {
+  return name.replace(/[^\s]/gu, "*");
+}
+
 export function clampListPage(page: number, totalPages: number): number {
   if (!Number.isFinite(totalPages) || totalPages <= 0) return 0;
   if (!Number.isFinite(page)) return 0;
