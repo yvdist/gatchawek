@@ -546,3 +546,32 @@ export async function listRenderableCards(
     );
   return rows;
 }
+
+/**
+ * Tukar nama member ↔ label foto untuk satu kartu tanpa mengganti id.
+ * Id (`members.id`, `cards.id`, `memberId` slug, `serial`, `photoNo`)
+ * SENGAJA dipertahankan agar stabil (slug lama tetap dipakai walau tidak
+ * lagi cocok dengan nama baru) — merename id merusak FK `user_cards`,
+ * `inject_queue`, dan URL `/cards/<file>`.
+ */
+export async function swapCardMemberLabel(
+  db: Db,
+  cardId: string,
+): Promise<{ status: "ok" | "not-found" | "no-label"; memberName: string; photoLabel: string | null }> {
+  const current = await db
+    .select({ id: cards.id, memberId: cards.memberId, photoLabel: cards.photoLabel, memberName: members.name })
+    .from(cards)
+    .innerJoin(members, eq(members.id, cards.memberId))
+    .where(eq(cards.id, cardId))
+    .limit(1);
+  const row = current[0];
+  if (row === undefined) return { status: "not-found", memberName: "", photoLabel: null };
+  if (row.photoLabel === null) return { status: "no-label", memberName: row.memberName, photoLabel: null };
+  const newMemberName = row.photoLabel;
+  const newLabel = row.memberName;
+  await nativeBatch(db, [
+    db.update(members).set({ name: newMemberName, nameLower: newMemberName.toLowerCase() }).where(eq(members.id, row.memberId)),
+    db.update(cards).set({ photoLabel: newLabel }).where(eq(cards.id, cardId)),
+  ]);
+  return { status: "ok", memberName: newMemberName, photoLabel: newLabel };
+}

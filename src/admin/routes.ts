@@ -20,6 +20,7 @@ import {
   listRenderableCards,
   setAdminCardEnabled,
   setAdminCardImage,
+  swapCardMemberLabel,
   type AdminCardKindFilter,
   type AdminQueueStatus,
 } from "../db/queries/admin.js";
@@ -319,6 +320,18 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     return c.redirect(`/admin/cards/${encodeURIComponent(id)}`);
   });
 
+  admin.post("/cards/:id/swap-names", async (c) => {
+    const id = c.req.param("id");
+    const outcome = await swapCardMemberLabel(createDb(c.env), id);
+    if (outcome.status === "not-found") return c.text("Kartu tidak ditemukan", 404);
+    const msg =
+      outcome.status === "no-label"
+        ? "Tidak ada label untuk ditukar — isi label dulu."
+        : "Nama \u2194 label ditukar. Minta render ulang bila kartu static.";
+    const ok = outcome.status === "ok" ? "1" : "0";
+    return c.redirect(`/admin/cards/${encodeURIComponent(id)}?ok=${ok}&msg=${encodeURIComponent(msg)}`);
+  });
+
   admin.get("/inject", async (c) => {
     const raw = c.req.query("status") ?? "";
     const status: AdminQueueStatus =
@@ -544,13 +557,17 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         now: baseNow + i,
       });
       if (outcome.status === "ok") {
+        const labelNorm = labelRaw !== "" ? labelRaw : null;
+        const judul = labelNorm ?? nama;
+        const sub = labelNorm !== null ? nama : "—";
+        const shown =
+          createdGroupName === null
+            ? `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)})`
+            : `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)}) · grup baru ${createdGroupName}`;
         results.push({
           filename: file.name,
           ok: true,
-          message:
-            createdGroupName === null
-              ? `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)})`
-              : `${outcome.cardId} (${outcome.rarity}, No. ${String(outcome.serial)}) · grup baru ${createdGroupName}`,
+          message: `${shown} · Judul: "${judul}" / Sub: "${sub}"`,
           cardId: outcome.cardId,
           serial: outcome.serial,
         });
