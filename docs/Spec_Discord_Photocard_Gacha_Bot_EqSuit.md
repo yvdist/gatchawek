@@ -18,7 +18,7 @@
 | Label kartu | `✨ Kartu baru!` = member baru. `🆕 Foto baru!` = foto baru dari member yang sudah dimiliki. `🔁 Duplikat ×N` = foto yang sama | Dua label tambahan murah dan informatif. |
 | Penyimpanan gambar | **Workers Static Assets**, bukan R2 | R2 meminta payment method saat pertama diaktifkan, melanggar syarat Rp0 tanpa kartu. Static Assets gratis, request ke aset tidak dihitung kuota, batas free plan 20.000 file dan 25 MiB per file. |
 | Transaksi | `db.batch()` + statement berpenjaga + kolom `version` (optimistic) | D1 tidak mendukung interactive transaction. |
-| RNG | `crypto.getRandomValues`; tanpa pity di v1 | Pity bisa ditambah lewat migrasi additive. |
+| RNG | `crypto.getRandomValues`; satu-satunya pity adalah wish pity (6.5.1). Secret tanpa pity, murni hoki | Hard pity Secret dihapus di migrasi 0006. |
 | Command scope | Guild command untuk satu server, `contexts: [0]` | Update instan, tidak muncul di DM. |
 | Struktur repo | Satu package, bukan monorepo multi-package | Worker dan script Node cukup berbagi schema Zod; dua tsconfig. |
 | Anti-abuse | Tidak ada di v1 (keputusan sadar) | Server tertutup sekitar 10 orang. |
@@ -388,7 +388,7 @@ Jika kuota masih penuh, tolak tanpa menghabiskan cooldown. Jika belum siap, tamp
 
 1. Satu batch: `INSERT OR IGNORE` ke `users` dan `user_pool_states` (stamina = max, anchor = now, version = 0), lalu `SELECT` state dan konfigurasi pool.
 2. `consume()` murni. Jika `null`, balas ephemeral dengan `<t:next:R>`.
-3. Pilih rarity berdasar bobot, **hanya dari rarity yang punya minimal satu kartu `enabled` di pool**. RNG: `crypto.getRandomValues(new Uint32Array(1))[0] / 2**32`. Lalu pilih kartu seragam dalam rarity itu. **Hard pity Secret**: bila `user_pool_states.pity_secret >= 199` dan pool punya kartu `secret` enabled, rarity dipaksa `secret` tanpa roll. Counter naik +1 tiap tarikan non-Secret dan kembali 0 saat Secret, dalam CAS yang sama dengan stamina.
+3. Pilih rarity berdasar bobot, **hanya dari rarity yang punya minimal satu kartu `enabled` di pool**. RNG: `crypto.getRandomValues(new Uint32Array(1))[0] / 2**32`. Lalu pilih kartu seragam dalam rarity itu. **Wish pity** (lihat 6.5.1) dicek sebelum roll rarity.
 4. Baca kepemilikan sebelum tulis: apakah kartu sudah dimiliki, dan apakah member sudah dimiliki (`EXISTS` via join `cards`). Hasilnya menentukan label.
 5. Satu `db.batch()`:
    - (a) CAS state: `UPDATE user_pool_states SET stamina = ?1, stamina_anchor_at = ?2, version = version + 1 WHERE user_id = ?3 AND pool_id = ?4 AND version = ?5`
@@ -409,6 +409,13 @@ ON CONFLICT (user_id, card_id) DO UPDATE SET quantity = quantity + 1, last_obtai
 Klausa `WHERE` pada `INSERT ... SELECT` wajib ada agar tidak terkena ambiguitas parsing SQLite pada `ON CONFLICT`.
 
 **Embed** (mengikuti referensi): judul `🎴 {member} ({grup})`; deskripsi `<@user> dapet photocard {pool} {★} **{Label}**!`, baris `{grup} · {fullName} · 📸 Foto {photoNo}/{photoTotal}`, baris label (`✨ Kartu baru!` / `🆕 Foto baru!` / `🔁 Duplikat ×N`), baris `📚 Koleksi {grup}: **x/y**`; image = URL bingkai; `color` = warna rarity; footer `Sisa tarik: n/max`. Tombol `🎲 Tarik Lagi` dengan `custom_id = gacha:again:<poolId>:<ownerId>`; hasilnya pesan baru, bukan edit.
+
+### 6.5.1 `/wish`, `/unwish`, `/wishlist` dan wish pity
+
+- `/wish <kartu>`: tandai kartu incaran, maksimal **3 per pool** (tabel `wishes`, PK `(user_id, card_id)`). Batas dijaga dalam satu `INSERT ... SELECT ... WHERE count < 3`. Hanya rarity sampai **Holo**; **Secret tidak bisa di-wish**. Autocomplete tidak pernah menampilkan kartu Holo, jadi Holo harus diketik namanya persis (`photo_label` atau nama member, tanpa beda huruf besar/kecil). Semua balasan ephemeral agar nama Holo tidak bocor.
+- `/unwish <kartu>`: hapus dari wishlist. Tidak mereset pity.
+- `/wishlist`: daftar wish milik sendiri per pool beserta counter pity.
+- Counter `user_pool_states.pity_wish` per user per pool, hanya naik saat pool itu punya wish aktif. Di roll ke-50 (counter 49), satu wish dipilih acak dan peluangnya 30%; bila gagal, roll normal. Apa pun hasilnya counter kembali 0. Mendapat kartu wish sebelum roll ke-50 juga mereset counter. Kartu wish yang didapat dihapus dari wishlist di batch CAS yang sama dengan stamina.
 
 ### 6.6 `/trade` dan transaksi atomik
 

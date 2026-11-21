@@ -23,6 +23,8 @@ import {
   resetReadyAt,
 } from "../../domain/stamina.js";
 import { pullKind, type PullKind } from "../../domain/gacha.js";
+import { nextWishPity, rollWishPity } from "../../domain/wish.js";
+import { getActiveWishes } from "./wish.js";
 
 export interface PoolConfig {
   id: string;
@@ -38,7 +40,7 @@ interface PoolState {
   anchorAt: number;
   lastResetAt: number | null;
   version: number;
-  pitySecret: number;
+  pityWish: number;
 }
 
 function toPoolConfig(row: typeof pools.$inferSelect): PoolConfig {
@@ -74,7 +76,7 @@ export async function ensureUserAndState(
 ): Promise<PoolState> {
   await nativeBatch(db, [
     sql`INSERT OR IGNORE INTO users (id, created_at) VALUES (${userId}, ${now})`,
-    sql`INSERT OR IGNORE INTO user_pool_states (user_id, pool_id, stamina, stamina_anchor_at, last_reset_at, version, pity_secret) VALUES (${userId}, ${pool.id}, ${pool.staminaMax}, ${now}, NULL, 0, 0)`,
+    sql`INSERT OR IGNORE INTO user_pool_states (user_id, pool_id, stamina, stamina_anchor_at, last_reset_at, version, pity_wish) VALUES (${userId}, ${pool.id}, ${pool.staminaMax}, ${now}, NULL, 0, 0)`,
   ]);
   const rows = await db
     .select()
@@ -95,7 +97,7 @@ export async function ensureUserAndState(
     anchorAt: row.staminaAnchorAt,
     lastResetAt: row.lastResetAt,
     version: row.version,
-    pitySecret: row.pitySecret,
+    pityWish: row.pityWish,
   };
 }
 
@@ -210,6 +212,7 @@ export type PullOutcome =
       kind: PullKind;
       isHolo: boolean;
       isFirstClaim: boolean;
+      wishHit: boolean;
       quantity: number;
       staminaLeft: number;
       groupOwned: number;
@@ -237,21 +240,25 @@ export async function executePull(
 
   const rarities = await getEnabledRarities(db, pool.id);
   if (rarities.length === 0) return { status: "pool-empty" };
-  // Hard pity: 200th consecutive pull without a Secret forces one, when the
-  // pool has an enabled Secret card. Counter runs 0..199; the roll is
-  // skipped entirely on a forced pull.
-  let forcedSecret: CandidateCard[] | null = null;
-  if (state.pitySecret >= 199 && rarities.includes("secret")) {
-    const secretCandidates = await getCandidatesByRarity(db, pool.id, "secret");
-    if (secretCandidates.length > 0) forcedSecret = secretCandidates;
+  const wishes = await getActiveWishes(db, userId, pool.id);
+  const wishIds = wishes.map((w) => w.cardId);
+  const pityId = rollWishPity(state.pityWish, wishIds, rand);
+  const pityWish = wishes.find((w) => w.cardId === pityId);
+  let card =
+    pityWish === undefined
+      ? undefined
+      : (await getCandidatesByRarity(db, pool.id, pityWish.rarity)).find(
+          (c) => c.id === pityWish.cardId,
+        );
+  if (card === undefined) {
+    const rarity = pickRarity(rand(), rarities);
+    if (rarity === null) return { status: "pool-empty" };
+    const candidates = await getCandidatesByRarity(db, pool.id, rarity);
+    if (candidates.length === 0) return { status: "pool-empty" };
+    card = candidates[pickIndex(rand(), candidates.length)];
   }
-  const rarity = forcedSecret !== null ? "secret" : pickRarity(rand(), rarities);
-  if (rarity === null) return { status: "pool-empty" };
-  const candidates =
-    forcedSecret ?? (await getCandidatesByRarity(db, pool.id, rarity));
-  if (candidates.length === 0) return { status: "pool-empty" };
-  const card = candidates[pickIndex(rand(), candidates.length)];
   if (card === undefined) return { status: "pool-empty" };
+  const wishHit = wishIds.includes(card.id);
   const isHolo = rollHolo(card.rarity, rand(), card.holoEnabled);
 
   const ownership = await readOwnership(db, userId, card.id, card.memberId);
@@ -270,13 +277,18 @@ ON CONFLICT (user_id, card_id) DO UPDATE SET quantity = quantity + ${isHolo ? 0 
     sql`INSERT INTO pulls (user_id, pool_id, card_id, new_member, new_card, is_holo, pulled_at)
 SELECT ${userId}, ${pool.id}, ${card.id}, ${kind === "new-member" ? 1 : 0}, ${kind !== "duplicate" ? 1 : 0}, ${isHolo ? 1 : 0}, ${now}
 WHERE EXISTS ${versionGuard}`,
+    ...(wishHit
+      ? [
+          sql`DELETE FROM wishes WHERE user_id = ${userId} AND card_id = ${card.id} AND EXISTS ${versionGuard}`,
+        ]
+      : []),
     db
       .update(userPoolStates)
       .set({
         stamina: consumed.stamina,
         staminaAnchorAt: consumed.anchorAt,
         version: newVersion,
-        pitySecret: rarity === "secret" ? 0 : state.pitySecret + 1,
+        pityWish: nextWishPity(state.pityWish, wishes.length > 0, wishHit),
       })
       .where(
         and(
@@ -286,7 +298,7 @@ WHERE EXISTS ${versionGuard}`,
         ),
       ),
   ]);
-  const cas = batchResults[2];
+  const cas = batchResults.at(-1);
   // No retry: re-running would roll a different card and spend stamina twice
   // for one user action. The loser keeps its stamina and can tap again.
   if ((cas?.meta.changes ?? 0) !== 1) return { status: "conflict" };
@@ -321,6 +333,7 @@ WHERE EXISTS ${versionGuard}`,
     kind,
     isHolo,
     isFirstClaim: kind === "new-member" && ownership.memberVirgin,
+    wishHit,
     quantity: qtyRows[0]?.quantity ?? (isHolo ? 0 : ownership.quantity + 1),
     staminaLeft: consumed.stamina,
     groupOwned: ownedRows[0]?.n ?? 0,

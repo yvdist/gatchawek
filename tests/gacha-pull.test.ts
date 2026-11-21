@@ -14,7 +14,14 @@ import {
   userCards,
   userPoolStates,
   users,
+  wishes,
 } from "../src/db/schema.js";
+import {
+  addWish,
+  findWishableCard,
+  removeWish,
+  searchWishableCards,
+} from "../src/db/queries/wish.js";
 import {
   executePull,
   executeReset,
@@ -337,63 +344,154 @@ describe("executePull holo", () => {
     expect(out.quantity).toBe(1);
   });
 });
-describe("executePull secret pity", () => {
-  it("forces a secret card on the 200th pull without one", async () => {
-    const userId = "pull-pity-trip";
-    const now = 14_000_000;
-    await db.insert(users).values({ id: userId, createdAt: now });
-    await db.insert(userPoolStates).values({
-      userId,
-      poolId: POOL.id,
-      stamina: POOL.staminaMax,
-      staminaAnchorAt: now,
-      version: 0,
-      pitySecret: 199,
-    });
-    // rand would pick common, but pity skips the roll entirely.
-    const out = await executePull(db, {
-      userId,
-      pool: POOL,
-      now,
-      rand: scripted([0.0, 0.0, 0.0]),
-    });
-    expect(out.status).toBe("ok");
-    if (out.status !== "ok") return;
-    expect(out.card.rarity).toBe("secret");
-    expect(out.card.id).toBe("bb-03");
-    const rows = await db
-      .select()
-      .from(userPoolStates)
-      .where(eq(userPoolStates.userId, userId));
-    expect(rows[0]?.pitySecret).toBe(0);
+async function seedState(userId: string, now: number, pityWish: number): Promise<void> {
+  await db.insert(users).values({ id: userId, createdAt: now });
+  await db.insert(userPoolStates).values({
+    userId,
+    poolId: POOL.id,
+    stamina: POOL.staminaMax,
+    staminaAnchorAt: now,
+    version: 0,
+    pityWish,
   });
+}
 
-  it("rolls normally one pull before pity and increments the counter", async () => {
-    const userId = "pull-pity-near";
-    const now = 15_000_000;
-    await db.insert(users).values({ id: userId, createdAt: now });
-    await db.insert(userPoolStates).values({
-      userId,
-      poolId: POOL.id,
-      stamina: POOL.staminaMax,
-      staminaAnchorAt: now,
-      version: 0,
-      pitySecret: 198,
-    });
-    const out = await executePull(db, {
-      userId,
-      pool: POOL,
-      now,
-      rand: scripted([0.0, 0.0]),
-    });
+async function pityOf(userId: string): Promise<number | undefined> {
+  const rows = await db
+    .select()
+    .from(userPoolStates)
+    .where(eq(userPoolStates.userId, userId));
+  return rows[0]?.pityWish;
+}
+
+async function wishIds(userId: string): Promise<string[]> {
+  const rows = await db.select().from(wishes).where(eq(wishes.userId, userId));
+  return rows.map((r) => r.cardId);
+}
+
+describe("executePull wish pity", () => {
+  it("has no Secret hard pity: a high counter without wishes rolls normally", async () => {
+    const userId = "pull-no-secret-pity";
+    const now = 14_000_000;
+    await seedState(userId, now, 199);
+    const out = await executePull(db, { userId, pool: POOL, now, rand: scripted([0.0]) });
     expect(out.status).toBe("ok");
     if (out.status !== "ok") return;
     expect(out.card.rarity).toBe("common");
-    const rows = await db
-      .select()
-      .from(userPoolStates)
-      .where(eq(userPoolStates.userId, userId));
-    expect(rows[0]?.pitySecret).toBe(199);
+    // Counter only moves while the pool has wishes.
+    expect(await pityOf(userId)).toBe(199);
+  });
+
+  it("50th roll hits a wish at 30%, resets pity, and clears the wish", async () => {
+    const userId = "pull-wish-hit";
+    const now = 15_000_000;
+    await seedState(userId, now, 49);
+    await db.insert(wishes).values({ userId, poolId: POOL.id, cardId: "bb-02", createdAt: now });
+    // 0 -> target index 0; 0.1 < 0.3 -> hit; rest feed the holo roll.
+    const out = await executePull(db, { userId, pool: POOL, now, rand: scripted([0, 0.1, 0.99]) });
+    expect(out.status).toBe("ok");
+    if (out.status !== "ok") return;
+    expect(out.card.id).toBe("bb-02");
+    expect(out.wishHit).toBe(true);
+    expect(await pityOf(userId)).toBe(0);
+    expect(await wishIds(userId)).toEqual([]);
+  });
+
+  it("50th roll that misses still resets pity and keeps the wish", async () => {
+    const userId = "pull-wish-miss";
+    const now = 16_000_000;
+    await seedState(userId, now, 49);
+    await db.insert(wishes).values({ userId, poolId: POOL.id, cardId: "bb-02", createdAt: now });
+    // target 0; 0.5 >= 0.3 miss; then rarity 0 -> common, index 0.
+    const out = await executePull(db, { userId, pool: POOL, now, rand: scripted([0, 0.5, 0, 0]) });
+    expect(out.status).toBe("ok");
+    if (out.status !== "ok") return;
+    expect(out.card.id).toBe("aa-01");
+    expect(out.wishHit).toBe(false);
+    expect(await pityOf(userId)).toBe(0);
+    expect(await wishIds(userId)).toEqual(["bb-02"]);
+  });
+
+  it("increments pity on a non-wish pull and resets on an early wish hit", async () => {
+    const userId = "pull-wish-early";
+    const now = 17_000_000;
+    await seedState(userId, now, 20);
+    await db.insert(wishes).values({ userId, poolId: POOL.id, cardId: "aa-01", createdAt: now });
+    const miss = await executePull(db, { userId, pool: POOL, now, rand: scripted([0.9, 0]) });
+    expect(miss.status).toBe("ok");
+    expect(await pityOf(userId)).toBe(21);
+    const hit = await executePull(db, { userId, pool: POOL, now, rand: scripted([0, 0]) });
+    expect(hit.status).toBe("ok");
+    if (hit.status !== "ok") return;
+    expect(hit.card.id).toBe("aa-01");
+    expect(await pityOf(userId)).toBe(0);
+    expect(await wishIds(userId)).toEqual([]);
+  });
+});
+
+describe("wish queries", () => {
+  it("never accepts Secret cards", async () => {
+    expect(await findWishableCard(db, "bb-03")).toBeNull();
+  });
+
+  it("caps wishes at 3 per pool and reports duplicates", async () => {
+    const userId = "wish-cap";
+    const now = 18_000_000;
+    const ids = ["aa-01", "aa-02", "bb-01", "bb-02"];
+    const outcomes = [];
+    for (const id of [...ids, "aa-01"]) {
+      const card = await findWishableCard(db, id);
+      if (card === null || card === "ambiguous") throw new Error(`no card ${id}`);
+      outcomes.push(await addWish(db, userId, card, now));
+    }
+    expect(outcomes).toEqual(["ok", "ok", "ok", "full", "duplicate"]);
+    expect(await removeWish(db, userId, "aa-02")).toBe(true);
+    expect(await removeWish(db, userId, "aa-02")).toBe(false);
+  });
+
+  it("hides Holo from autocomplete and id lookup but accepts its exact name", async () => {
+    await db.insert(pools).values({
+      id: "kilau-pool",
+      name: "Kilau",
+      emoji: "✨",
+      sortOrder: 1,
+      staminaMax: 5,
+      regenIntervalSec: 100,
+      resetCooldownSec: 3600,
+      memberCount: 1,
+    });
+    await db.insert(groups).values({ id: "kg", poolId: "kilau-pool", name: "Kilau", badge: "KLU", memberCount: 1 });
+    await db.insert(members).values({
+      id: "km",
+      poolId: "kilau-pool",
+      groupId: "kg",
+      name: "Rahasia Kilau",
+      nameLower: "rahasia kilau",
+      photoTotal: 1,
+    });
+    await db.insert(cards).values({
+      id: "km-01",
+      poolId: "kilau-pool",
+      groupId: "kg",
+      memberId: "km",
+      serial: 1,
+      photoNo: 1,
+      rarity: "holo",
+      imageFile: "km-01.x.webp",
+      enabled: true,
+    });
+    try {
+      expect(await searchWishableCards(db, "kilau")).toEqual([]);
+      expect(await findWishableCard(db, "km-01")).toBeNull();
+      const byName = await findWishableCard(db, "  rahasia KILAU ");
+      expect(byName !== null && byName !== "ambiguous" ? byName.cardId : null).toBe("km-01");
+    } finally {
+      // Other suites count pools; keep this fixture local.
+      await db.delete(cards).where(eq(cards.id, "km-01"));
+      await db.delete(members).where(eq(members.id, "km"));
+      await db.delete(groups).where(eq(groups.id, "kg"));
+      await db.delete(pools).where(eq(pools.id, "kilau-pool"));
+    }
   });
 });
 
