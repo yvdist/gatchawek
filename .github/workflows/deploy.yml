@@ -38,8 +38,12 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       - name: Register Discord commands
-        if: secrets.DISCORD_APPLICATION_ID != '' && secrets.DISCORD_BOT_TOKEN != '' && secrets.GUILD_ID != ''
-        run: pnpm register
+        run: |
+          if [ -z "${DISCORD_APPLICATION_ID:-}" ] || [ -z "${DISCORD_BOT_TOKEN:-}" ] || [ -z "${GUILD_ID:-}" ]; then
+            echo "Discord command secrets not set; skipping registration."
+            exit 0
+          fi
+          pnpm register
         env:
           DISCORD_APPLICATION_ID: ${{ secrets.DISCORD_APPLICATION_ID }}
           DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
