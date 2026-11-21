@@ -27,8 +27,20 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm run typecheck
+      # A spent free-tier read quota makes even the migration bookkeeping
+      # SELECT fail; skipping the step once is better than blocking the
+      # deploy that fixes the read volume. Any other failure still fails.
       - name: Apply D1 migrations (remote)
-        run: pnpm exec wrangler d1 migrations apply DB --remote
+        run: |
+          set +e
+          output=$(pnpm exec wrangler d1 migrations apply DB --remote 2>&1)
+          status=$?
+          echo "$output"
+          if [ "$status" -ne 0 ] && echo "$output" | grep -q "exceeded D1's free tier daily row read limit"; then
+            echo "::warning::D1 daily row-read quota exhausted — skipping this run's migrations."
+            exit 0
+          fi
+          exit "$status"
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

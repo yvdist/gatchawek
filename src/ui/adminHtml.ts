@@ -93,6 +93,11 @@ export function loginPage(error: string | null): string {
   return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>login · admin</title><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${FONTS}"><link rel="stylesheet" href="${BASE}">${STYLE}</head><body><main class="loginwrap"><div class="login"><div class="fan" aria-hidden="true"><i class="r-rare"></i><i class="r-secret"></i><i class="r-holo"></i></div><div class="card login-card"><h1>Gatchawek admin</h1><p class="lede">Masukkan password owner untuk mengelola katalog kartu.</p>${err}<form method="post" action="/admin/login"><div class="field"><label for="loginPw">Password</label><input id="loginPw" type="password" name="password" required autocomplete="current-password" autofocus></div><button class="btn" type="submit">Masuk</button></form></div></div></main></body></html>`;
 }
 
+/** D1 free-tier daily read quota is spent: every SELECT fails until midnight UTC. */
+export function quotaPage(): string {
+  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>kuota habis · admin</title><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${FONTS}"><link rel="stylesheet" href="${BASE}">${STYLE}</head><body><nav class="topbar"><div class="topbar-inner"><span class="brand"><span class="brand-text">Admin</span></span></div></nav><main class="wrap"><div class="pagehead"><h1>Kuota baca database habis</h1><p class="lede">D1 free tier menolak semua SELECT sampai reset harian: <strong>00:00 UTC</strong> (07:00 WIB). Panel dan bot baru bisa membaca katalog lagi setelah itu.</p></div><article class="card"><p>Reload tidak akan menolong sampai kuota reset — setiap percobaan tetap ditolak. Tidak ada data yang hilang: hanya batas baca harian yang terpakai.</p><p><a class="btn" href="/admin">Coba lagi</a></p></article></main></body></html>`;
+}
+
 export function dashboardPage(counts: AdminCounts): string {
   // Each card is a to-do; a zero is "done" and gets neither a tone nor a link.
   const work = (label: string, value: number, href: string, tone: string, action: string): string =>

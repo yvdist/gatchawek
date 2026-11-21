@@ -6,6 +6,7 @@ import {
   importPage,
   injectPage,
   loginPage,
+  quotaPage,
 } from "../src/ui/adminHtml.js";
 import type { AdminCardDetail } from "../src/db/queries/admin.js";
 
@@ -46,6 +47,15 @@ describe("loginPage", () => {
 
   it("shows the error message", () => {
     expect(loginPage("Password salah")).toContain("Password salah");
+  });
+});
+
+describe("quotaPage", () => {
+  it("names the reset time and offers a retry link", () => {
+    const html = quotaPage();
+    expect(html).toContain("Kuota baca database habis");
+    expect(html).toContain("00:00 UTC");
+    expect(html).toContain('href="/admin"');
   });
 });
 

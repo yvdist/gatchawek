@@ -35,3 +35,21 @@ export async function nativeBatch(
 ): Promise<D1Result[]> {
   return rawD1(db).batch(statements.map((s) => toNative(db, s)));
 }
+
+/**
+ * D1 free-tier daily cap: every SELECT fails (account-wide) until midnight UTC.
+ * Drizzle rethrows as `DrizzleQueryError` ("Failed query: ...") with the D1
+ * message on `cause`, so the whole chain is checked.
+ */
+export function isD1DailyQuotaError(error: unknown): boolean {
+  let current: unknown = error;
+  for (let depth = 0; depth < 5; depth += 1) {
+    if (current === null || current === undefined) return false;
+    const message = current instanceof Error ? current.message : String(current);
+    if (message.includes("exceeded D1's free tier daily row read limit")) {
+      return true;
+    }
+    current = current instanceof Error ? current.cause : undefined;
+  }
+  return false;
+}

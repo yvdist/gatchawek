@@ -47,7 +47,8 @@ import {
   handleAlbumWebRequest,
 } from "./commands/album/handler.js";
 import { getShareableCard } from "./db/queries/share.js";
-import { createDb } from "./db/client.js";
+import { createDb, isD1DailyQuotaError } from "./db/client.js";
+import { quotaPage } from "./ui/adminHtml.js";
 import { isLinkPreviewCrawler } from "./domain/album.js";
 import { cardImageUrl } from "./ui/gachaEmbed.js";
 import {
@@ -68,6 +69,18 @@ app.use(
     return dsn !== undefined ? { dsn } : {};
   }),
 );
+
+// A spent D1 free-tier read quota is an outage, not a bug: every SELECT
+// fails account-wide until midnight UTC. Answer with a plain page instead of
+// a 500 (Sentry already captured the exception before this handler runs).
+app.onError((error, c) => {
+  if (isD1DailyQuotaError(error)) {
+    c.header("Cache-Control", "no-store");
+    if (c.req.path.startsWith("/admin")) return c.html(quotaPage(), 503);
+    return c.text("Kuota baca database harian habis. Coba lagi setelah 07:00 WIB.", 503);
+  }
+  return c.text("Internal Server Error", 500);
+});
 
 app.get("/health", (c) => c.json({ status: "ok" }, 200));
 /** Card frames from R2 (persistent; Worker assets can't hold runtime files). */
