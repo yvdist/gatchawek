@@ -84,6 +84,7 @@ export const poolSchema = z.object({
   regenIntervalSec: z.number().int().positive(),
   resetCooldownSec: z.number().int().positive(),
   sortOrder: z.number().int().default(0),
+  hidden: z.boolean().default(false),
 });
 
 export type PoolManifest = z.infer<typeof poolSchema>;

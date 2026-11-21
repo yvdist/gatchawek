@@ -18,6 +18,7 @@ if (typeof process.loadEnvFile === "function") {
 interface PoolEntry {
   id: string;
   name: string;
+  hidden?: boolean;
 }
 
 interface CommandDefinitionWithPoolOption
@@ -72,6 +73,7 @@ async function main(): Promise<void> {
   );
   const pools = JSON.parse(poolsRaw) as PoolEntry[];
   const choices = pools
+    .filter((pool) => pool.hidden !== true)
     .slice(0, MAX_CHOICES)
     .map((pool) => ({ name: pool.name, value: pool.id }));
 

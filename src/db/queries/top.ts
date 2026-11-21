@@ -1,7 +1,8 @@
-import { eq, sql } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { pools } from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
 import { getLevelProgress } from "../../domain/level.js";
+import { visiblePool } from "./poolVisibility.js";
 
 export interface TopCollector {
   userId: string;
@@ -58,7 +59,7 @@ export async function getTopBoards(db: Db): Promise<TopBoards> {
   const livePools = await db
     .select({ id: pools.id, name: pools.name })
     .from(pools)
-    .where(eq(pools.enabled, true))
+    .where(visiblePool())
     .orderBy(pools.sortOrder)
     .limit(25);
   if (livePools.length === 0) {

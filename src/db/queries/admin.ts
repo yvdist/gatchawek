@@ -13,6 +13,11 @@ import { slugifyBase } from "../../domain/submissions.js";
 import { badgeForGroupName, slugifyGroupId } from "../../domain/importGroups.js";
 import { RARITY_KEYS, type RarityKey } from "../../domain/rarity.js";
 import type { QueueRow } from "./inject.js";
+import {
+  CARD_POOL_NOT_HIDDEN_SQL,
+  QUEUE_POOL_NOT_HIDDEN_SQL,
+  visiblePool,
+} from "./poolVisibility.js";
 
 export type CardImageKind = "static" | "remote" | "empty";
 /** `todo` = every card not rendered yet (empty + remote). */
@@ -122,6 +127,7 @@ function cardWhere(kind: AdminCardKindFilter, q: string, f: AdminCardFilters = {
       sql`((${cards.imageFile} != '' AND ${cards.imageFile} NOT LIKE 'http%') OR (${isRemote} AND ${inExcludedPool()}))`,
     );
   }
+  conds.push(CARD_POOL_NOT_HIDDEN_SQL);
   if (typeof f.poolId === "string" && f.poolId !== "") {
     conds.push(sql`${cards.poolId} = ${f.poolId}`);
   }
@@ -262,7 +268,7 @@ export async function getAdminCard(
   cardId: string,
 ): Promise<AdminCardDetail | null> {
   const [res] = await nativeBatch(db, [
-    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${cards.groupId} AS group_id, ${pools.name} AS pool_name, ${cards.poolId} AS pool_id, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned, ${cards.renderRequestedAt} AS render_requested_at, ${cards.photoLabel} AS photo_label, ${members.fullName} AS full_name, ${members.photoTotal} AS photo_total, ${cards.serial} AS serial, ${cards.sourcePageUrl} AS source_page_url, ${cards.holoEnabled} AS holo_enabled FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${cards.id} = ${cardId} GROUP BY ${cards.id}`,
+    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${cards.groupId} AS group_id, ${pools.name} AS pool_name, ${cards.poolId} AS pool_id, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${cards.imageFile} AS image_file, ${cards.enabled} AS enabled, IFNULL(SUM(${userCards.quantity}), 0) AS owned, ${cards.renderRequestedAt} AS render_requested_at, ${cards.photoLabel} AS photo_label, ${members.fullName} AS full_name, ${members.photoTotal} AS photo_total, ${cards.serial} AS serial, ${cards.sourcePageUrl} AS source_page_url, ${cards.holoEnabled} AS holo_enabled FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} WHERE ${cards.id} = ${cardId} AND ${pools.hidden} = 0 GROUP BY ${cards.id}`,
   ]);
   const raw = (res?.results ?? []) as unknown as AdminCardDetailRaw[];
   const r = raw[0];
@@ -292,7 +298,7 @@ export async function setAdminCardImage(
           ? { imageFile }
           : { imageFile, sourcePageUrl },
       )
-      .where(eq(cards.id, cardId)),
+      .where(and(eq(cards.id, cardId), CARD_POOL_NOT_HIDDEN_SQL)),
   ]);
   return (res[0]?.meta.changes ?? 0) === 1;
 }
@@ -303,7 +309,10 @@ export async function setAdminCardEnabled(
   enabled: boolean,
 ): Promise<boolean> {
   const res = await nativeBatch(db, [
-    db.update(cards).set({ enabled }).where(eq(cards.id, cardId)),
+    db
+      .update(cards)
+      .set({ enabled })
+      .where(and(eq(cards.id, cardId), CARD_POOL_NOT_HIDDEN_SQL)),
   ]);
   return (res[0]?.meta.changes ?? 0) === 1;
 }
@@ -318,25 +327,25 @@ export async function listAdminQueue(
     db
       .select()
       .from(injectQueue)
-      .where(eq(injectQueue.status, status))
+      .where(and(eq(injectQueue.status, status), QUEUE_POOL_NOT_HIDDEN_SQL))
       .orderBy(desc(injectQueue.submittedAt))
       .limit(clampLimit(limit))
       .offset(clampOffset(offset)),
     db
       .select({ n: sql<number>`count(*)` })
       .from(injectQueue)
-      .where(eq(injectQueue.status, status)),
+      .where(and(eq(injectQueue.status, status), QUEUE_POOL_NOT_HIDDEN_SQL)),
   ]);
   return { rows, total: countRows[0]?.n ?? 0 };
 }
 
 export async function getAdminCounts(db: Db): Promise<AdminCounts> {
   const res = await nativeBatch(db, [
-    sql`SELECT COUNT(*) AS n FROM ${cards}`,
-    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${cards.imageFile} = ''`,
-    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${isRemote} AND ${outsideExcludedPool()}`,
-    sql`SELECT COUNT(*) AS n FROM ${injectQueue} WHERE ${injectQueue.status} = 'pending'`,
-    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${isRemote} AND ${outsideExcludedPool()} AND ${cards.enabled} = 1 AND ${cards.renderRequestedAt} IS NOT NULL AND ${cards.renderRequestedAt} <= ${Math.floor(Date.now() / 1000) - RENDER_PENDING_SEC}`,
+    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${CARD_POOL_NOT_HIDDEN_SQL}`,
+    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${cards.imageFile} = '' AND ${CARD_POOL_NOT_HIDDEN_SQL}`,
+    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${isRemote} AND ${outsideExcludedPool()} AND ${CARD_POOL_NOT_HIDDEN_SQL}`,
+    sql`SELECT COUNT(*) AS n FROM ${injectQueue} WHERE ${injectQueue.status} = 'pending' AND ${QUEUE_POOL_NOT_HIDDEN_SQL}`,
+    sql`SELECT COUNT(*) AS n FROM ${cards} WHERE ${isRemote} AND ${outsideExcludedPool()} AND ${cards.enabled} = 1 AND ${cards.renderRequestedAt} IS NOT NULL AND ${cards.renderRequestedAt} <= ${Math.floor(Date.now() / 1000) - RENDER_PENDING_SEC} AND ${CARD_POOL_NOT_HIDDEN_SQL}`,
   ]);
   const n = (i: number): number =>
     Number((res[i]?.results?.[0] as { n?: number } | undefined)?.n ?? 0);
@@ -366,7 +375,7 @@ export async function listAdminPoolGroups(
     })
     .from(groups)
     .innerJoin(pools, eq(groups.poolId, pools.id))
-    .where(and(eq(pools.enabled, true), eq(groups.enabled, true)))
+    .where(and(visiblePool(), eq(groups.enabled, true)))
     .orderBy(asc(pools.sortOrder), asc(groups.sortOrder), asc(groups.id));
 }
 
@@ -383,7 +392,7 @@ export async function listAdminPools(db: Db): Promise<AdminPoolOption[]> {
   return db
     .select({ poolId: pools.id, poolName: pools.name, poolEmoji: pools.emoji })
     .from(pools)
-    .where(eq(pools.enabled, true))
+    .where(visiblePool())
     .orderBy(asc(pools.sortOrder), asc(pools.id));
 }
 
@@ -462,7 +471,7 @@ export async function ensureAdminGroup(
   const [poolRow] = await db
     .select({ id: pools.id })
     .from(pools)
-    .where(and(eq(pools.id, poolId), eq(pools.enabled, true)))
+    .where(and(eq(pools.id, poolId), visiblePool()))
     .limit(1);
   if (poolRow === undefined) return { status: "unknown-pool" };
   const nameLower = name.toLowerCase();
@@ -713,6 +722,7 @@ export async function listRenderableCards(
         like(cards.imageFile, "http%"),
         eq(cards.enabled, true),
         outsideExcludedPool(),
+        CARD_POOL_NOT_HIDDEN_SQL,
         or(
           isNull(cards.renderRequestedAt),
           lt(cards.renderRequestedAt, nowSec - RENDER_PENDING_SEC),
@@ -742,6 +752,7 @@ export async function listReRenderableFromSource(
         like(cards.sourcePageUrl, "http%"),
         eq(cards.enabled, true),
         outsideExcludedPool(),
+        CARD_POOL_NOT_HIDDEN_SQL,
         or(
           isNull(cards.renderRequestedAt),
           lt(cards.renderRequestedAt, nowSec - RENDER_PENDING_SEC),
@@ -779,7 +790,7 @@ export async function swapCardMemberLabel(
     .select({ id: cards.id, memberId: cards.memberId, photoLabel: cards.photoLabel, memberName: members.name })
     .from(cards)
     .innerJoin(members, eq(members.id, cards.memberId))
-    .where(eq(cards.id, cardId))
+    .where(and(eq(cards.id, cardId), CARD_POOL_NOT_HIDDEN_SQL))
     .limit(1);
   const row = current[0];
   if (row === undefined) return { status: "not-found", memberName: "", photoLabel: null };
@@ -808,7 +819,7 @@ export async function promoteCardLabelToMember(
     .select({ id: cards.id, memberId: cards.memberId, photoLabel: cards.photoLabel, memberName: members.name })
     .from(cards)
     .innerJoin(members, eq(members.id, cards.memberId))
-    .where(eq(cards.id, cardId))
+    .where(and(eq(cards.id, cardId), CARD_POOL_NOT_HIDDEN_SQL))
     .limit(1);
   const row = current[0];
   if (row === undefined) return { status: "not-found", memberName: "", photoLabel: null };
@@ -870,7 +881,7 @@ export async function updateAdminCardDetails(
   const current = await db
     .select({ id: cards.id, memberId: cards.memberId })
     .from(cards)
-    .where(eq(cards.id, cardId))
+    .where(and(eq(cards.id, cardId), CARD_POOL_NOT_HIDDEN_SQL))
     .limit(1);
   const cardRow = current[0];
   if (cardRow === undefined) return { status: "not-found" };

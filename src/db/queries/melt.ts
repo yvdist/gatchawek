@@ -9,6 +9,7 @@ import {
   userPoolStates,
 } from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
+import { CARD_POOL_NOT_HIDDEN_SQL } from "./poolVisibility.js";
 import { RARITY_STARS, type RarityKey } from "../../domain/rarity.js";
 import {
   meltPointsForRarity,
@@ -54,7 +55,7 @@ export async function searchMeltableCards(
       ? sql`1 = 1`
       : sql`${members.nameLower} LIKE ${`${sanitized}%`}`;
   const results = await nativeBatch(db, [
-    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${userCards.userId} = ${ownerId} AND ${userCards.quantity} >= 2 AND ${cards.enabled} = 1 AND ${MELTABLE_RARITY_SQL} AND ${likeCondition} ORDER BY ${members.nameLower}, ${cards.photoNo} LIMIT 25`,
+    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${userCards.userId} = ${ownerId} AND ${userCards.quantity} >= 2 AND ${cards.enabled} = 1 AND ${CARD_POOL_NOT_HIDDEN_SQL} AND ${MELTABLE_RARITY_SQL} AND ${likeCondition} ORDER BY ${members.nameLower}, ${cards.photoNo} LIMIT 25`,
   ]);
   const rows = (results[0]?.results ?? []) as unknown as {
     id: string;
@@ -96,7 +97,7 @@ async function readMeltState(
         poolId: cards.poolId,
       })
       .from(cards)
-      .where(eq(cards.id, cardId))
+      .where(and(eq(cards.id, cardId), CARD_POOL_NOT_HIDDEN_SQL))
       .limit(1),
     db
       .select({ quantity: userCards.quantity })
@@ -140,7 +141,13 @@ async function meltCardView(
     .innerJoin(members, eq(cards.memberId, members.id))
     .innerJoin(groups, eq(cards.groupId, groups.id))
     .innerJoin(pools, eq(cards.poolId, pools.id))
-    .where(and(eq(userCards.userId, ownerId), eq(userCards.cardId, cardId)))
+    .where(
+      and(
+        eq(userCards.userId, ownerId),
+        eq(userCards.cardId, cardId),
+        CARD_POOL_NOT_HIDDEN_SQL,
+      ),
+    )
     .limit(1);
   const row = rows[0];
   if (row === undefined) return null;
@@ -192,7 +199,7 @@ export async function dismantleCard(
   // after the win is confirmed, so a loser never mints points.
   const writeResults = await nativeBatch(db, [
     sql`INSERT INTO users (id, created_at) VALUES (${userId}, ${now}) ON CONFLICT (id) DO NOTHING`,
-    sql`UPDATE user_cards SET quantity = quantity - 1 WHERE user_id = ${userId} AND card_id = ${cardId} AND quantity >= 2`,
+    sql`UPDATE user_cards SET quantity = quantity - 1 WHERE user_id = ${userId} AND card_id = ${cardId} AND quantity >= 2 AND NOT EXISTS (SELECT 1 FROM ${cards} JOIN ${pools} ON ${pools.id} = ${cards.poolId} WHERE ${cards.id} = ${cardId} AND ${pools.hidden} = 1)`,
     sql`DELETE FROM user_cards WHERE user_id = ${userId} AND card_id = ${cardId} AND quantity <= 0`,
   ]);
   const updated = writeResults[1];
@@ -333,6 +340,6 @@ export async function getMeltBalances(
     })
     .from(userMeltPoints)
     .innerJoin(pools, eq(userMeltPoints.poolId, pools.id))
-    .where(eq(userMeltPoints.userId, userId));
+    .where(and(eq(userMeltPoints.userId, userId), eq(pools.hidden, false)));
   return rows;
 }

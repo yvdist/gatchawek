@@ -128,6 +128,20 @@ pool `pejabat`) atau `jomok` (untuk pool `meme`). `[rarity]` salah satu dari
 
 Kartu milik user tetap tersimpan di DB tetapi tersembunyi dan tidak bisa ditukar.
 
+### Sembunyikan pool (tanpa hapus data)
+
+`"hidden": true` di entry `data/pools.json` menyembunyikan pool **beserta semua
+grup dan kartunya** dari bot dan admin panel: hilang dari `/gacha`, `/koleksi`,
+`/list`, `/cari`, `/status`, `/help`, `/top`, `/kartu`, `/pamer`, `/give`,
+`/trade`, `/battle`, `/wish`, `/dismantle`, `/redeem`, album, `/kartu/<id>`,
+autocomplete, dan semua hitungan admin. Baris D1, kepemilikan user, dan gambar R2
+tidak disentuh; antrean inject pool itu juga tidak tampil dan tidak bisa
+di-approve.
+
+1. Tambah `"hidden": true` di `data/pools.json`.
+2. `pnpm seed` (lokal), lalu `pnpm seed:remote` + `pnpm deploy` (produksi).
+3. Balikkan dengan menghapus flag itu dan seed ulang — tanpa migrasi.
+
 ### Catatan insiden (PDF)
 
 Catatan di `docs/*.md` bisa dirender jadi PDF siap-baca: `pnpm note:pdf docs/insiden-2026-11-21-d1-quota.md`

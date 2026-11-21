@@ -2,6 +2,7 @@ import { and, eq, like, sql } from "drizzle-orm";
 import { cards, groups, members } from "../schema.js";
 import type { Db } from "../client.js";
 import type { RarityKey } from "../../domain/rarity.js";
+import { CARD_POOL_NOT_HIDDEN_SQL } from "./poolVisibility.js";
 
 export interface CariOwner {
   userId: string;
@@ -31,7 +32,7 @@ export interface CariMember {
 /** Holo and secret rarity cards never surface in /cari (user decision). */
 export const VISIBLE_RARITY_SQL = sql.raw(`rarity NOT IN ('holo', 'secret')`);
 
-export const MEMBER_HAS_VISIBLE_CARD_SQL = sql`EXISTS (SELECT 1 FROM cards WHERE cards.member_id = members.id AND cards.enabled = 1 AND rarity NOT IN ('holo', 'secret'))`;
+export const MEMBER_HAS_VISIBLE_CARD_SQL = sql`EXISTS (SELECT 1 FROM cards WHERE cards.member_id = members.id AND cards.enabled = 1 AND rarity NOT IN ('holo', 'secret') AND ${CARD_POOL_NOT_HIDDEN_SQL})`;
 
 export const CARI_MEMBER_LIMIT = 8;
 export const CARI_CARD_LIMIT = 25;
@@ -73,10 +74,11 @@ export function sanitizeCariPrefix(raw: string): string {
    // members.nameLower (= "jomok mix NN"). Empty query matches all labels.
    const labelWhere =
      sanitized === ""
-       ? and(eq(cards.enabled, true), VISIBLE_RARITY_SQL)
+       ? and(eq(cards.enabled, true), VISIBLE_RARITY_SQL, CARD_POOL_NOT_HIDDEN_SQL)
        : and(
            eq(cards.enabled, true),
            VISIBLE_RARITY_SQL,
+           CARD_POOL_NOT_HIDDEN_SQL,
            like(sql`lower(${cards.photoLabel})`, `%${sanitized}%`),
          );
    const labelRows =
@@ -113,6 +115,7 @@ export function sanitizeCariPrefix(raw: string): string {
            and(
              eq(members.enabled, true),
              sql`${members.id} IN (${sql.join(extraIds.map((id) => sql`${id}`), sql`, `)})`,
+             MEMBER_HAS_VISIBLE_CARD_SQL,
            ),
          )
          .orderBy(members.nameLower)
@@ -137,6 +140,7 @@ export function sanitizeCariPrefix(raw: string): string {
          sql`${cards.memberId} IN (${sql.join(memberRows.map((m) => sql`${m.id}`), sql`, `)})`,
          eq(cards.enabled, true),
          VISIBLE_RARITY_SQL,
+         CARD_POOL_NOT_HIDDEN_SQL,
        ),
      )
      .orderBy(cards.photoNo)

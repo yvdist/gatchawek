@@ -13,6 +13,7 @@ import {
   searchMembers,
   VISIBLE_RARITY_SQL,
 } from "../../db/queries/cari.js";
+import { CARD_POOL_NOT_HIDDEN_SQL } from "../../db/queries/poolVisibility.js";
 import {
   buildCariEmbed,
   buildCariEmpty,
@@ -134,6 +135,7 @@ export async function handleCariAutocomplete(
        .where(
          and(
            eq(members.enabled, true),
+           eq(pools.hidden, false),
            sanitized === "" ? sql`1 = 1` : like(members.nameLower, `%${sanitized}%`),
            MEMBER_HAS_VISIBLE_CARD_SQL,
          ),
@@ -158,6 +160,7 @@ export async function handleCariAutocomplete(
                  eq(cards.enabled, true),
                  eq(members.enabled, true),
                  VISIBLE_RARITY_SQL,
+                 CARD_POOL_NOT_HIDDEN_SQL,
                  like(sql`lower(${cards.photoLabel})`, `%${sanitized}%`),
                ),
              )

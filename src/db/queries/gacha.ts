@@ -10,6 +10,10 @@ import {
 } from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
 import {
+  CARD_POOL_NOT_HIDDEN_SQL,
+  visiblePool,
+} from "./poolVisibility.js";
+import {
   RARITY_KEYS,
   pickIndex,
   pickRarity,
@@ -68,7 +72,7 @@ export async function getPoolConfig(
   const rows = await db
     .select()
     .from(pools)
-    .where(and(eq(pools.id, poolId), eq(pools.enabled, true)))
+    .where(and(eq(pools.id, poolId), visiblePool()))
     .limit(1);
   const row = rows[0];
   return row === undefined ? null : toPoolConfig(row);
@@ -114,7 +118,13 @@ export async function getEnabledRarities(
   const rows = await db
     .selectDistinct({ rarity: cards.rarity })
     .from(cards)
-    .where(and(eq(cards.poolId, poolId), eq(cards.enabled, true)));
+    .where(
+      and(
+        eq(cards.poolId, poolId),
+        eq(cards.enabled, true),
+        CARD_POOL_NOT_HIDDEN_SQL,
+      ),
+    );
   const present = new Set<RarityKey>(rows.map((r) => r.rarity));
   return RARITY_KEYS.filter((k) => present.has(k));
 }
@@ -168,6 +178,7 @@ export async function getCandidatesByRarity(
         eq(cards.poolId, poolId),
         eq(cards.rarity, rarity),
         eq(cards.enabled, true),
+        CARD_POOL_NOT_HIDDEN_SQL,
       ),
     )
     .orderBy(cards.id);
@@ -480,7 +491,7 @@ export async function getUserStatusOverview(
   const poolRows = await db
     .select()
     .from(pools)
-    .where(eq(pools.enabled, true))
+    .where(visiblePool())
     .orderBy(pools.sortOrder);
   if (poolRows.length === 0) return { rows: [], userExp: 0 };
   const configs = poolRows.map(toPoolConfig);

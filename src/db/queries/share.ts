@@ -2,6 +2,7 @@ import { and, eq } from "drizzle-orm";
 import { cards, groups, members, pools } from "../schema.js";
 import type { Db } from "../client.js";
 import type { RarityKey } from "../../domain/rarity.js";
+import { CARD_POOL_NOT_HIDDEN_SQL } from "./poolVisibility.js";
 
 export interface ShareableCard {
   cardId: string;
@@ -38,7 +39,13 @@ export async function getShareableCard(
     .innerJoin(members, eq(cards.memberId, members.id))
     .innerJoin(groups, eq(cards.groupId, groups.id))
     .innerJoin(pools, eq(cards.poolId, pools.id))
-    .where(and(eq(cards.id, cardId), eq(cards.enabled, true)))
+    .where(
+      and(
+        eq(cards.id, cardId),
+        eq(cards.enabled, true),
+        CARD_POOL_NOT_HIDDEN_SQL,
+      ),
+    )
     .limit(1);
   const row = rows[0];
   if (row === undefined) return null;

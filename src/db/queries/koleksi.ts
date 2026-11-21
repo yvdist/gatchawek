@@ -3,6 +3,10 @@ import { cards, groups, members, pools, userCards } from "../schema.js";
 import { clampPage, PAGE_SIZE } from "../../domain/koleksi.js";
 import { RARITY_KEYS, type RarityKey } from "../../domain/rarity.js";
 import { nativeBatch, type Db } from "../client.js";
+import {
+  GROUP_POOL_NOT_HIDDEN_SQL,
+  visiblePool,
+} from "./poolVisibility.js";
 
 export interface KoleksiFilters {
   poolId: string;
@@ -115,7 +119,7 @@ export async function getKoleksiPage(
   const poolRows = await db
     .select()
     .from(pools)
-    .where(and(eq(pools.id, filters.poolId), eq(pools.enabled, true)))
+    .where(and(eq(pools.id, filters.poolId), visiblePool()))
     .limit(1);
   const pool = poolRows[0];
   if (pool === undefined) return { status: "unknown-pool" };
@@ -210,12 +214,12 @@ export async function getHelpCatalog(db: Db): Promise<HelpCatalog> {
     db
       .select()
       .from(pools)
-      .where(eq(pools.enabled, true))
+      .where(visiblePool())
       .orderBy(asc(pools.sortOrder)),
     db
       .select()
       .from(groups)
-      .where(eq(groups.enabled, true))
+      .where(and(eq(groups.enabled, true), GROUP_POOL_NOT_HIDDEN_SQL))
       .orderBy(asc(groups.poolId), asc(groups.sortOrder)),
   ]);
   const byPool = new Map<string, HelpCatalog["pools"][number]>();

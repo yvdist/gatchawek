@@ -2,6 +2,12 @@ import { and, asc, eq, like, or, sql } from "drizzle-orm";
 import { cards, groups, members, pools, type Rarity } from "../schema.js";
 import { clampListPage, LIST_PAGE_SIZE } from "../../domain/list.js";
 import { nativeBatch, type Db } from "../client.js";
+import {
+  CARD_POOL_NOT_HIDDEN_SQL,
+  GROUP_POOL_NOT_HIDDEN_SQL,
+  VISIBLE_POOL_SQL,
+  visiblePool,
+} from "./poolVisibility.js";
 
 export interface ListFilters {
   poolId: string | null;
@@ -73,7 +79,7 @@ export async function getListPage(
     const poolRows = await db
       .select({ id: pools.id, name: pools.name, emoji: pools.emoji })
       .from(pools)
-      .where(and(eq(pools.id, filters.poolId), eq(pools.enabled, true)))
+      .where(and(eq(pools.id, filters.poolId), visiblePool()))
       .limit(1);
     const pool = poolRows[0];
     if (pool === undefined) return { status: "unknown-pool" };
@@ -84,7 +90,11 @@ export async function getListPage(
   if (filters.groupId !== null) {
     const groupWhere =
       filters.poolId === null
-        ? and(eq(groups.id, filters.groupId), eq(groups.enabled, true))
+        ? and(
+            eq(groups.id, filters.groupId),
+            eq(groups.enabled, true),
+            GROUP_POOL_NOT_HIDDEN_SQL,
+          )
         : and(
             eq(groups.id, filters.groupId),
             eq(groups.poolId, filters.poolId),
@@ -100,7 +110,7 @@ export async function getListPage(
     scopeGroup = group;
   }
 
-  const baseWhere = sql`${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${pools.enabled} = 1`;
+  const baseWhere = sql`${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${VISIBLE_POOL_SQL}`;
   const poolFilter =
     filters.poolId === null ? sql`` : sql` AND ${cards.poolId} = ${filters.poolId}`;
   const groupFilter =
@@ -163,7 +173,7 @@ export async function searchListPools(
     .from(pools)
     .where(
       and(
-        eq(pools.enabled, true),
+        visiblePool(),
         sanitized === ""
           ? sql`1 = 1`
           : or(like(pools.name, `%${sanitized}%`), like(pools.id, `%${sanitized}%`)),
@@ -179,7 +189,7 @@ export async function searchListGroups(
   typed: string,
 ): Promise<{ id: string; name: string; badge: string; poolId: string }[]> {
   const sanitized = typed.replace(/[%_\\]/g, "");
-  const hasVisibleCard = sql`EXISTS (SELECT 1 FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} WHERE ${cards.groupId} = ${groups.id} AND ${cards.enabled} = 1 AND ${members.enabled} = 1)`;
+  const hasVisibleCard = sql`EXISTS (SELECT 1 FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} WHERE ${cards.groupId} = ${groups.id} AND ${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${CARD_POOL_NOT_HIDDEN_SQL})`;
 
   const validPool =
     poolId !== null && poolId !== ""
@@ -187,7 +197,7 @@ export async function searchListGroups(
           await db
             .select({ id: pools.id })
             .from(pools)
-            .where(and(eq(pools.id, poolId), eq(pools.enabled, true)))
+            .where(and(eq(pools.id, poolId), visiblePool()))
             .limit(1)
         )[0]
       : undefined;
@@ -204,6 +214,7 @@ export async function searchListGroups(
       and(
         eq(groups.enabled, true),
         hasVisibleCard,
+        GROUP_POOL_NOT_HIDDEN_SQL,
         validPool !== undefined ? eq(groups.poolId, validPool.id) : sql`1 = 1`,
         sanitized === ""
           ? sql`1 = 1`

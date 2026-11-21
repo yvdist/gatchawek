@@ -3,6 +3,7 @@ import { cards, members, pools, userCards, users } from "../schema.js";
 import type { RarityKey } from "../../domain/rarity.js";
 import type { TopPoolSummary } from "../../domain/kartu.js";
 import { nativeBatch, type Db } from "../client.js";
+import { CARD_POOL_NOT_HIDDEN_SQL, VISIBLE_POOL_SQL } from "./poolVisibility.js";
 
 export interface KartuProfileStats {
   readonly userCreatedAt: number | null;
@@ -25,9 +26,9 @@ export async function getKartuProfileStats(
 ): Promise<KartuProfileStats> {
   const results = await nativeBatch(db, [
     sql`SELECT ${users.createdAt} AS created_at FROM ${users} WHERE ${users.id} = ${userId} LIMIT 1`,
-    sql`SELECT COALESCE(SUM(${userCards.quantity}), 0) AS total_cards, COUNT(DISTINCT ${cards.memberId}) AS unique_members, COALESCE(SUM(${userCards.holoQty}), 0) AS total_holo, MIN(${userCards.firstObtainedAt}) AS first_card_at FROM ${userCards} INNER JOIN ${cards} ON ${cards.id} = ${userCards.cardId} WHERE ${userCards.userId} = ${userId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1`,
-    sql`SELECT ${members.name} AS member_name, ${cards.rarity} AS rarity FROM ${userCards} INNER JOIN ${cards} ON ${cards.id} = ${userCards.cardId} INNER JOIN ${members} ON ${members.id} = ${cards.memberId} WHERE ${userCards.userId} = ${userId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 ORDER BY CASE ${cards.rarity} WHEN 'secret' THEN 0 WHEN 'holo' THEN 1 WHEN 'ultra_rare' THEN 2 WHEN 'super_rare' THEN 3 WHEN 'rare' THEN 4 ELSE 5 END, ${userCards.holoQty} DESC, ${userCards.quantity} DESC, ${userCards.firstObtainedAt} ASC LIMIT 1`,
-    sql`SELECT ${pools.name} AS pool_name, COUNT(DISTINCT ${cards.memberId}) AS owned_members, ${pools.memberCount} AS total_members FROM ${userCards} INNER JOIN ${cards} ON ${cards.id} = ${userCards.cardId} INNER JOIN ${pools} ON ${pools.id} = ${cards.poolId} WHERE ${userCards.userId} = ${userId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 AND ${pools.enabled} = 1 GROUP BY ${pools.id} ORDER BY owned_members DESC, ${pools.sortOrder} ASC LIMIT 1`,
+    sql`SELECT COALESCE(SUM(${userCards.quantity}), 0) AS total_cards, COUNT(DISTINCT ${cards.memberId}) AS unique_members, COALESCE(SUM(${userCards.holoQty}), 0) AS total_holo, MIN(${userCards.firstObtainedAt}) AS first_card_at FROM ${userCards} INNER JOIN ${cards} ON ${cards.id} = ${userCards.cardId} WHERE ${userCards.userId} = ${userId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 AND ${CARD_POOL_NOT_HIDDEN_SQL}`,
+    sql`SELECT ${members.name} AS member_name, ${cards.rarity} AS rarity FROM ${userCards} INNER JOIN ${cards} ON ${cards.id} = ${userCards.cardId} INNER JOIN ${members} ON ${members.id} = ${cards.memberId} WHERE ${userCards.userId} = ${userId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 AND ${CARD_POOL_NOT_HIDDEN_SQL} ORDER BY CASE ${cards.rarity} WHEN 'secret' THEN 0 WHEN 'holo' THEN 1 WHEN 'ultra_rare' THEN 2 WHEN 'super_rare' THEN 3 WHEN 'rare' THEN 4 ELSE 5 END, ${userCards.holoQty} DESC, ${userCards.quantity} DESC, ${userCards.firstObtainedAt} ASC LIMIT 1`,
+    sql`SELECT ${pools.name} AS pool_name, COUNT(DISTINCT ${cards.memberId}) AS owned_members, ${pools.memberCount} AS total_members FROM ${userCards} INNER JOIN ${cards} ON ${cards.id} = ${userCards.cardId} INNER JOIN ${pools} ON ${pools.id} = ${cards.poolId} WHERE ${userCards.userId} = ${userId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 AND ${VISIBLE_POOL_SQL} GROUP BY ${pools.id} ORDER BY owned_members DESC, ${pools.sortOrder} ASC LIMIT 1`,
   ]);
 
   const userRow = (results[0]?.results ?? [])[0] as unknown as

@@ -4,6 +4,7 @@ import { nativeBatch, type Db } from "../client.js";
 import { cardDisplayName } from "../../domain/gacha.js";
 import { MAX_WISHES_PER_POOL } from "../../domain/wish.js";
 import type { RarityKey } from "../../domain/rarity.js";
+import { CARD_POOL_NOT_HIDDEN_SQL } from "./poolVisibility.js";
 
 export interface WishCard {
   cardId: string;
@@ -52,6 +53,7 @@ function wishableCards(db: Db) {
 const wishableWhere = and(
   eq(cards.enabled, true),
   eq(pools.enabled, true),
+  eq(pools.hidden, false),
   ne(cards.rarity, "secret"),
 );
 
@@ -71,6 +73,7 @@ export async function getActiveWishes(
         eq(wishes.poolId, poolId),
         eq(cards.enabled, true),
         ne(cards.rarity, "secret"),
+        CARD_POOL_NOT_HIDDEN_SQL,
       ),
     )
     .orderBy(asc(wishes.createdAt), asc(cards.id));
@@ -194,7 +197,7 @@ export async function listWishes(db: Db, userId: string): Promise<WishCard[]> {
     .innerJoin(members, eq(cards.memberId, members.id))
     .innerJoin(groups, eq(cards.groupId, groups.id))
     .innerJoin(pools, eq(cards.poolId, pools.id))
-    .where(eq(wishes.userId, userId))
+    .where(and(eq(wishes.userId, userId), CARD_POOL_NOT_HIDDEN_SQL))
     .orderBy(asc(pools.sortOrder), asc(wishes.createdAt));
   return rows.map(toWishCard);
 }

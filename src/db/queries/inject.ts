@@ -1,6 +1,14 @@
 import { and, asc, eq, sql } from "drizzle-orm";
-import { cards, groups, injectQueue, members, type Rarity } from "../schema.js";
+import {
+  cards,
+  groups,
+  injectQueue,
+  members,
+  pools,
+  type Rarity,
+} from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
+import { QUEUE_POOL_NOT_HIDDEN_SQL, visiblePool } from "./poolVisibility.js";
 
 export interface QueueRow {
   messageId: string;
@@ -59,7 +67,7 @@ export async function oldestPending(db: Db): Promise<QueueRow | null> {
   const [row] = await db
     .select()
     .from(injectQueue)
-    .where(eq(injectQueue.status, "pending"))
+    .where(and(eq(injectQueue.status, "pending"), QUEUE_POOL_NOT_HIDDEN_SQL))
     .orderBy(asc(injectQueue.submittedAt))
     .limit(1);
   return (row as QueueRow | undefined) ?? null;
@@ -69,7 +77,7 @@ export async function countPending(db: Db): Promise<number> {
   const [row] = await db
     .select({ n: sql<number>`count(*)` })
     .from(injectQueue)
-    .where(eq(injectQueue.status, "pending"));
+    .where(and(eq(injectQueue.status, "pending"), QUEUE_POOL_NOT_HIDDEN_SQL));
   return row?.n ?? 0;
 }
 
@@ -101,6 +109,12 @@ export async function approveQueued(
   if (q.pool === null || q.grup === null || q.nama === null || q.memberId === null) {
     return { status: "not-pending" };
   }
+  const [liveVpool] = await db
+    .select({ id: pools.id })
+    .from(pools)
+    .where(and(eq(pools.id, q.pool), visiblePool()))
+    .limit(1);
+  if (liveVpool === undefined) return { status: "unknown-pool" };
   const [groupRow] = await db
     .select({ id: groups.id })
     .from(groups)
@@ -221,6 +235,7 @@ export async function oldestPendingBulkBatch(db: Db): Promise<BulkBatch | null> 
     .where(
       and(
         eq(injectQueue.status, "pending"),
+        QUEUE_POOL_NOT_HIDDEN_SQL,
         sql`${injectQueue.messageId} LIKE '%-b%'`,
       ),
     )
@@ -237,6 +252,7 @@ export async function oldestPendingBulkBatch(db: Db): Promise<BulkBatch | null> 
     .where(
       and(
         eq(injectQueue.status, "pending"),
+        QUEUE_POOL_NOT_HIDDEN_SQL,
         sql`${injectQueue.messageId} LIKE ${baseId + "-b%"}`,
       ),
     )
@@ -253,6 +269,7 @@ export async function countPendingBulkBatches(db: Db): Promise<number> {
     .where(
       and(
         eq(injectQueue.status, "pending"),
+        QUEUE_POOL_NOT_HIDDEN_SQL,
         sql`${injectQueue.messageId} LIKE '%-b%'`,
       ),
     )) as Array<{ messageId: string }>;
