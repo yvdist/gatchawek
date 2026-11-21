@@ -62,6 +62,7 @@ async function runPamerTask(
       return;
     }
     const imageUrl = cardImageUrl(env.PUBLIC_BASE_URL, card.imageFile);
+    const cleanBase = env.PUBLIC_BASE_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "");
     const shareUrl = buildWaShareUrl(
       buildWaShareText({
         memberName: card.memberName,
@@ -72,6 +73,7 @@ async function runPamerTask(
         serial: card.serial,
         rarity: card.rarity,
         imageUrl,
+        pageUrl: `https://${cleanBase}/kartu/${card.id}`,
       }),
     );
     await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {

@@ -68,6 +68,7 @@ async function followupPull(
   switch (outcome.status) {
     case "ok": {
       const imageUrl = cardImageUrl(env.PUBLIC_BASE_URL, outcome.card.imageFile);
+      const cleanBase = env.PUBLIC_BASE_URL.replace(/^https?:\/\//, "").replace(/\/+$/, "");
       const shareUrl = buildWaShareUrl(
         buildWaShareText({
           memberName: outcome.card.memberName,
@@ -78,6 +79,7 @@ async function followupPull(
           serial: outcome.card.serial,
           rarity: outcome.card.rarity,
           imageUrl,
+          pageUrl: `https://${cleanBase}/kartu/${outcome.card.id}`,
         }),
       );
       await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
