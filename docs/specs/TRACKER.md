@@ -36,7 +36,7 @@
 - [x] P0-T5 Konfigurasi Cloudflare
 - [x] P0-T6 DO "ping-pong"
 - [ ] P0-T7 Schema Drizzle & migrasi baru — **lokal ✅** (`0014_game_tables.sql` applied, 8 tabel); **staging tertunda**: kuota baca D1 akun habis (lihat Blockers)
-- [ ] P0-T8 CI minimal
+- [x] P0-T8 CI minimal — `.github/workflows/check.yml` (install + `pnpm check`, PR & branch non-main); deploy tetap manual
 - [ ] P0-T9 `.env.example` & README repo
 - [ ] P0-T10 Salin task fase ke `TRACKER.md` + ringkasan temuan
 
