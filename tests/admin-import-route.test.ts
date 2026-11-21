@@ -9,7 +9,7 @@ import { ADMIN_SESSION_COOKIE, signSession } from "../src/admin/auth.js";
 import { registerAdminRoutes } from "../src/admin/routes.js";
 import { createDb } from "../src/db/client.js";
 import { getAdminCard } from "../src/db/queries/admin.js";
-import { cards, groups, injectQueue, pools } from "../src/db/schema.js";
+import { cards, groups, injectQueue, members, pools } from "../src/db/schema.js";
 import type { Env } from "../src/env.js";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -49,6 +49,8 @@ beforeAll(async () => {
     INJECT_APPROVER_IDS: "boss",
     ADMIN_PASSWORD: "secret",
     ADMIN_SECRET: "hmac-secret",
+    GITHUB_ACTIONS_PAT: "test-pat",
+    GITHUB_REPO: "o/r",
   };
   const db = createDb(env);
   await db.insert(pools).values({
@@ -116,7 +118,9 @@ describe("admin /admin/import routes", () => {
     );
     expect(res.status).toBe(200);
     const html = await res.text();
-    expect(html).toContain('value="ahli-ngebul:default"');
+    expect(html).toContain('value="ahli-ngebul"');
+    expect(html).not.toContain("ahli-ngebul:default");
+    expect(html).toContain("Target pool");
     expect(html).toContain("(holo) - refi kaget.jpg");
     expect(html).toContain("★★★★★ Holo");
   });
@@ -137,7 +141,7 @@ describe("admin /admin/import routes", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const fd = new FormData();
-      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.set("poolGroup", "ahli-ngebul");
       fd.set(
         "files",
         new File([new Uint8Array([1, 2, 3, 4])], "(holo) - refi kaget.jpg", {
@@ -193,7 +197,7 @@ describe("admin /admin/import routes", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const fd = new FormData();
-      fd.set("poolGroup", "pejabat:kabinet");
+      fd.set("poolGroup", "pejabat");
       fd.set(
         "files",
         new File([new Uint8Array([9, 9, 9])], "(secret) - Default - X.jpg", {
@@ -238,7 +242,7 @@ describe("admin /admin/import routes", () => {
     }
   });
 
-  it("routes a cross-pool group name to the other pool and continues past unknown groups", async () => {
+  it("routes a cross-pool group name to the other pool and auto-creates unknown groups", async () => {
     let discordCalls = 0;
     const fetchMock = vi.fn(async () => {
       discordCalls += 1;
@@ -256,7 +260,7 @@ describe("admin /admin/import routes", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const fd = new FormData();
-      fd.set("poolGroup", "ahli-ngebul:default");
+      fd.set("poolGroup", "ahli-ngebul");
       fd.append(
         "files",
         new File([new Uint8Array([5])], "(rare) - Kabinet - Cross Kid.jpg", {
@@ -292,22 +296,335 @@ describe("admin /admin/import routes", () => {
         ok: boolean;
         results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
       };
-      expect(body.ok).toBe(false);
+      expect(body.ok).toBe(true);
       expect(body.results).toHaveLength(3);
       expect(body.results[0]).toMatchObject({ ok: true, cardId: "cross-kid-01" });
-      expect(body.results[1]).toMatchObject({ ok: false });
-      expect(body.results[1]?.message).toContain('Grup "Atlantis" tidak dikenal.');
+      expect(body.results[1]).toMatchObject({ ok: true, cardId: "lost-kid-01" });
+      expect(body.results[1]?.message).toContain("grup baru Atlantis");
       expect(body.results[2]).toMatchObject({ ok: true, cardId: "batch-kid-01" });
 
       const db = createDb(env);
       const [cross] = await db.select().from(cards).where(eq(cards.id, "cross-kid-01")).limit(1);
       expect(cross?.poolId).toBe("pejabat");
       expect(cross?.groupId).toBe("kabinet");
+      const [lost] = await db.select().from(cards).where(eq(cards.id, "lost-kid-01")).limit(1);
+      expect(lost?.poolId).toBe("ahli-ngebul");
+      expect(lost?.groupId).toBe("atlantis");
+      const [atlantis] = await db.select().from(groups).where(eq(groups.id, "atlantis")).limit(1);
+      expect(atlantis).toMatchObject({ poolId: "ahli-ngebul", name: "Atlantis", enabled: true });
       const [batch] = await db.select().from(cards).where(eq(cards.id, "batch-kid-01")).limit(1);
       expect(batch?.poolId).toBe("ahli-ngebul");
       expect(batch?.groupId).toBe("default");
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  it("creates a new group once when two files share it", async () => {
+    const fetchMock = vi.fn(async () => {
+      return new Response(
+        JSON.stringify({
+          id: "m-ramean",
+          channel_id: "c-ingest",
+          attachments: [
+            { url: "https://cdn.discordapp.com/attachments/1/2/ramean.jpg" },
+          ],
+        }),
+        { status: 200, headers: { "content-type": "application/json" } },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.set("poolGroup", "ahli-ngebul");
+      fd.append(
+        "files",
+        new File(
+          [new Uint8Array([11])],
+          "(super_rare) - Ramean - Salman Habibi.jpg",
+          { type: "image/jpeg" },
+        ),
+      );
+      fd.append(
+        "files",
+        new File(
+          [new Uint8Array([12])],
+          "(secret) - Ramean - Jidan Kedua.jpg",
+          { type: "image/jpeg" },
+        ),
+      );
+      const res = await app.request(
+        "/admin/import",
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie,
+            Accept: "application/json",
+          },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        ok: boolean;
+        results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
+      };
+      expect(body.ok).toBe(true);
+      expect(body.results).toHaveLength(2);
+      expect(body.results[0]).toMatchObject({ ok: true });
+      expect(body.results[0]?.message).toContain("grup baru Ramean");
+      expect(body.results[1]).toMatchObject({ ok: true });
+      expect(body.results[1]?.message).not.toContain("grup baru");
+
+      const db = createDb(env);
+      const ramean = await db.select().from(groups).where(eq(groups.id, "ramean"));
+      expect(ramean).toHaveLength(1);
+      expect(ramean[0]).toMatchObject({
+        poolId: "ahli-ngebul",
+        name: "Ramean",
+        badge: "RAMEAN",
+        memberCount: 2,
+      });
+      const [first] = await db
+        .select()
+        .from(cards)
+        .where(eq(cards.id, "salman-habibi-01"))
+        .limit(1);
+      expect(first?.groupId).toBe("ramean");
+      const [second] = await db
+        .select()
+        .from(cards)
+        .where(eq(cards.id, "jidan-kedua-01"))
+        .limit(1);
+      expect(second?.groupId).toBe("ramean");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("rejects a symbol-only group segment as ambiguous", async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new Error("upload must not run for rejected files");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.set("poolGroup", "ahli-ngebul");
+      fd.set(
+        "files",
+        new File([new Uint8Array([13])], "(rare) - @#$% - Simbol Kid.jpg", {
+          type: "image/jpeg",
+        }),
+      );
+      const res = await app.request(
+        "/admin/import",
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie,
+            Accept: "application/json",
+          },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        ok: boolean;
+        results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
+      };
+      expect(body.ok).toBe(false);
+      expect(body.results).toHaveLength(1);
+      expect(body.results[0]).toMatchObject({ ok: false });
+      expect(body.results[0]?.message).toContain("ambigu");
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("rejects a slug collision with a different group name", async () => {
+    const db = createDb(env);
+    await db.insert(groups).values({
+      id: "tabrakan",
+      poolId: "ahli-ngebul",
+      name: "Tabrakan X",
+      badge: "TBRX",
+      memberCount: 0,
+      enabled: true,
+    });
+    const fetchMock = vi.fn(async () => {
+      throw new Error("upload must not run for rejected files");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.set("poolGroup", "ahli-ngebul");
+      fd.set(
+        "files",
+        new File([new Uint8Array([14])], "(rare) - Tabrakan! - Tabrakan Kid.jpg", {
+          type: "image/jpeg",
+        }),
+      );
+      const res = await app.request(
+        "/admin/import",
+        {
+          method: "POST",
+          headers: {
+            Cookie: authCookie,
+            Accept: "application/json",
+          },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(200);
+      const body = (await res.json()) as {
+        ok: boolean;
+        results: Array<{ filename: string; ok: boolean; cardId?: string; message: string }>;
+      };
+      expect(body.ok).toBe(false);
+      expect(body.results).toHaveLength(1);
+      expect(body.results[0]).toMatchObject({ ok: false });
+      expect(body.results[0]?.message).toContain("ambigu");
+      expect(fetchMock).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("dispatches a render run for selected remote cards and skips others", async () => {
+    const db = createDb(env);
+    await db.insert(members).values({
+      id: "render-kid",
+      poolId: "ahli-ngebul",
+      groupId: "default",
+      name: "Render Kid",
+      nameLower: "render kid",
+      fullName: null,
+      photoTotal: 1,
+      sortOrder: 0,
+      enabled: true,
+    });
+    await db.insert(members).values({
+      id: "static-kid",
+      poolId: "ahli-ngebul",
+      groupId: "default",
+      name: "Static Kid",
+      nameLower: "static kid",
+      fullName: null,
+      photoTotal: 1,
+      sortOrder: 0,
+      enabled: true,
+    });
+    await db.insert(members).values({
+      id: "pejabat-kid",
+      poolId: "pejabat",
+      groupId: "kabinet",
+      name: "Pejabat Kid",
+      nameLower: "pejabat kid",
+      fullName: null,
+      photoTotal: 1,
+      sortOrder: 0,
+      enabled: true,
+    });
+    await db.insert(cards).values([
+      {
+        id: "render-kid-01",
+        poolId: "ahli-ngebul",
+        groupId: "default",
+        memberId: "render-kid",
+        serial: 900,
+        photoNo: 1,
+        rarity: "rare",
+        photoLabel: null,
+        imageFile: "https://cdn.example/render.jpg",
+        sourcePageUrl: null,
+        enabled: true,
+        holoEnabled: false,
+      },
+      {
+        id: "static-kid-01",
+        poolId: "ahli-ngebul",
+        groupId: "default",
+        memberId: "static-kid",
+        serial: 901,
+        photoNo: 1,
+        rarity: "rare",
+        photoLabel: null,
+        imageFile: "static-kid-01.abcdef12.webp",
+        sourcePageUrl: null,
+        enabled: true,
+        holoEnabled: false,
+      },
+      {
+        id: "pejabat-kid-01",
+        poolId: "pejabat",
+        groupId: "kabinet",
+        memberId: "pejabat-kid",
+        serial: 902,
+        photoNo: 1,
+        rarity: "rare",
+        photoLabel: null,
+        imageFile: "https://cdn.example/pejabat.jpg",
+        sourcePageUrl: null,
+        enabled: true,
+        holoEnabled: false,
+      },
+    ]);
+    const calls: Array<{ url: string; body: string }> = [];
+    const fetchMock = vi.fn(async (url: string | URL | Request, init?: RequestInit) => {
+      calls.push({ url: String(url), body: String(init?.body ?? "") });
+      return new Response(null, { status: 204 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.append("ids", "render-kid-01");
+      fd.append("ids", "static-kid-01");
+      fd.append("ids", "pejabat-kid-01");
+      fd.append("ids", "nope-01");
+      const res = await app.request(
+        "/admin/cards/render-remote",
+        {
+          method: "POST",
+          headers: { Cookie: authCookie },
+          body: fd,
+        },
+        env,
+      );
+      expect(res.status).toBe(302);
+      expect(calls).toHaveLength(1);
+      expect(calls[0]?.url).toBe(
+        "https://api.github.com/repos/o/r/actions/workflows/render-remote.yml/dispatches",
+      );
+      const payload = JSON.parse(calls[0]?.body ?? "{}") as {
+        ref: string;
+        inputs: { ids: string };
+      };
+      expect(payload.ref).toBe("main");
+      expect(payload.inputs.ids).toBe("render-kid-01");
+      const loc = res.headers.get("location") ?? "";
+      expect(loc).toContain("kind=remote");
+      expect(loc).toContain("ok=1");
+      expect(decodeURIComponent(loc)).toContain("3 dilewati");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("rejects render requests without a selection", async () => {
+    const res = await app.request(
+      "/admin/cards/render-remote",
+      {
+        method: "POST",
+        headers: { Cookie: authCookie },
+        body: new FormData(),
+      },
+      env,
+    );
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location") ?? "").toContain("ok=0");
   });
 });
