@@ -1,9 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
   clampPage,
+  koleksiCardSelectCustomId,
   koleksiPageCustomId,
+  koleksiPamerCustomId,
   ownerGate,
+  parseKoleksiCardSelectCustomId,
   parseKoleksiPageCustomId,
+  parseKoleksiPamerCustomId,
 } from "../src/domain/koleksi.js";
 import { formatOwnedPhotos } from "../src/ui/koleksiEmbed.js";
 
@@ -85,21 +89,62 @@ describe("formatOwnedPhotos", () => {
   it("formats duplicates with × and omits qty 1", () => {
     expect(
       formatOwnedPhotos([
-        { photoNo: 11, quantity: 2 },
-        { photoNo: 3, quantity: 1 },
-        { photoNo: 5, quantity: 1 },
+        { photoNo: 11, quantity: 2, rarity: "rare" },
+        { photoNo: 3, quantity: 1, rarity: "common" },
+        { photoNo: 5, quantity: 1, rarity: "common" },
       ]),
-    ).toBe("#3 #5 #11×2");
+    ).toBe("#3 ★ #5 ★ #11 ★★×2");
   });
   it("returns an em dash when empty", () => {
     expect(formatOwnedPhotos([])).toBe("—");
   });
-  it("sorts ascending", () => {
+  it("sorts ascending and shows one star per rarity tier", () => {
     expect(
       formatOwnedPhotos([
-        { photoNo: 5, quantity: 1 },
-        { photoNo: 1, quantity: 3 },
+        { photoNo: 5, quantity: 1, rarity: "holo" },
+        { photoNo: 1, quantity: 3, rarity: "secret" },
       ]),
-    ).toBe("#1×3 #5");
+    ).toBe("#1 ★★★★★★×3 #5 ★★★★★");
+  });
+  it("keeps the photo label prefix", () => {
+    expect(
+      formatOwnedPhotos([
+        { photoNo: 2, quantity: 1, rarity: "common", photoLabel: "Senyum" },
+      ]),
+    ).toBe("Foto 2 · Senyum ★");
+  });
+});
+
+describe("koleksi card picker custom ids", () => {
+  it("round-trips the select custom id", () => {
+    const id = koleksiCardSelectCustomId("u1", 0);
+    expect(id).toBe("koleksi:d:u1:0");
+    expect(parseKoleksiCardSelectCustomId(id)).toEqual({
+      ownerId: "u1",
+      chunk: 0,
+    });
+    expect(parseKoleksiCardSelectCustomId("koleksi:d:u1:3")).toEqual({
+      ownerId: "u1",
+      chunk: 3,
+    });
+  });
+
+  it("rejects malformed select custom ids", () => {
+    expect(parseKoleksiCardSelectCustomId("koleksi:p:u1:pejabat:*:0")).toBeNull();
+    expect(parseKoleksiCardSelectCustomId("list:d:u1:0")).toBeNull();
+    expect(parseKoleksiCardSelectCustomId("koleksi:d:u1:x")).toBeNull();
+    expect(parseKoleksiCardSelectCustomId("koleksi:d::0")).toBeNull();
+    expect(parseKoleksiCardSelectCustomId("koleksi:d:u1:0:extra")).toBeNull();
+  });
+
+  it("round-trips the pamer custom id", () => {
+    const id = koleksiPamerCustomId("u1", "anna-01");
+    expect(id).toBe("koleksi:pr:u1:anna-01");
+    expect(parseKoleksiPamerCustomId(id)).toEqual({
+      ownerId: "u1",
+      cardId: "anna-01",
+    });
+    expect(parseKoleksiPamerCustomId("koleksi:pr:u1:")).toBeNull();
+    expect(parseKoleksiPamerCustomId("koleksi:p:u1:anna-01")).toBeNull();
   });
 });

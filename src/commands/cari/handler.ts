@@ -8,7 +8,11 @@ import {
 import { and, asc, eq, like, sql } from "drizzle-orm";
 import { createDb } from "../../db/client.js";
 import { cards, groups, members, pools } from "../../db/schema.js";
-import { searchMembers } from "../../db/queries/cari.js";
+import {
+  MEMBER_HAS_VISIBLE_CARD_SQL,
+  searchMembers,
+  VISIBLE_RARITY_SQL,
+} from "../../db/queries/cari.js";
 import {
   buildCariEmbed,
   buildCariEmpty,
@@ -131,6 +135,7 @@ export async function handleCariAutocomplete(
          and(
            eq(members.enabled, true),
            sanitized === "" ? sql`1 = 1` : like(members.nameLower, `%${sanitized}%`),
+           MEMBER_HAS_VISIBLE_CARD_SQL,
          ),
        )
        .orderBy(asc(members.nameLower))
@@ -152,6 +157,7 @@ export async function handleCariAutocomplete(
                and(
                  eq(cards.enabled, true),
                  eq(members.enabled, true),
+                 VISIBLE_RARITY_SQL,
                  like(sql`lower(${cards.photoLabel})`, `%${sanitized}%`),
                ),
              )

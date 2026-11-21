@@ -1,10 +1,13 @@
 import {
   ApplicationCommandOptionType,
+  ComponentType,
   InteractionResponseType,
   type APIApplicationCommandAutocompleteInteraction,
   type APIChatInputApplicationCommandInteraction,
   type APIInteractionResponse,
+  type APIEmbed,
   type APIMessageComponentInteraction,
+  type APIMessageTopLevelComponent,
 } from "discord-api-types/v10";
 import { and, asc, eq, like, sql } from "drizzle-orm";
 import { createDb } from "../../db/client.js";
@@ -16,10 +19,30 @@ import {
   patchOriginal,
   postFollowup,
 } from "../../discord/rest.js";
-import { ownerGate, parseKoleksiPageCustomId } from "../../domain/koleksi.js";
-import { getKoleksiPage, type KoleksiFilters } from "../../db/queries/koleksi.js";
+import {
+  ownerGate,
+  parseKoleksiCardSelectCustomId,
+  parseKoleksiPageCustomId,
+  parseKoleksiPamerCustomId,
+} from "../../domain/koleksi.js";
+import {
+  getKoleksiPage,
+  type KoleksiFilters,
+  type KoleksiOutcome,
+} from "../../db/queries/koleksi.js";
 import { groups, pools } from "../../db/schema.js";
-import { buildKoleksiEmbed, koleksiNavRow } from "../../ui/koleksiEmbed.js";
+import { getShowcaseCard } from "../../db/queries/pamer.js";
+import { pickHype } from "../../domain/pamer.js";
+import {
+  buildKoleksiCardEmbed,
+  buildKoleksiEmbed,
+  koleksiCardPamerRow,
+  koleksiCardPickerOverflow,
+  koleksiCardSelectRows,
+  koleksiNavRow,
+} from "../../ui/koleksiEmbed.js";
+import { buildPamerEmbed, cardImageUrl } from "../../ui/pamerEmbed.js";
+import { cryptoRandom } from "../pamer/handler.js";
 import type { WaitUntil } from "../registry.js";
 
 function stringOption(
@@ -49,6 +72,60 @@ function publicOption(
 
 function groupLabel(poolName: string, groupName: string | null): string {
   return groupName ?? poolName;
+}
+
+/**
+ * One page's message body: card selects first, then the nav row.
+ * Discord allows 5 action rows, so selects cap at 4 (100 cards).
+ */
+function pageBody(
+  ownerId: string,
+  poolId: string,
+  groupIdForNav: string,
+  outcome: Extract<KoleksiOutcome, { status: "ok" }>,
+  filters: KoleksiFilters,
+): {
+  embeds: APIEmbed[];
+  components: APIMessageTopLevelComponent[];
+} {
+  // Single page: no nav buttons. Prev and Next would carry the same page
+  // number, producing duplicate custom_ids that Discord rejects with
+  // COMPONENT_CUSTOM_ID_DUPLICATED.
+  const nav: APIMessageTopLevelComponent[] =
+    outcome.totalPages <= 1
+      ? []
+      : [
+          koleksiNavRow(
+            ownerId,
+            poolId,
+            groupIdForNav,
+            outcome.page,
+            outcome.totalPages,
+          ),
+        ];
+  const embed = buildKoleksiEmbed({
+    viewerId: ownerId,
+    poolName: outcome.poolName,
+    poolEmoji: outcome.poolEmoji,
+    groupLabel: groupLabel(outcome.poolName, outcome.groupName),
+    members: outcome.members,
+    page: outcome.page,
+    totalPages: outcome.totalPages,
+    groupOwned: outcome.groupOwned,
+    groupTotal: outcome.groupTotal,
+    filters,
+  });
+  const overflow = koleksiCardPickerOverflow(outcome.members);
+  if (overflow > 0) {
+    embed.description = `${embed.description ?? ""}\n\n… +${overflow} kartu lain di halaman ini tidak masuk dropdown (pakai Prev/Next).`.slice(
+      0,
+      4096,
+    );
+  }
+  return {
+    embeds: [embed],
+    components: [...koleksiCardSelectRows(ownerId, outcome.members), ...nav],
+  };
 }
 
 async function followupKoleksiPage(
@@ -83,38 +160,13 @@ async function followupKoleksiPage(
       });
       return;
     case "ok": {
-      // Single page: no nav buttons. Prev and Next would carry the same
-      // page number, producing duplicate custom_ids that Discord rejects
-      // with COMPONENT_CUSTOM_ID_DUPLICATED.
-      const nav =
-        outcome.totalPages <= 1
-          ? []
-          : [
-              koleksiNavRow(
-                userId,
-                filters.poolId,
-                groupIdForNav,
-                outcome.page,
-                outcome.totalPages,
-              ),
-            ];
-      const body = {
-        embeds: [
-          buildKoleksiEmbed({
-            viewerId: userId,
-            poolName: outcome.poolName,
-            poolEmoji: outcome.poolEmoji,
-            groupLabel: groupLabel(outcome.poolName, outcome.groupName),
-            members: outcome.members,
-            page: outcome.page,
-            totalPages: outcome.totalPages,
-            groupOwned: outcome.groupOwned,
-            groupTotal: outcome.groupTotal,
-            filters,
-          }),
-        ],
-        components: nav,
-      };
+      const body = pageBody(
+        userId,
+        filters.poolId,
+        groupIdForNav,
+        outcome,
+        filters,
+      );
       await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
         ...body,
         ...(isPublic ? {} : { flags: 64 as const }),
@@ -203,40 +255,11 @@ export function handleKoleksiPage(
           );
           return;
         }
-        // Single page: omit nav buttons (duplicate custom_ids).
-        const nav =
-          outcome.totalPages <= 1
-            ? []
-            : [
-                koleksiNavRow(
-                  ownerId,
-                  poolId,
-                  groupRaw,
-                  outcome.page,
-                  outcome.totalPages,
-                ),
-              ];
         await patchOriginal(
           interaction.application_id,
           interaction.token,
           env.DISCORD_BOT_TOKEN,
-          {
-            embeds: [
-              buildKoleksiEmbed({
-                viewerId: ownerId,
-                poolName: outcome.poolName,
-                poolEmoji: outcome.poolEmoji,
-                groupLabel: groupLabel(outcome.poolName, outcome.groupName),
-                members: outcome.members,
-                page: outcome.page,
-                totalPages: outcome.totalPages,
-                groupOwned: outcome.groupOwned,
-                groupTotal: outcome.groupTotal,
-                filters: { poolId, groupId },
-              }),
-            ],
-            components: nav,
-          },
+          pageBody(ownerId, poolId, groupRaw, outcome, { poolId, groupId }),
         );
       } catch {
         try {
@@ -246,6 +269,133 @@ export function handleKoleksiPage(
             env.DISCORD_BOT_TOKEN,
             { content: "D1 sibuk/kuota habis, coba lagi." },
           );
+        } catch {
+          // Never throw out of waitUntil.
+        }
+      }
+    })(),
+  );
+  return { type: InteractionResponseType.DeferredMessageUpdate };
+}
+
+/** Dropdown pick: show one owned card privately with a pamer button. */
+export function handleKoleksiCardSelect(
+  interaction: APIMessageComponentInteraction,
+  env: Env,
+  waitUntil: WaitUntil,
+): APIInteractionResponse {
+  const target = parseKoleksiCardSelectCustomId(interaction.data.custom_id);
+  if (target === null) return ephemeralResponse("Tombol kedaluwarsa.");
+  const clicker = invokerId(interaction);
+  if (!ownerGate(clicker, target.ownerId)) {
+    return ephemeralResponse(`Tombol ini milik <@${target.ownerId}>.`);
+  }
+  const cardId =
+    interaction.data.component_type === ComponentType.StringSelect
+      ? interaction.data.values[0]
+      : undefined;
+  if (cardId === undefined) {
+    return ephemeralResponse("Pilih kartu dari dropdown dulu.");
+  }
+  const { ownerId } = target;
+  const appId = interaction.application_id;
+  const token = interaction.token;
+  waitUntil(
+    (async () => {
+      try {
+        const db = createDb(env);
+        const card = await getShowcaseCard(db, ownerId, cardId);
+        if (card === null) {
+          await patchOriginal(appId, token, env.DISCORD_BOT_TOKEN, {
+            content: "Kartu tidak tersedia atau bukan milikmu.",
+            embeds: [],
+            components: [],
+          });
+          return;
+        }
+        await patchOriginal(appId, token, env.DISCORD_BOT_TOKEN, {
+          embeds: [
+            buildKoleksiCardEmbed({
+              userId: ownerId,
+              card,
+              imageUrl: cardImageUrl(env.PUBLIC_BASE_URL, card.imageFile),
+            }),
+          ],
+          components: [koleksiCardPamerRow(ownerId, cardId)],
+        });
+      } catch {
+        try {
+          await patchOriginal(appId, token, env.DISCORD_BOT_TOKEN, {
+            content: "D1 sibuk/kuota habis, coba lagi.",
+          });
+        } catch {
+          // Never throw out of waitUntil.
+        }
+      }
+    })(),
+  );
+  // Private placeholder: a type-5 followup would leave a ghost message.
+  return {
+    type: InteractionResponseType.DeferredChannelMessageWithSource,
+    data: { flags: 64 },
+  };
+}
+
+/** Pamer button on the private card view: post the public pamer embed. */
+export function handleKoleksiPamerClick(
+  interaction: APIMessageComponentInteraction,
+  env: Env,
+  waitUntil: WaitUntil,
+): APIInteractionResponse {
+  const target = parseKoleksiPamerCustomId(interaction.data.custom_id);
+  if (target === null) return ephemeralResponse("Tombol kedaluwarsa.");
+  const clicker = invokerId(interaction);
+  if (!ownerGate(clicker, target.ownerId)) {
+    return ephemeralResponse(`Tombol ini milik <@${target.ownerId}>.`);
+  }
+  const { ownerId, cardId } = target;
+  const appId = interaction.application_id;
+  const token = interaction.token;
+  waitUntil(
+    (async () => {
+      try {
+        const db = createDb(env);
+        const card = await getShowcaseCard(db, ownerId, cardId);
+        if (card === null) {
+          await patchOriginal(appId, token, env.DISCORD_BOT_TOKEN, {
+            content: "Kartu tidak tersedia atau bukan milikmu.",
+            embeds: [],
+            components: [],
+          });
+          return;
+        }
+        await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
+          embeds: [
+            buildPamerEmbed({
+              userId: ownerId,
+              memberName: card.memberName,
+              photoLabel: card.photoLabel,
+              fullName: card.fullName,
+              poolName: card.poolName,
+              poolEmoji: card.poolEmoji,
+              groupName: card.groupName,
+              groupBadge: card.groupBadge,
+              photoNo: card.photoNo,
+              photoTotal: card.photoTotal,
+              serial: card.serial,
+              rarity: card.rarity,
+              quantity: card.quantity,
+              caption: null,
+              hype: pickHype(card.rarity, cryptoRandom()),
+              imageUrl: cardImageUrl(env.PUBLIC_BASE_URL, card.imageFile),
+            }),
+          ],
+        });
+      } catch {
+        try {
+          await patchOriginal(appId, token, env.DISCORD_BOT_TOKEN, {
+            content: "D1 sibuk/kuota habis, coba lagi.",
+          });
         } catch {
           // Never throw out of waitUntil.
         }

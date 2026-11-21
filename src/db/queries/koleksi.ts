@@ -1,6 +1,7 @@
 import { and, asc, eq, sql } from "drizzle-orm";
 import { cards, groups, members, pools, userCards } from "../schema.js";
 import { clampPage, PAGE_SIZE } from "../../domain/koleksi.js";
+import { RARITY_KEYS, type RarityKey } from "../../domain/rarity.js";
 import { nativeBatch, type Db } from "../client.js";
 
 export interface KoleksiFilters {
@@ -10,8 +11,10 @@ export interface KoleksiFilters {
 }
 
 export interface OwnedPhoto {
+  cardId: string;
   photoNo: number;
   quantity: number;
+  rarity: RarityKey;
   photoLabel: string | null;
 }
 
@@ -75,22 +78,28 @@ function parseBlob(blob: string | null): OwnedPhoto[] {
   if (blob === null || blob === "") return [];
   const out: OwnedPhoto[] = [];
   for (const part of blob.split("\u001F")) {
-    const [noRaw, qtyRaw, labelRaw] = part.split("\u001E");
+    const [cardId, noRaw, qtyRaw, rarityRaw, labelRaw] = part.split("\u001E");
     const photoNo = Number(noRaw);
     const quantity = Number(qtyRaw);
     if (
+      cardId === undefined ||
+      cardId === "" ||
       noRaw === undefined ||
       qtyRaw === undefined ||
+      rarityRaw === undefined ||
       !Number.isInteger(photoNo) ||
       !Number.isInteger(quantity) ||
       photoNo <= 0 ||
-      quantity <= 0
+      quantity <= 0 ||
+      !(RARITY_KEYS as readonly string[]).includes(rarityRaw)
     ) {
       continue;
     }
     out.push({
+      cardId,
       photoNo,
       quantity,
+      rarity: rarityRaw as RarityKey,
       photoLabel: labelRaw === undefined || labelRaw === "" ? null : labelRaw,
     });
   }
@@ -147,7 +156,7 @@ export async function getKoleksiPage(
   const page = clampPage(requestedPage, totalPages);
 
   const pageResults = await nativeBatch(db, [
-    sql`SELECT ${members.id} AS member_id, ${members.name} AS member_name, ${members.photoTotal} AS photo_total, ${members.groupId} AS group_id, ${groups.name} AS group_name, ${groups.badge} AS group_badge, COUNT(DISTINCT ${userCards.cardId}) AS owned_photos, GROUP_CONCAT(${cards.photoNo} || char(30) || ${userCards.quantity} || char(30) || IFNULL(${cards.photoLabel}, ''), char(31)) AS blob FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${scopeCondition} GROUP BY ${members.id} ORDER BY ${members.sortOrder}, ${members.name} LIMIT ${PAGE_SIZE} OFFSET ${page * PAGE_SIZE}`,
+    sql`SELECT ${members.id} AS member_id, ${members.name} AS member_name, ${members.photoTotal} AS photo_total, ${members.groupId} AS group_id, ${groups.name} AS group_name, ${groups.badge} AS group_badge, COUNT(DISTINCT ${userCards.cardId}) AS owned_photos, GROUP_CONCAT(${cards.id} || char(30) || ${cards.photoNo} || char(30) || ${userCards.quantity} || char(30) || ${cards.rarity} || char(30) || IFNULL(${cards.photoLabel}, ''), char(31)) AS blob FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${scopeCondition} GROUP BY ${members.id} ORDER BY ${members.sortOrder}, ${members.name} LIMIT ${PAGE_SIZE} OFFSET ${page * PAGE_SIZE}`,
   ]);
   const rawRows = (pageResults[0]?.results ?? []) as unknown as RawPageRow[];
   const pageMembers: OwnedMemberRow[] = rawRows.map((row) => ({

@@ -31,6 +31,9 @@ import { battleDefinition } from "./battle/definition.js";
 import { handleBattle } from "./battle/handler.js";
 import { listDefinition } from "./list/definition.js";
 import { handleList } from "./list/handler.js";
+import { giveDefinition } from "./give/definition.js";
+import { handleGive, handleGiveTo } from "./give/handler.js";
+import { giveToDefinition } from "./give-to/definition.js";
 import {
   unwishDefinition,
   wishDefinition,
@@ -64,6 +67,8 @@ export const commandDefinitions = [
   wishDefinition,
   unwishDefinition,
   wishlistDefinition,
+  giveDefinition,
+  giveToDefinition,
 ];
 
 const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
@@ -84,6 +89,8 @@ const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
   ["wish", handleWish],
   ["unwish", handleUnwish],
   ["wishlist", handleWishlist],
+  ["give", handleGive],
+  ["give-to", handleGiveTo],
 ];
 
 export const commandHandlers: Map<string, CommandHandler | CommandHandlerWithWait> =
