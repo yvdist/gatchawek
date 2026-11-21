@@ -37,3 +37,10 @@ jobs:
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Register Discord commands
+        if: ${{ secrets.DISCORD_APPLICATION_ID != '' && secrets.DISCORD_BOT_TOKEN != '' && secrets.GUILD_ID != '' }}
+        run: pnpm register
+        env:
+          DISCORD_APPLICATION_ID: ${{ secrets.DISCORD_APPLICATION_ID }}
+          DISCORD_BOT_TOKEN: ${{ secrets.DISCORD_BOT_TOKEN }}
+          GUILD_ID: ${{ secrets.GUILD_ID }}
