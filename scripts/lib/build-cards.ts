@@ -2,8 +2,24 @@ import { createHash } from "node:crypto";
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 import { createCanvas, GlobalFonts, loadImage } from "@napi-rs/canvas";
-import * as gifenc from "gifenc";
-const { applyPalette, GIFEncoder, quantize } = gifenc;
+import * as gifencNamespace from "gifenc";
+import gifencDefault from "gifenc";
+interface GifencEncoder {
+  writeFrame(index: Uint8Array, width: number, height: number, opts: { palette?: number[][] | null; delay?: number; repeat?: number; transparent?: boolean; dispose?: number }): void;
+  finish(): void;
+  bytesView(): Uint8Array;
+}
+interface GifencApi {
+  GIFEncoder: (opts?: { initialCapacity?: number; auto?: boolean }) => GifencEncoder;
+  quantize(rgba: Uint8Array | Uint8ClampedArray, maxColors: number, options?: { format?: string; oneBitAlpha?: boolean | number }): number[][];
+  applyPalette(rgba: Uint8Array | Uint8ClampedArray, palette: number[][], format?: string): Uint8Array;
+}
+// gifenc ships no "exports" map: tsx/node resolve main (CJS) while vitest
+// resolves module (ESM). Normalize both shapes to the real API object.
+const gifencApi = (typeof (gifencNamespace as unknown as { GIFEncoder?: unknown }).GIFEncoder === "function"
+  ? (gifencNamespace as unknown as GifencApi)
+  : (gifencDefault as unknown as GifencApi));
+const { applyPalette, GIFEncoder, quantize } = gifencApi;
 
 export const CARD_W = 600;
 export const CARD_H = 900;
