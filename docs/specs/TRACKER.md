@@ -34,7 +34,7 @@
 - [x] P0-T3 Scaffold workspace
 - [x] P0-T4 Skrip `pnpm check`
 - [x] P0-T5 Konfigurasi Cloudflare
-- [ ] P0-T6 DO "ping-pong"
+- [x] P0-T6 DO "ping-pong"
 - [ ] P0-T7 Schema Drizzle & migrasi baru
 - [ ] P0-T8 CI minimal
 - [ ] P0-T9 `.env.example` & README repo

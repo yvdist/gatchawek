@@ -13,6 +13,7 @@
     "drizzle.config.ts",
     "games/adu-batang/src",
     "games/adu-batang/scripts",
+    "games/adu-batang/tests",
     "games/adu-batang/vite.config.ts",
     "packages/*/src"
   ]
