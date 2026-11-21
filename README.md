@@ -127,3 +127,10 @@ pool `pejabat`) atau `jomok` (untuk pool `meme`). `[rarity]` salah satu dari
 3. `pnpm seed:remote` — terapkan ke produksi (atas persetujuan eksplisit), lalu `pnpm deploy`.
 
 Kartu milik user tetap tersimpan di DB tetapi tersembunyi dan tidak bisa ditukar.
+
+### Catatan insiden (PDF)
+
+Catatan di `docs/*.md` bisa dirender jadi PDF siap-baca: `pnpm note:pdf docs/insiden-2026-11-21-d1-quota.md`
+(butuh Chrome/Chromium; set `CHROME_PATH` kalau tidak terdeteksi). Hasilnya di `out/`.
+Unggah ke R2 lalu buka `/notes/<file>.pdf`: `pnpm exec wrangler r2 object put gatchawek-cards/notes/<file>.pdf --file out/<file>.pdf --remote`.
+Route ini tidak menyentuh D1, jadi catatan tetap bisa dibaca walau database menolak query.
