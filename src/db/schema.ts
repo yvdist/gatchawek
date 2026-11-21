@@ -202,6 +202,9 @@ export const userCards = sqliteTable(
   },
   (t) => [
     primaryKey({ columns: [t.userId, t.cardId] }),
+    // Ownership checks join cards -> user_cards by card_id alone; without this
+    // index D1 nested-loops the whole table (60k rows per admin card list).
+    index("user_cards_card_idx").on(t.cardId),
     check("user_cards_qty_nonneg", sql`${t.quantity} >= 0`),
     check("user_cards_holo_qty_nonneg", sql`${t.holoQty} >= 0`),
   ],
