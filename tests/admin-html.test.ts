@@ -341,11 +341,12 @@ describe("round 5: one state vocabulary, rarity dot, mobile filter", () => {
 
   it("offers a select filter for narrow screens and refreshes while renders are pending", () => {
     const html = cardsPage({
-      rows: [{ ...base, renderPending: true, renderRequestedAt: 1 }],
+      rows: [{ ...base, renderPending: true, renderRequestedAt: 1900 }],
       total: 1,
       kind: "todo",
       q: "",
       base: "example.test",
+      nowSec: 2000,
       poolId: "",
       groupId: "",
       rarity: "",
@@ -400,11 +401,12 @@ describe("round 6", () => {
 
   it("tells the owner when the page refreshes itself", () => {
     const html = cardsPage({
-      rows: [{ ...base, renderPending: true, renderRequestedAt: 1 }],
+      rows: [{ ...base, renderPending: true, renderRequestedAt: 1900 }],
       total: 1,
       kind: "todo",
       q: "",
       base: "example.test",
+      nowSec: 2000,
       poolId: "",
       groupId: "",
       rarity: "",
@@ -550,6 +552,21 @@ describe("render ulang dari Sumber", () => {
   it("hides source re-render when there is no source URL", () => {
     const html = cardDetailPage({ card: detail({ imageFile: "x-01.abcdef12.webp", imageKind: "static", sourcePageUrl: null, renderable: false }), base: "example.test", message: null, ok: false, pools: [], poolGroups: [] });
     expect(html).not.toContain("Render ulang dari Sumber");
+  });
+});
+
+describe("static re-render pending state", () => {
+  const base = { id: "x-01", memberName: "M", groupBadge: "G", groupId: "g1", poolName: "P", poolId: "p1", photoNo: 1, rarity: "common" as const, imageFile: "x-01.abcdef12.webp", imageKind: "static" as const, enabled: true, quantityOwned: 0, renderable: false, renderPending: false, excludedPool: false, renderRequestedAt: null };
+
+  it("shows a static card as pending while its re-render request is fresh", () => {
+    const html = cardsPage({ rows: [{ ...base, renderRequestedAt: 1000 }], total: 1, kind: "all", q: "", base: "example.test", nowSec: 1010, poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
+    expect(html).toContain("tile is-raw is-pending");
+    expect(html).toContain("diminta barusan");
+  });
+
+  it("shows the same static card as rendered once the request window passes", () => {
+    const html = cardsPage({ rows: [{ ...base, renderRequestedAt: 1000 }], total: 1, kind: "all", q: "", base: "example.test", nowSec: 1000 + 1900, poolId: "", groupId: "", rarity: "", pools: [], poolGroups: [] });
+    expect(html).toContain("tile is-rendered");
   });
 });
 
