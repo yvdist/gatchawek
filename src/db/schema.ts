@@ -335,3 +335,17 @@ export const albumTokens = sqliteTable(
   },
   (t) => [index("album_tokens_user_idx").on(t.userId, t.createdAt)],
 );
+
+export const userMeltPoints = sqliteTable(
+  "user_melt_points",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    poolId: text("pool_id")
+      .notNull()
+      .references(() => pools.id),
+    points: integer("points").notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.poolId] })],
+);

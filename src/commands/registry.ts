@@ -33,6 +33,10 @@ import { listDefinition } from "./list/definition.js";
 import { handleList } from "./list/handler.js";
 import { giveDefinition } from "./give/definition.js";
 import { handleGive, handleGiveTo } from "./give/handler.js";
+import { dismantleDefinition } from "./dismantle/definition.js";
+import { handleDismantle } from "./dismantle/handler.js";
+import { redeemDefinition } from "./redeem/definition.js";
+import { handleRedeem } from "./redeem/handler.js";
 import { giveToDefinition } from "./give-to/definition.js";
 import {
   unwishDefinition,
@@ -73,6 +77,8 @@ export const commandDefinitions = [
   wishlistDefinition,
   giveDefinition,
   giveToDefinition,
+  dismantleDefinition,
+  redeemDefinition,
   kartuDefinition,
   albumDefinition,
 ];
@@ -97,6 +103,8 @@ const handlerEntries: [string, CommandHandler | CommandHandlerWithWait][] = [
   ["wishlist", handleWishlist],
   ["give", handleGive],
   ["give-to", handleGiveTo],
+  ["dismantle", handleDismantle],
+  ["tukar-poin", handleRedeem],
   ["kartu", handleKartu],
   ["album", handleAlbum],
 ];
