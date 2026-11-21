@@ -148,3 +148,64 @@ Catatan di `archive/docs/*.md` bisa dirender jadi PDF siap-baca: `pnpm note:pdf 
 (butuh Chrome/Chromium; set `CHROME_PATH` kalau tidak terdeteksi). Hasilnya di `out/`.
 Unggah ke R2 lalu buka `/notes/<file>.pdf`: `pnpm exec wrangler r2 object put gatchawek-cards/notes/<file>.pdf --file out/<file>.pdf --remote`.
 Route ini tidak menyentuh D1, jadi catatan tetap bisa dibaca walau database menolak query.
+
+## Game — Adu Batang (web card game)
+
+Game-nya hidup di repo yang sama dengan bot, tanpa memindahkan file bot:
+
+```
+games/adu-batang/   # Worker (Hono) + React/Vite/Tailwind, satu wrangler, satu deploy
+packages/engine/    # logika game murni (tanpa Cloudflare/DOM/IO)
+packages/shared/    # tipe, skema zod protokol, konstanta, i18n id
+packages/bots/      # bot heuristik (simulasi, latihan, pengisi kursi)
+docs/specs/         # spec pack + TRACKER (sumber kebenaran rencana)
+docs/PROJECT_STATE.md  # fakta D1/R2/bot hasil recon Fase 0
+```
+
+### Perintah
+
+| Perintah | Fungsi |
+| --- | --- |
+| `pnpm check` | typecheck (bot + semua paket) · lint · vitest · validate-content — wajib hijau sebelum commit |
+| `pnpm --filter adu-batang dev` | Worker game + SPA di Vite (default `http://localhost:5173`) |
+| `pnpm --filter adu-batang build` | build produksi ke `games/adu-batang/dist` |
+| `pnpm --filter adu-batang validate-content` | gerbang konten (stub sampai Fase 2) |
+| `pnpm db:migrate` | terapkan migrasi D1 ke **lokal** |
+| `pnpm db:generate` | buat migrasi baru (schema bot + `src/db/schema-game.ts`) |
+
+Cek HTTP setelah `dev` jalan: `GET /api/health` → `{"status":"ok","service":"adu-batang"}`.
+Bukti DO realtime: `ws://localhost:5173/ws/<kode-room>` membalas `echo: <pesan>`.
+
+### Secret & binding
+
+- `.dev.vars` di `games/adu-batang/` untuk lokal (contoh: `games/adu-batang/.dev.vars.example`).
+  Bot punya `.dev.vars` sendiri di root; jangan dicampur.
+- `SENTRY_DSN` = opsional (unset = SDK tidak mengirim apa pun).
+- Binding di `games/adu-batang/wrangler.jsonc`: `DB` (D1 **yang sama** dengan bot), `CARDS` (R2 yang sama),
+  `GAME_ROOM` + `MATCHMAKER` (Durable Object SQLite). Env `staging` memakai D1 `gatchawek-staging` +
+  R2 `gatchawek-cards-staging`.
+- Secret produksi/staging: `pnpm --filter adu-batang exec wrangler secret put SENTRY_DSN [--env staging]`.
+
+### Deploy
+
+Bot dan game dideploy terpisah; deploy game tidak menyentuh bot. Deploy manual untuk sementara
+(workflow otomatis menyusul di fase berikutnya).
+
+```bash
+# staging (D1/R2 staging)
+pnpm --filter adu-batang exec wrangler d1 migrations apply DB --env staging --remote
+$env:CLOUDFLARE_ENV="staging"; pnpm --filter adu-batang build   # PowerShell; bash: CLOUDFLARE_ENV=staging pnpm ...
+pnpm --filter adu-batang exec wrangler deploy
+
+# produksi
+pnpm --filter adu-batang exec wrangler d1 migrations apply DB --remote
+pnpm --filter adu-batang build
+pnpm --filter adu-batang exec wrangler deploy
+```
+
+Migrasi selalu additive: `migrations/0014_game_tables.sql` menambah 8 tabel game, tidak menyentuh tabel bot.
+
+### CI
+
+`.github/workflows/check.yml` menjalankan `pnpm install --frozen-lockfile` + `pnpm check` pada PR dan push
+ke branch non-`main`. Workflow `deploy.yml` yang lama tetap milik bot.
