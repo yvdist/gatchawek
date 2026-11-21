@@ -96,7 +96,8 @@ export async function handleWish(
     return ephemeralResponse(
       `🌠 ${cardLine(card)} masuk wishlist pool ${card.poolEmoji} ${card.poolName}.`,
     );
-  } catch {
+  } catch (e) {
+    console.error("wish failed:", e);
     return ephemeralResponse(BUSY);
   }
 }
@@ -117,7 +118,8 @@ export async function handleUnwish(
       return ephemeralResponse("Kartu itu tidak ada di wishlist-mu.");
     }
     return ephemeralResponse(`${cardLine(wish)} dihapus dari wishlist.`);
-  } catch {
+  } catch (e) {
+    console.error("unwish failed:", e);
     return ephemeralResponse(BUSY);
   }
 }
@@ -143,7 +145,8 @@ export async function handleWishlist(
       `🌠 **Wishlist** (maks ${MAX_WISHES_PER_POOL} per pool)\n\n${blocks.join("\n\n")}\n\n` +
         `Roll ke-${WISH_PITY_AT} di pool itu: satu wish acak naik jadi ${rate}%.`,
     );
-  } catch {
+  } catch (e) {
+    console.error("wishlist failed:", e);
     return ephemeralResponse(BUSY);
   }
 }
@@ -154,7 +157,8 @@ export async function handleWishAutocomplete(
 ): Promise<APIInteractionResponse> {
   try {
     return choices(await searchWishableCards(createDb(env), typedKartu(interaction)));
-  } catch {
+  } catch (e) {
+    console.error("wish autocomplete failed:", e);
     return choices([]);
   }
 }
@@ -171,7 +175,8 @@ export async function handleUnwishAutocomplete(
     return choices(
       own.filter((w) => w.name.toLowerCase().includes(typed)).slice(0, 25),
     );
-  } catch {
+  } catch (e) {
+    console.error("unwish autocomplete failed:", e);
     return choices([]);
   }
 }
