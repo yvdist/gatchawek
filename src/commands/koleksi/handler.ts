@@ -31,6 +31,10 @@ import {
   type KoleksiOutcome,
 } from "../../db/queries/koleksi.js";
 import { groups, pools } from "../../db/schema.js";
+import {
+  GROUP_POOL_NOT_HIDDEN_SQL,
+  visiblePool,
+} from "../../db/queries/poolVisibility.js";
 import { getShowcaseCard } from "../../db/queries/pamer.js";
 import { pickHype } from "../../domain/pamer.js";
 import { buildWaShareText, buildWaShareUrl } from "../../domain/share.js";
@@ -442,7 +446,7 @@ export async function handleKoleksiGrupAutocomplete(
       const poolRows = await db
         .select({ id: pools.id })
         .from(pools)
-        .where(and(eq(pools.id, poolValue), eq(pools.enabled, true)))
+        .where(and(eq(pools.id, poolValue), visiblePool()))
         .limit(1);
       if (poolRows[0] !== undefined) {
         const sanitized = typed.replace(/[%_\\]/g, "");
@@ -471,7 +475,7 @@ export async function handleKoleksiGrupAutocomplete(
     const fallback = await db
       .select({ id: groups.id, name: groups.name, poolId: groups.poolId })
       .from(groups)
-      .where(eq(groups.enabled, true))
+      .where(and(eq(groups.enabled, true), GROUP_POOL_NOT_HIDDEN_SQL))
       .orderBy(asc(groups.poolId), asc(groups.sortOrder))
       .limit(25);
     return {

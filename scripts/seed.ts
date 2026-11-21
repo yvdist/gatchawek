@@ -95,8 +95,8 @@ export function renderSeedSql(
   const lines: string[] = ["PRAGMA foreign_keys=OFF;"];
   for (const pool of loaded.pools) {
     lines.push(
-      `INSERT INTO pools (id, name, emoji, sort_order, stamina_max, regen_interval_sec, reset_cooldown_sec, member_count, enabled) VALUES (${sqlText(pool.id)}, ${sqlText(pool.name)}, ${sqlText(pool.emoji)}, ${pool.sortOrder}, ${pool.staminaMax}, ${pool.regenIntervalSec}, ${pool.resetCooldownSec}, 0, 1) ` +
-        `ON CONFLICT(id) DO UPDATE SET name=excluded.name, emoji=excluded.emoji, sort_order=excluded.sort_order, stamina_max=excluded.stamina_max, regen_interval_sec=excluded.regen_interval_sec, reset_cooldown_sec=excluded.reset_cooldown_sec, enabled=1;`,
+      `INSERT INTO pools (id, name, emoji, sort_order, stamina_max, regen_interval_sec, reset_cooldown_sec, member_count, enabled, hidden) VALUES (${sqlText(pool.id)}, ${sqlText(pool.name)}, ${sqlText(pool.emoji)}, ${pool.sortOrder}, ${pool.staminaMax}, ${pool.regenIntervalSec}, ${pool.resetCooldownSec}, 0, 1, ${pool.hidden ? 1 : 0}) ` +
+        `ON CONFLICT(id) DO UPDATE SET name=excluded.name, emoji=excluded.emoji, sort_order=excluded.sort_order, stamina_max=excluded.stamina_max, regen_interval_sec=excluded.regen_interval_sec, reset_cooldown_sec=excluded.reset_cooldown_sec, enabled=1, hidden=excluded.hidden;`,
     );
   }
   // Pools removed from data/pools.json (takedown): disable, never delete.

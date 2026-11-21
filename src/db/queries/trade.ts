@@ -1,5 +1,5 @@
 import { and, eq, inArray, sql } from "drizzle-orm";
-import { cards, groups, members, trades, userCards } from "../schema.js";
+import { cards, groups, members, pools, trades, userCards } from "../schema.js";
 import {
   tradeExpiry,
   validateNewTrade,
@@ -7,6 +7,7 @@ import {
 } from "../../domain/trade.js";
 import { RARITY_STARS, type RarityKey } from "../../domain/rarity.js";
 import { nativeBatch, type Db } from "../client.js";
+import { CARD_POOL_NOT_HIDDEN_SQL } from "./poolVisibility.js";
 
 export interface TradeCardView {
   cardId: string;
@@ -71,7 +72,12 @@ export async function createTrade(
     db
       .select({ id: cards.id, enabled: cards.enabled })
       .from(cards)
-      .where(inArray(cards.id, [offerCardId, requestCardId])),
+      .where(
+        and(
+          inArray(cards.id, [offerCardId, requestCardId]),
+          CARD_POOL_NOT_HIDDEN_SQL,
+        ),
+      ),
   ]);
   const proposerPending = pendingRows[0]?.n ?? 0;
   const proposerOwnsOffer = (offerRows[0]?.quantity ?? 0) >= 1;
@@ -108,8 +114,8 @@ SELECT ${tradeId}, ${proposerId}, ${targetId}, ${offerCardId}, ${requestCardId},
 WHERE (SELECT COUNT(*) FROM trades WHERE proposer_id = ${proposerId} AND status = 'pending' AND expires_at > ${now}) < 3
 AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${proposerId} AND card_id = ${offerCardId} AND quantity >= 1)
 AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${targetId} AND card_id = ${requestCardId} AND quantity >= 1)
-AND EXISTS (SELECT 1 FROM cards WHERE id = ${offerCardId} AND enabled = 1)
-AND EXISTS (SELECT 1 FROM cards WHERE id = ${requestCardId} AND enabled = 1)`,
+AND EXISTS (SELECT 1 FROM cards WHERE id = ${offerCardId} AND enabled = 1 AND NOT EXISTS (SELECT 1 FROM ${pools} WHERE ${pools.id} = ${cards.poolId} AND ${pools.hidden} = 1))
+AND EXISTS (SELECT 1 FROM cards WHERE id = ${requestCardId} AND enabled = 1 AND NOT EXISTS (SELECT 1 FROM ${pools} WHERE ${pools.id} = ${cards.poolId} AND ${pools.hidden} = 1))`,
   ]);
   const guarded = writeResults[2];
   if ((guarded?.meta.changes ?? 0) !== 1) {
@@ -143,7 +149,12 @@ AND EXISTS (SELECT 1 FROM cards WHERE id = ${requestCardId} AND enabled = 1)`,
       db
         .select({ id: cards.id, enabled: cards.enabled })
         .from(cards)
-        .where(inArray(cards.id, [offerCardId, requestCardId])),
+        .where(
+          and(
+            inArray(cards.id, [offerCardId, requestCardId]),
+            CARD_POOL_NOT_HIDDEN_SQL,
+          ),
+        ),
     ]);
     const retryError = validateNewTrade({
       proposerId,
@@ -223,7 +234,7 @@ export async function acceptTrade(
   const tok = crypto.randomUUID();
   const guard = sql`(SELECT 1 FROM trades WHERE id = ${tradeId} AND settle_token = ${tok})`;
   await nativeBatch(db, [
-    sql`UPDATE trades SET status = 'accepted', resolved_at = ${now}, settle_token = ${tok} WHERE id = ${tradeId} AND status = 'pending' AND expires_at > ${now} AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${proposer} AND card_id = ${offer} AND quantity >= 1) AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${target} AND card_id = ${request} AND quantity >= 1)`,
+    sql`UPDATE trades SET status = 'accepted', resolved_at = ${now}, settle_token = ${tok} WHERE id = ${tradeId} AND status = 'pending' AND expires_at > ${now} AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${proposer} AND card_id = ${offer} AND quantity >= 1) AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${target} AND card_id = ${request} AND quantity >= 1) AND NOT EXISTS (SELECT 1 FROM ${cards} JOIN ${pools} ON ${pools.id} = ${cards.poolId} WHERE ${cards.id} IN (${offer}, ${request}) AND ${pools.hidden} = 1)`,
     sql`UPDATE user_cards SET quantity = quantity - 1 WHERE user_id = ${proposer} AND card_id = ${offer} AND EXISTS ${guard}`,
     sql`UPDATE user_cards SET quantity = quantity - 1 WHERE user_id = ${target} AND card_id = ${request} AND EXISTS ${guard}`,
     sql`DELETE FROM user_cards WHERE quantity = 0 AND ((user_id = ${proposer} AND card_id = ${offer}) OR (user_id = ${target} AND card_id = ${request})) AND EXISTS ${guard}`,
@@ -270,7 +281,7 @@ export async function searchTradableCards(
       ? sql`1 = 1`
       : sql`${members.nameLower} LIKE ${`${sanitized}%`}`;
   const results = await nativeBatch(db, [
-    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${userCards.userId} = ${ownerId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 AND ${likeCondition} ORDER BY ${members.nameLower}, ${cards.photoNo} LIMIT 25`,
+    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${userCards.userId} = ${ownerId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 AND ${CARD_POOL_NOT_HIDDEN_SQL} AND ${likeCondition} ORDER BY ${members.nameLower}, ${cards.photoNo} LIMIT 25`,
   ]);
   const rows = (results[0]?.results ?? []) as unknown as {
     id: string;

@@ -8,6 +8,7 @@ import {
   userCards,
 } from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
+import { VISIBLE_POOL_SQL, visiblePool } from "./poolVisibility.js";
 import {
   albumExpiry,
   maskAlbumSlot,
@@ -82,8 +83,8 @@ export async function searchAlbumPools(
   const sanitized = prefix.replace(/[%_\\]/g, "").trim();
   const whereClause =
     sanitized === ""
-      ? eq(pools.enabled, true)
-      : and(eq(pools.enabled, true), like(pools.name, `%${sanitized}%`));
+      ? visiblePool()
+      : and(visiblePool(), like(pools.name, `%${sanitized}%`));
   const rows = await db
     .select({ id: pools.id, name: pools.name, emoji: pools.emoji })
     .from(pools)
@@ -112,7 +113,7 @@ export async function createAlbumToken(
     const found = await db
       .select({ id: pools.id, name: pools.name, emoji: pools.emoji })
       .from(pools)
-      .where(and(eq(pools.id, args.poolId), eq(pools.enabled, true)))
+      .where(and(eq(pools.id, args.poolId), visiblePool()))
       .limit(1);
     if (found[0] === undefined) {
       return { status: "unknown-pool" };
@@ -126,8 +127,8 @@ export async function createAlbumToken(
     sql`INSERT OR IGNORE INTO users (id, created_at) VALUES (${args.userId}, ${args.now})`,
     sql`DELETE FROM ${albumTokens} WHERE ${albumTokens.userId} = ${args.userId}`,
     sql`INSERT INTO ${albumTokens} (token, user_id, display_name, avatar_url, pool_id, settle_token, created_at, expires_at, used_at) VALUES (${args.token}, ${args.userId}, ${args.displayName}, ${args.avatarUrl}, ${args.poolId}, NULL, ${args.now}, ${expiresAt}, NULL)`,
-    sql`SELECT COUNT(*) AS total_cards, COUNT(DISTINCT ${cards.memberId}) AS total_members FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} WHERE ${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${pools.enabled} = 1`,
-    sql`SELECT COUNT(*) AS owned_cards, COUNT(DISTINCT ${cards.memberId}) AS owned_members, COALESCE(SUM(${userCards.quantity} + ${userCards.holoQty}), 0) AS total_copies, COALESCE(SUM(${userCards.holoQty}), 0) AS total_holo FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} WHERE ${userCards.userId} = ${args.userId} AND (${userCards.quantity} + ${userCards.holoQty}) >= 1 AND ${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${pools.enabled} = 1`,
+    sql`SELECT COUNT(*) AS total_cards, COUNT(DISTINCT ${cards.memberId}) AS total_members FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} WHERE ${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${VISIBLE_POOL_SQL}`,
+    sql`SELECT COUNT(*) AS owned_cards, COUNT(DISTINCT ${cards.memberId}) AS owned_members, COALESCE(SUM(${userCards.quantity} + ${userCards.holoQty}), 0) AS total_copies, COALESCE(SUM(${userCards.holoQty}), 0) AS total_holo FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} WHERE ${userCards.userId} = ${args.userId} AND (${userCards.quantity} + ${userCards.holoQty}) >= 1 AND ${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${VISIBLE_POOL_SQL}`,
   ]);
 
   const catRow = (results[3]?.results?.[0] ?? {}) as {
@@ -218,9 +219,9 @@ export async function redeemAlbumToken(
   }
 
   const dataResults = await nativeBatch(db, [
-    sql`SELECT ${pools.id} AS id, ${pools.name} AS name, ${pools.emoji} AS emoji FROM ${pools} WHERE ${pools.enabled} = 1 ORDER BY ${pools.sortOrder}, ${pools.id}`,
-    sql`SELECT ${groups.id} AS id, ${groups.poolId} AS pool_id, ${groups.name} AS name, ${groups.badge} AS badge FROM ${groups} JOIN ${pools} ON ${pools.id} = ${groups.poolId} WHERE ${groups.enabled} = 1 AND ${pools.enabled} = 1 ORDER BY ${pools.sortOrder}, ${groups.sortOrder}, ${groups.id}`,
-    sql`SELECT ${cards.id} AS card_id, ${cards.poolId} AS pool_id, ${cards.groupId} AS group_id, ${cards.memberId} AS member_id, ${members.name} AS member_name, ${members.fullName} AS full_name, ${cards.photoLabel} AS photo_label, ${cards.serial} AS serial, ${cards.photoNo} AS photo_no, ${members.photoTotal} AS photo_total, ${cards.rarity} AS rarity, ${cards.holoEnabled} AS holo_enabled, ${cards.imageFile} AS image_file, ${userCards.quantity} AS quantity, ${userCards.holoQty} AS holo_qty, ${userCards.firstObtainedAt} AS first_obtained_at, ${userCards.lastObtainedAt} AS last_obtained_at FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} AND ${userCards.userId} = ${tokenRow.user_id} WHERE ${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${pools.enabled} = 1 ORDER BY ${pools.sortOrder}, ${groups.sortOrder}, ${cards.serial}, ${members.sortOrder}, ${cards.photoNo}`,
+    sql`SELECT ${pools.id} AS id, ${pools.name} AS name, ${pools.emoji} AS emoji FROM ${pools} WHERE ${VISIBLE_POOL_SQL} ORDER BY ${pools.sortOrder}, ${pools.id}`,
+    sql`SELECT ${groups.id} AS id, ${groups.poolId} AS pool_id, ${groups.name} AS name, ${groups.badge} AS badge FROM ${groups} JOIN ${pools} ON ${pools.id} = ${groups.poolId} WHERE ${groups.enabled} = 1 AND ${VISIBLE_POOL_SQL} ORDER BY ${pools.sortOrder}, ${groups.sortOrder}, ${groups.id}`,
+    sql`SELECT ${cards.id} AS card_id, ${cards.poolId} AS pool_id, ${cards.groupId} AS group_id, ${cards.memberId} AS member_id, ${members.name} AS member_name, ${members.fullName} AS full_name, ${cards.photoLabel} AS photo_label, ${cards.serial} AS serial, ${cards.photoNo} AS photo_no, ${members.photoTotal} AS photo_total, ${cards.rarity} AS rarity, ${cards.holoEnabled} AS holo_enabled, ${cards.imageFile} AS image_file, ${userCards.quantity} AS quantity, ${userCards.holoQty} AS holo_qty, ${userCards.firstObtainedAt} AS first_obtained_at, ${userCards.lastObtainedAt} AS last_obtained_at FROM ${cards} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} JOIN ${pools} ON ${pools.id} = ${cards.poolId} LEFT JOIN ${userCards} ON ${userCards.cardId} = ${cards.id} AND ${userCards.userId} = ${tokenRow.user_id} WHERE ${cards.enabled} = 1 AND ${members.enabled} = 1 AND ${groups.enabled} = 1 AND ${VISIBLE_POOL_SQL} ORDER BY ${pools.sortOrder}, ${groups.sortOrder}, ${cards.serial}, ${members.sortOrder}, ${cards.photoNo}`,
   ]);
 
   const rawPools = (dataResults[0]?.results ?? []) as unknown as {

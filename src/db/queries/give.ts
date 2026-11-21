@@ -1,5 +1,6 @@
 import { and, eq, sql } from "drizzle-orm";
 import { cards, gives, groups, members, pools, userCards } from "../schema.js";
+import { CARD_POOL_NOT_HIDDEN_SQL } from "./poolVisibility.js";
 import {
   giveExpiry,
   validateNewGive,
@@ -57,7 +58,7 @@ export async function searchGiftableCards(
       ? sql`1 = 1`
       : sql`${members.nameLower} LIKE ${`${sanitized}%`}`;
   const results = await nativeBatch(db, [
-    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${userCards.userId} = ${ownerId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 AND ${GIVEABLE_RARITY_SQL} AND ${likeCondition} ORDER BY ${members.nameLower}, ${cards.photoNo} LIMIT 25`,
+    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${groups.badge} AS group_badge, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${userCards.userId} = ${ownerId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 AND ${CARD_POOL_NOT_HIDDEN_SQL} AND ${GIVEABLE_RARITY_SQL} AND ${likeCondition} ORDER BY ${members.nameLower}, ${cards.photoNo} LIMIT 25`,
   ]);
   const rows = (results[0]?.results ?? []) as unknown as {
     id: string;
@@ -94,7 +95,7 @@ async function readGiveState(
     db
       .select({ enabled: cards.enabled, rarity: cards.rarity })
       .from(cards)
-      .where(eq(cards.id, cardId))
+      .where(and(eq(cards.id, cardId), CARD_POOL_NOT_HIDDEN_SQL))
       .limit(1),
     db
       .select({ quantity: userCards.quantity })
@@ -128,7 +129,7 @@ export async function createGive(
     db
       .select({ enabled: cards.enabled, rarity: cards.rarity })
       .from(cards)
-      .where(eq(cards.id, cardId))
+      .where(and(eq(cards.id, cardId), CARD_POOL_NOT_HIDDEN_SQL))
       .limit(1),
     db
       .select({ quantity: userCards.quantity })
@@ -165,7 +166,7 @@ export async function createGive(
     sql`INSERT INTO gives (id, mode, giver_id, target_id, card_id, status, claimer_id, settle_token, created_at, expires_at, resolved_at)
 SELECT ${giveId}, ${mode}, ${giverId}, ${targetId}, ${cardId}, 'open', NULL, NULL, ${now}, ${expiresAt}, NULL
 WHERE EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${giverId} AND card_id = ${cardId} AND quantity >= 1)
-AND EXISTS (SELECT 1 FROM cards WHERE id = ${cardId} AND enabled = 1 AND rarity NOT IN ('holo', 'secret'))`,
+AND EXISTS (SELECT 1 FROM cards WHERE id = ${cardId} AND enabled = 1 AND rarity NOT IN ('holo', 'secret') AND NOT EXISTS (SELECT 1 FROM ${pools} WHERE ${pools.id} = ${cards.poolId} AND ${pools.hidden} = 1))`,
   ]);
   const guarded = writeResults[writeResults.length - 1];
   if ((guarded?.meta.changes ?? 0) !== 1) {
@@ -253,7 +254,7 @@ export async function claimGive(
   const guard = sql`(SELECT 1 FROM gives WHERE id = ${giveId} AND settle_token = ${tok})`;
   await nativeBatch(db, [
     sql`INSERT INTO users (id, created_at) VALUES (${claimerId}, ${now}) ON CONFLICT (id) DO NOTHING`,
-    sql`UPDATE gives SET status = 'claimed', claimer_id = ${claimerId}, resolved_at = ${now}, settle_token = ${tok} WHERE id = ${giveId} AND status = 'open' AND expires_at > ${now} AND giver_id <> ${claimerId} AND (mode = 'public' OR target_id = ${claimerId}) AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${giver} AND card_id = ${cardId} AND quantity >= 1)`,
+    sql`UPDATE gives SET status = 'claimed', claimer_id = ${claimerId}, resolved_at = ${now}, settle_token = ${tok} WHERE id = ${giveId} AND status = 'open' AND expires_at > ${now} AND giver_id <> ${claimerId} AND (mode = 'public' OR target_id = ${claimerId}) AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${giver} AND card_id = ${cardId} AND quantity >= 1) AND NOT EXISTS (SELECT 1 FROM ${cards} JOIN ${pools} ON ${pools.id} = ${cards.poolId} WHERE ${cards.id} = ${cardId} AND ${pools.hidden} = 1)`,
     sql`UPDATE user_cards SET quantity = quantity - 1 WHERE user_id = ${giver} AND card_id = ${cardId} AND EXISTS ${guard}`,
     sql`DELETE FROM user_cards WHERE quantity = 0 AND holo_qty = 0 AND user_id = ${giver} AND card_id = ${cardId} AND EXISTS ${guard}`,
     sql`INSERT INTO user_cards (user_id, card_id, quantity, holo_qty, first_obtained_at, last_obtained_at) SELECT ${claimerId}, ${cardId}, 1, 0, ${now}, ${now} WHERE EXISTS ${guard} ON CONFLICT (user_id, card_id) DO UPDATE SET quantity = quantity + 1, last_obtained_at = excluded.last_obtained_at`,

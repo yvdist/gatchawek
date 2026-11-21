@@ -1,5 +1,13 @@
 import { and, eq, sql } from "drizzle-orm";
-import { battles, cards, groups, members, userCards, users } from "../schema.js";
+import {
+  battles,
+  cards,
+  groups,
+  members,
+  pools,
+  userCards,
+  users,
+} from "../schema.js";
 import {
   BATTLE_BASE_POWER,
   battleExpiry,
@@ -18,6 +26,7 @@ import {
 } from "../../domain/level.js";
 import { RARITY_STARS, type RarityKey } from "../../domain/rarity.js";
 import { nativeBatch, type Db } from "../client.js";
+import { CARD_POOL_NOT_HIDDEN_SQL } from "./poolVisibility.js";
 
 export interface BattleCardView {
   cardId: string;
@@ -68,7 +77,7 @@ export async function listTargetBattleCards(
   targetId: string,
 ): Promise<TargetCardOption[]> {
   const results = await nativeBatch(db, [
-    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${cards.photoLabel} AS photo_label, ${groups.badge} AS group_badge, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${userCards.quantity} AS quantity FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${userCards.userId} = ${targetId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 ORDER BY CASE ${cards.rarity} WHEN 'secret' THEN 0 WHEN 'holo' THEN 1 WHEN 'ultra_rare' THEN 2 WHEN 'super_rare' THEN 3 WHEN 'rare' THEN 4 ELSE 5 END, ${userCards.quantity} DESC, ${members.nameLower}, ${cards.photoNo} LIMIT 25`,
+    sql`SELECT ${cards.id} AS id, ${members.name} AS member_name, ${cards.photoLabel} AS photo_label, ${groups.badge} AS group_badge, ${cards.photoNo} AS photo_no, ${cards.rarity} AS rarity, ${userCards.quantity} AS quantity FROM ${userCards} JOIN ${cards} ON ${cards.id} = ${userCards.cardId} JOIN ${members} ON ${members.id} = ${cards.memberId} JOIN ${groups} ON ${groups.id} = ${cards.groupId} WHERE ${userCards.userId} = ${targetId} AND ${userCards.quantity} >= 1 AND ${cards.enabled} = 1 AND ${CARD_POOL_NOT_HIDDEN_SQL} ORDER BY CASE ${cards.rarity} WHEN 'secret' THEN 0 WHEN 'holo' THEN 1 WHEN 'ultra_rare' THEN 2 WHEN 'super_rare' THEN 3 WHEN 'rare' THEN 4 ELSE 5 END, ${userCards.quantity} DESC, ${members.nameLower}, ${cards.photoNo} LIMIT 25`,
   ]);
   const rows = (results[0]?.results ?? []) as unknown as {
     id: string;
@@ -129,7 +138,7 @@ async function readCreatePreconditions(
         rarity: cards.rarity,
       })
       .from(cards)
-      .where(eq(cards.id, challengerCardId))
+      .where(and(eq(cards.id, challengerCardId), CARD_POOL_NOT_HIDDEN_SQL))
       .limit(1),
     db
       .select({ n: sql<number>`count(*)` })
@@ -140,6 +149,7 @@ async function readCreatePreconditions(
           eq(userCards.userId, targetId),
           sql`${userCards.quantity} >= 1`,
           eq(cards.enabled, true),
+          CARD_POOL_NOT_HIDDEN_SQL,
         ),
       ),
   ]);
@@ -194,8 +204,8 @@ export async function createBattle(
 SELECT ${battleId}, ${challengerId}, ${targetId}, ${challengerCardId}, NULL, ${mode}, 'pending', NULL, NULL, NULL, 0, 0, NULL, ${now}, ${expiresAt}, NULL
 WHERE (SELECT COUNT(*) FROM battles WHERE challenger_id = ${challengerId} AND status = 'pending' AND expires_at > ${now}) < 3
 AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${challengerId} AND card_id = ${challengerCardId} AND quantity >= 1)
-AND EXISTS (SELECT 1 FROM cards WHERE id = ${challengerCardId} AND enabled = 1)
-AND EXISTS (SELECT 1 FROM user_cards uc JOIN cards c ON c.id = uc.card_id WHERE uc.user_id = ${targetId} AND uc.quantity >= 1 AND c.enabled = 1)`,
+AND EXISTS (SELECT 1 FROM cards WHERE id = ${challengerCardId} AND enabled = 1 AND NOT EXISTS (SELECT 1 FROM ${pools} WHERE ${pools.id} = ${cards.poolId} AND ${pools.hidden} = 1))
+AND EXISTS (SELECT 1 FROM user_cards uc JOIN cards c ON c.id = uc.card_id WHERE uc.user_id = ${targetId} AND uc.quantity >= 1 AND c.enabled = 1 AND NOT EXISTS (SELECT 1 FROM ${pools} WHERE ${pools.id} = c.pool_id AND ${pools.hidden} = 1))`,
   ]);
   const guarded = writeResults[2];
   if ((guarded?.meta.changes ?? 0) !== 1) {
@@ -263,6 +273,7 @@ export async function getBattleCardView(
         eq(userCards.cardId, cardId),
         sql`${userCards.quantity} >= 1`,
         eq(cards.enabled, true),
+        CARD_POOL_NOT_HIDDEN_SQL,
       ),
     )
     .limit(1);
@@ -346,7 +357,7 @@ export async function settleBattle(
   const tok = crypto.randomUUID();
   const guard = sql`(SELECT 1 FROM battles WHERE id = ${args.battleId} AND settle_token = ${tok})`;
   const stmts = [
-    sql`UPDATE battles SET status = 'resolved', target_card_id = ${args.targetCardId}, winner_id = ${calc.winnerId}, challenger_score = ${calc.challengerRoll.total}, target_score = ${calc.targetRoll.total}, challenger_crit = ${calc.challengerRoll.isCrit ? 1 : 0}, target_crit = ${calc.targetRoll.isCrit ? 1 : 0}, resolved_at = ${args.now}, settle_token = ${tok} WHERE id = ${args.battleId} AND status = 'pending' AND expires_at > ${args.now} AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${existing.challengerId} AND card_id = ${existing.challengerCardId} AND quantity >= 1) AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${existing.targetId} AND card_id = ${args.targetCardId} AND quantity >= 1) AND EXISTS (SELECT 1 FROM cards WHERE id = ${existing.challengerCardId} AND enabled = 1) AND EXISTS (SELECT 1 FROM cards WHERE id = ${args.targetCardId} AND enabled = 1)`,
+    sql`UPDATE battles SET status = 'resolved', target_card_id = ${args.targetCardId}, winner_id = ${calc.winnerId}, challenger_score = ${calc.challengerRoll.total}, target_score = ${calc.targetRoll.total}, challenger_crit = ${calc.challengerRoll.isCrit ? 1 : 0}, target_crit = ${calc.targetRoll.isCrit ? 1 : 0}, resolved_at = ${args.now}, settle_token = ${tok} WHERE id = ${args.battleId} AND status = 'pending' AND expires_at > ${args.now} AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${existing.challengerId} AND card_id = ${existing.challengerCardId} AND quantity >= 1) AND EXISTS (SELECT 1 FROM user_cards WHERE user_id = ${existing.targetId} AND card_id = ${args.targetCardId} AND quantity >= 1) AND EXISTS (SELECT 1 FROM cards WHERE id = ${existing.challengerCardId} AND enabled = 1 AND NOT EXISTS (SELECT 1 FROM ${pools} WHERE ${pools.id} = ${cards.poolId} AND ${pools.hidden} = 1)) AND EXISTS (SELECT 1 FROM cards WHERE id = ${args.targetCardId} AND enabled = 1 AND NOT EXISTS (SELECT 1 FROM ${pools} WHERE ${pools.id} = ${cards.poolId} AND ${pools.hidden} = 1))`,
   ];
 
   if (mode === "wager") {

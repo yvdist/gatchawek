@@ -32,6 +32,8 @@ export const pools = sqliteTable("pools", {
   resetCooldownSec: integer("reset_cooldown_sec").notNull().default(10800),
   memberCount: integer("member_count").notNull().default(0),
   enabled: flag("enabled"),
+  /** Visibility only: hidden pools keep their rows but vanish from bot/admin. */
+  hidden: integer("hidden", { mode: "boolean" }).notNull().default(false),
 });
 
 export const groups = sqliteTable(

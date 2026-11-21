@@ -13,6 +13,7 @@ function loaded(groups: LoadedManifests["groups"]): LoadedManifests {
         regenIntervalSec: 1500,
         resetCooldownSec: 10800,
         sortOrder: 0,
+        hidden: false,
       },
     ],
     poolIds: new Set(["pejabat"]),
