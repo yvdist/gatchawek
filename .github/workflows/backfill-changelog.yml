@@ -1,0 +1,30 @@
+name: Backfill changelog (temporary)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 12.21.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Post last 10 PRs to #bot-changelog (oldest first)
+        env:
+          CHANGELOG_WEBHOOK_URL: ${{ secrets.CHANGELOG_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          cat > /tmp/prs.json <<'PRS_EOF'
+[{"number":53,"title":"feat: add animated GIF rendering for holo and secret cards","mergedAt":"2026-11-21T01:21:51Z","commits":[{"headline":"feat: add animated GIF rendering for holo and secret cards","sha":"c53c9080c1c70695ef530104f481a6b91330cb89"},{"headline":"chore: merge origin/main and adapt animated GIF cards to v3 frame","sha":"ef492531e47ffc56481c95e24512d9137dea7d97"},{"headline":"docs: add PR #45 and #53 review and verification recap","sha":"301180aa9fc8807688c99f5cc78f166855996334"}]},{"number":54,"title":"feat: rebalance gacha rates and add Secret hard pity","mergedAt":"2026-11-21T00:51:25Z","commits":[{"headline":"feat: rebalance gacha rates and add Secret hard pity","sha":"047008506d898100e25ef6522f25000e992a7d2e"}]},{"number":55,"title":"chore: add reusable reset-progress script","mergedAt":"2026-11-21T01:02:58Z","commits":[{"headline":"chore: add reusable reset-progress script","sha":"7d562f2a7b949a8a2f06af67ef2834ab067d367f"}]},{"number":56,"title":"fix(admin): perjelas semantik nama vs label kartu + tombol swap","mergedAt":"2026-11-21T02:06:17Z","commits":[{"headline":"fix(admin): perjelas semantik nama vs label kartu + tombol swap","sha":"24c441507f078f9e5d9d3e4179a9403f7c804833"}]},{"number":57,"title":"feat: add /wish, /unwish, /wishlist with wish pity; drop Secret hard pity","mergedAt":"2026-11-21T02:10:47Z","commits":[{"headline":"feat: add /wish, /unwish, /wishlist with wish pity; drop Secret hard …","sha":"22d762fca04e745a75fa17d327694948fb5555ee"}]},{"number":58,"title":"feat(admin): promote label foto menjadi nama member","mergedAt":"2026-11-21T03:46:21Z","commits":[{"headline":"feat(admin): promote label foto menjadi nama member","sha":"14891065d49f9015d94a3a99f294cfc15cf36914"}]},{"number":59,"title":"feat: post push-to-main changelog to #bot-changelog via webhook","mergedAt":"2026-11-21T03:59:11Z","commits":[{"headline":"feat: post push-to-main changelog to #bot-changelog via webhook","sha":"e1ecc6e33de4da6bc2f696c55885f6f277d9a62c"}]},{"number":60,"title":"feat: announce manual deploys to #bot-changelog via workflow_dispatch","mergedAt":"2026-11-21T04:09:07Z","commits":[{"headline":"feat: announce manual deploys to #bot-changelog via workflow_dispatch","sha":"35748648c6f51d12d16dfc4ae0d14e3804a79374"}]},{"number":61,"title":"feat: hide repo name in changelog and deploy notices","mergedAt":"2026-11-21T04:10:48Z","commits":[{"headline":"feat: hide repo name in changelog and deploy notices","sha":"706c9b4e0dcf8f9bb5064ea53aae0baa995d1950"}]},{"number":62,"title":"feat: use English-only messages in changelog notices","mergedAt":"2026-11-21T04:12:58Z","commits":[{"headline":"feat: use English-only messages in changelog notices","sha":"2c884e2f4feada651de596935260968097b3e89d"}]}]
+PRS_EOF
+          pnpm exec tsx scripts/backfill-changelog.ts /tmp/prs.json
