@@ -147,7 +147,7 @@ async function main(): Promise<void> {
     const tmpDir = await mkdtemp(path.join(tmpdir(), "gatchawek-r2sql-"));
     try {
       const sql = batch
-        .map((u) => `UPDATE cards SET image_file = ${sqlText(u.fileName)} WHERE id = ${sqlText(u.cardId)};`)
+        .map((u) => `UPDATE cards SET image_file = ${sqlText(u.fileName)}, render_requested_at = NULL WHERE id = ${sqlText(u.cardId)};`)
         .join("\n");
       const tmpFile = path.join(tmpDir, "render.sql");
       await writeFile(tmpFile, `${sql}\n`);
