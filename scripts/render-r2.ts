@@ -111,6 +111,18 @@ async function main(): Promise<void> {
     rows = rows.filter((r) => only.has(r.id));
     console.log(`fallback queue-url cards: ${String(rows.length)}`);
   }
+  if (only.size > 0 && rows.length === 0) {
+    // Kartu sudah static tapi Sumber-nya URL file mentah: render ulang dari sana.
+    // URL non-gambar ditolak aman oleh validasi content-type saat fetch.
+    const ids = [...only].map((s) => `'${s.replace(/'/g, "''")}'`).join(",");
+    rows = await d1Json(
+      root,
+      d1Args,
+      `SELECT c.id, c.member_id, m.name AS member_name, c.group_id, g.badge, c.rarity, c.serial, c.photo_no, m.photo_total, c.photo_label, c.source_page_url AS image_file, c.pool_id FROM cards c JOIN members m ON m.id = c.member_id JOIN groups g ON g.id = c.group_id WHERE c.pool_id != 'pejabat' AND c.enabled = 1 AND c.source_page_url LIKE 'http%' AND c.id IN (${ids}) GROUP BY c.id`,
+    );
+    rows = rows.filter((r) => only.has(r.id));
+    console.log(`fallback source-url cards: ${String(rows.length)}`);
+  }
   if (rows.length === 0) return;
 
   registerFonts(path.join(SCRIPTS_DIR, "fonts"));

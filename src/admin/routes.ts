@@ -19,6 +19,7 @@ import {
   listAdminPools,
   listAdminQueue,
   listRenderableCards,
+  listReRenderableFromSource,
   markRenderRequested,
   RENDER_BATCH_MAX,
   setAdminCardEnabled,
@@ -312,6 +313,14 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const db = createDb(c.env);
     const nowSec = Math.floor(Date.now() / 1000);
     const renderable = await listRenderableCards(db, rawIds, nowSec);
+    const fromSource = await listReRenderableFromSource(db, rawIds, nowSec);
+    const seen = new Set(renderable.map((r) => r.id));
+    for (const r of fromSource) {
+      if (!seen.has(r.id)) {
+        renderable.push(r);
+        seen.add(r.id);
+      }
+    }
     if (renderable.length === 0) {
       return fail("Tidak ada kartu yang bisa dirender dari pilihan (mungkin sedang dirender).");
     }
@@ -431,7 +440,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
         `🗂️ admin upload untuk ${id} oleh owner`,
       );
       if (!uploaded.ok) return fail(uploaded.error, from);
-      await setAdminCardImage(db, id, uploaded.url);
+      await setAdminCardImage(db, id, uploaded.url, uploaded.url);
       return done("Image diperbarui (remote/CDN).");
     }
     if (url !== "") {
@@ -441,7 +450,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       if (url.length > MAX_MANUAL_URL_LEN) {
         return fail("URL terlalu panjang (maks 500).", from);
       }
-      await setAdminCardImage(db, id, url);
+      await setAdminCardImage(db, id, url, url);
       return done("Image diperbarui (remote/CDN).");
     }
     return fail("Pilih file upload atau isi URL manual.", from);

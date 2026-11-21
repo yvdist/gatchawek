@@ -328,7 +328,9 @@ export function cardDetailPage(args: {
   const renderOne =
     (st === "raw" || st === "stale") && c.renderable
       ? `<form method="post" action="/admin/cards/render-remote"><input type="hidden" name="ids" value="${id}"><input type="hidden" name="back" value="/admin/cards/${id}${fromQs}"><button class="btn" type="submit">Minta render kartu ini</button></form>`
-      : "";
+      : st === "rendered" && c.enabled && !c.excludedPool && c.sourcePageUrl !== null && c.sourcePageUrl.startsWith("http")
+        ? `<form method="post" action="/admin/cards/render-remote"><input type="hidden" name="ids" value="${id}"><input type="hidden" name="back" value="/admin/cards/${id}${fromQs}"><button class="btn" type="submit">Render ulang dari Sumber</button></form>`
+        : "";
   const msg =
     args.message === null
       ? ""

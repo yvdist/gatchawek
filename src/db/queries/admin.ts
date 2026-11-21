@@ -281,9 +281,17 @@ export async function setAdminCardImage(
   db: Db,
   cardId: string,
   imageFile: string,
+  sourcePageUrl?: string,
 ): Promise<boolean> {
   const res = await nativeBatch(db, [
-    db.update(cards).set({ imageFile }).where(eq(cards.id, cardId)),
+    db
+      .update(cards)
+      .set(
+        sourcePageUrl === undefined
+          ? { imageFile }
+          : { imageFile, sourcePageUrl },
+      )
+      .where(eq(cards.id, cardId)),
   ]);
   return (res[0]?.meta.changes ?? 0) === 1;
 }
@@ -649,6 +657,35 @@ export async function listRenderableCards(
       ),
     );
   return rows;
+}
+
+/**
+ * Kartu yang frame-nya sudah jadi tapi Sumber-nya URL file mentah:
+ * bisa render ulang dari Sumber tanpa upload. Pool exclude tetap dikecualikan.
+ */
+export async function listReRenderableFromSource(
+  db: Db,
+  ids: readonly string[],
+  nowSec: number,
+): Promise<RenderableCard[]> {
+  const clean = [...new Set(ids.map((id) => id.trim()).filter((id) => id !== ""))].slice(0, RENDER_BATCH_MAX);
+  if (clean.length === 0) return [];
+  const rows = await db
+    .select({ id: cards.id, imageFile: cards.sourcePageUrl })
+    .from(cards)
+    .where(
+      and(
+        inArray(cards.id, clean),
+        like(cards.sourcePageUrl, "http%"),
+        eq(cards.enabled, true),
+        outsideExcludedPool(),
+        or(
+          isNull(cards.renderRequestedAt),
+          lt(cards.renderRequestedAt, nowSec - RENDER_PENDING_SEC),
+        ),
+      ),
+    );
+  return rows.filter((r) => r.imageFile !== null).map((r) => ({ id: r.id, imageFile: r.imageFile as string }));
 }
 
 /** Stamp a successful render request so the panel shows "sedang dirender" and blocks repeats. */
