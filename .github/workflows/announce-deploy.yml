@@ -27,14 +27,13 @@ jobs:
           fi
 
           jq -n \
-            --arg repo "${GITHUB_REPOSITORY:-}" \
             --arg actor "${GITHUB_ACTOR:-}" \
             --arg sha "${GITHUB_SHA:-}" \
             --arg note "${NOTE:-}" \
             '
             ($sha[0:7]) as $short
             | {
-                content: "✅ Deploy live — \($repo) @ \($short) oleh \($actor)",
+                content: "✅ Deploy live @ \($short) oleh \($actor)",
                 allowed_mentions: { parse: [] },
                 embeds: [
                   ({ title: "Bot sudah di-deploy ulang" }
