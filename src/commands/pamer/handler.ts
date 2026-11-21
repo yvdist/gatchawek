@@ -15,6 +15,8 @@ import {
   postFollowup,
 } from "../../discord/rest.js";
 import { pickHype, sanitizeCaption } from "../../domain/pamer.js";
+import { buildWaShareText, buildWaShareUrl } from "../../domain/share.js";
+import { buildWaShareRow } from "../../ui/waShare.js";
 import {
   getShowcaseCard,
   searchShowcaseCards,
@@ -59,6 +61,19 @@ async function runPamerTask(
       });
       return;
     }
+    const imageUrl = cardImageUrl(env.PUBLIC_BASE_URL, card.imageFile);
+    const shareUrl = buildWaShareUrl(
+      buildWaShareText({
+        memberName: card.memberName,
+        photoLabel: card.photoLabel,
+        groupName: card.groupName,
+        photoNo: card.photoNo,
+        photoTotal: card.photoTotal,
+        serial: card.serial,
+        rarity: card.rarity,
+        imageUrl,
+      }),
+    );
     await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
       embeds: [
         buildPamerEmbed({
@@ -77,9 +92,10 @@ async function runPamerTask(
           quantity: card.quantity,
           caption: sanitizeCaption(caption),
           hype: pickHype(card.rarity, cryptoRandom()),
-          imageUrl: cardImageUrl(env.PUBLIC_BASE_URL, card.imageFile),
+          imageUrl,
         }),
       ],
+      components: [buildWaShareRow(shareUrl)],
     });
   } catch {
     try {

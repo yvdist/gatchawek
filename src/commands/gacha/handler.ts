@@ -23,6 +23,8 @@ import {
   cardImageUrl,
 } from "../../ui/gachaEmbed.js";
 import { parseGachaAgainCustomId } from "../../domain/gacha.js";
+import { buildWaShareText, buildWaShareUrl } from "../../domain/share.js";
+import { buildWaShareRow } from "../../ui/waShare.js";
 import { reportError } from "../../observability.js";
 import type { WaitUntil } from "../registry.js";
 
@@ -66,6 +68,18 @@ async function followupPull(
   switch (outcome.status) {
     case "ok": {
       const imageUrl = cardImageUrl(env.PUBLIC_BASE_URL, outcome.card.imageFile);
+      const shareUrl = buildWaShareUrl(
+        buildWaShareText({
+          memberName: outcome.card.memberName,
+          photoLabel: outcome.card.photoLabel,
+          groupName: outcome.card.groupName,
+          photoNo: outcome.card.photoNo,
+          photoTotal: outcome.card.photoTotal,
+          serial: outcome.card.serial,
+          rarity: outcome.card.rarity,
+          imageUrl,
+        }),
+      );
       await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
         embeds: [
           buildPullEmbed({
@@ -91,7 +105,7 @@ async function followupPull(
             imageUrl,
           }),
         ],
-        components: [againButton(pool.id, userId)],
+        components: [againButton(pool.id, userId), buildWaShareRow(shareUrl)],
       });
       return;
     }
