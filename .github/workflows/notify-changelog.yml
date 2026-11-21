@@ -31,7 +31,6 @@ jobs:
           # Build the Discord webhook payload entirely in jq so commit
           # messages with quotes/emoji/newlines can never break the JSON.
           jq -n \
-            --arg repo "${GITHUB_REPOSITORY:-}" \
             --arg branch "${GITHUB_REF_NAME:-main}" \
             --slurpfile ev "$GITHUB_EVENT_PATH" \
             '
@@ -39,18 +38,16 @@ jobs:
             | ($commits | length) as $n
             | ($commits[:10]) as $shown
             | {
-                content: "🚀 Update bot — \($repo) @ \($branch) (\($n) commit)",
+                content: "🚀 Update bot @ \($branch) (\($n) commit)",
                 allowed_mentions: { parse: [] },
                 embeds: [
                   ({
                     title: "Perubahan baru di main",
                     fields: ($shown | map({
                       name: "\((.id // "")[0:7]) \(((.message // "") | split("\n")[0] | .[0:240]))",
-                      value: "\(.author.name // .author.username // "unknown") · \(.url // "")"
+                      value: "\(.author.name // .author.username // "unknown") · [lihat commit](\(.url // ""))"
                     }))
                   }
-                  + (if ($ev[0].compare // "") != ""
-                     then { url: $ev[0].compare } else {} end)
                   + (if $n > 10
                      then { footer: { text: "… dan \($n - 10) commit lain" } }
                      else {} end)
