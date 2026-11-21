@@ -2,7 +2,8 @@ import { createHash } from "node:crypto";
 import { mkdir, readdir, rm, writeFile } from "node:fs/promises";
 import * as path from "node:path";
 import { createCanvas, GlobalFonts, loadImage } from "@napi-rs/canvas";
-import { applyPalette, GIFEncoder, quantize } from "gifenc";
+import * as gifenc from "gifenc";
+const { applyPalette, GIFEncoder, quantize } = gifenc;
 
 export const CARD_W = 600;
 export const CARD_H = 900;
