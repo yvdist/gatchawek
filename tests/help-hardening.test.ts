@@ -56,6 +56,25 @@ describe("help hardening (phase 5)", () => {
     }
   });
 
+  it("menampilkan nama grup sekali di daftar seri", () => {
+    const embed = buildHelpEmbed({
+      userId: "123",
+      catalog: {
+        pools: [
+          {
+            id: "demo",
+            name: "Demo",
+            emoji: "🎴",
+            groups: [{ id: "g1", name: "Alpha Group", memberCount: 7 }],
+          },
+        ],
+      },
+      commands: [],
+    });
+    expect(embed.description).toContain("Alpha Group (7 member)");
+    expect(embed.description).not.toMatch(/ALPHA\s+Alpha Group/);
+  });
+
   it("tidak membocorkan URL internal (workers.dev) di embed", () => {
     const embed = buildEmbed();
     const text = `${String(embed.title ?? "")}\n${String(embed.description ?? "")}\n${String(embed.footer?.text ?? "")}`;

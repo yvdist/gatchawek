@@ -39,7 +39,7 @@ function catalogLines(catalog: HelpCatalog): string {
       pool.groups.length === 0
         ? "belum ada seri"
         : pool.groups
-            .map((g) => `${g.badge} ${g.name} (${g.memberCount} member)`)
+            .map((g) => `${g.name} (${g.memberCount} member)`)
             .join(" · ");
     const line = `${pool.emoji} **${pool.name}** — ${groups}`;
     if (used + line.length + 1 > MAX_CATALOG) {

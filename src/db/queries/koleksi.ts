@@ -55,7 +55,6 @@ export interface HelpCatalog {
     groups: {
       id: string;
       name: string;
-      badge: string;
       memberCount: number;
     }[];
   }[];
@@ -232,7 +231,6 @@ export async function getHelpCatalog(db: Db): Promise<HelpCatalog> {
     byPool.get(group.poolId)?.groups.push({
       id: group.id,
       name: group.name,
-      badge: group.badge,
       memberCount: group.memberCount,
     });
   }
