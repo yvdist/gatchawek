@@ -1,6 +1,8 @@
 import {
   deriveBarcodeWidths,
+  deriveCardTheme,
   sanitizeAsciiText,
+  type CardTheme,
 } from "../domain/kartu.js";
 import { getBakedFont, type FontKey } from "./kartuFont.js";
 
@@ -89,6 +91,45 @@ function roundedRectDistance(
     return -distEdge;
   }
   return Math.hypot(dx, dy) - radius;
+}
+
+interface CardShapeMask {
+  readonly alpha: Uint8Array;
+  readonly isBorder: Uint8Array;
+}
+
+let cachedShapeMask: CardShapeMask | null = null;
+
+function getCardShapeMask(): CardShapeMask {
+  if (cachedShapeMask !== null) return cachedShapeMask;
+  const total = KARTU_WIDTH * KARTU_HEIGHT;
+  const alpha = new Uint8Array(total);
+  const isBorder = new Uint8Array(total);
+  const radius = 22;
+
+  for (let y = 0; y < KARTU_HEIGHT; y++) {
+    const rowOffset = y * KARTU_WIDTH;
+    for (let x = 0; x < KARTU_WIDTH; x++) {
+      const dist = roundedRectDistance(
+        x + 0.5,
+        y + 0.5,
+        0,
+        0,
+        KARTU_WIDTH,
+        KARTU_HEIGHT,
+        radius,
+      );
+      if (dist >= 0.8) continue;
+      const a =
+        dist > -0.8 ? Math.max(1, Math.min(255, Math.round((0.8 - dist) * 160))) : 255;
+      alpha[rowOffset + x] = a;
+      if (dist > -1.8 && dist <= 0) {
+        isBorder[rowOffset + x] = 1;
+      }
+    }
+  }
+  cachedShapeMask = { alpha, isBorder };
+  return cachedShapeMask;
 }
 
 function drawText(
@@ -190,7 +231,15 @@ function drawSmartChip(
     const gg = Math.round(198 - t * 38);
     const gb = Math.round(92 - t * 34);
     for (let px = chipX; px < chipX + chipW; px++) {
-      const dist = roundedRectDistance(px + 0.5, py + 0.5, chipX, chipY, chipW, chipH, radius);
+      const dist = roundedRectDistance(
+        px + 0.5,
+        py + 0.5,
+        chipX,
+        chipY,
+        chipW,
+        chipH,
+        radius,
+      );
       if (dist > 0.75) continue;
       const idx = py * KARTU_WIDTH + px;
       const edgeAlpha = dist > -0.75 ? Math.round((0.75 - dist) * 170) : 255;
@@ -201,7 +250,6 @@ function drawSmartChip(
       }
     }
   }
-  // Smartcard contact pad lines
   const lineRgb = [142, 108, 28] as const;
   const col1 = chipX + Math.round(chipW * 0.33);
   const col2 = chipX + Math.round(chipW * 0.67);
@@ -218,99 +266,547 @@ const AVATAR_CX = 122;
 const AVATAR_CY = 194;
 const AVATAR_R = 70;
 
-let cachedBaseTemplate: Uint32Array | null = null;
+function renderUniqueBackground(buf: Uint32Array, theme: CardTheme): void {
+  const mask = getCardShapeMask();
+  const [sR, sG, sB] = theme.bgStartRgb;
+  const [eR, eG, eB] = theme.bgEndRgb;
+  const [tR, tG, tB] = theme.shapeTintRgb;
+  const [aR, aG, aB] = theme.accentLineRgb;
 
-function getBaseTemplate(): Uint32Array {
-  if (cachedBaseTemplate !== null) return cachedBaseTemplate;
+  const dR = eR - sR;
+  const dG = eG - sG;
+  const dB = eB - sB;
 
-  const buf = new Uint32Array(KARTU_WIDTH * KARTU_HEIGHT);
-  const radius = 22;
+  const { seedA, seedB, seedC, motif, gradientMode } = theme;
 
-  const c1x = 515;
-  const c1y = 112;
-  const c1r2 = 148 * 148;
+  const p1x = 420 + (seedA % 180);
+  const p1y = 60 + ((seedA >>> 8) % 120);
+  const p1r = 115 + ((seedA >>> 16) % 50);
+  const p1r2 = p1r * p1r;
 
-  const c2x = 562;
-  const c2y = 262;
-  const c2r2 = 128 * 128;
+  const p2x = 470 + (seedB % 140);
+  const p2y = 210 + ((seedB >>> 8) % 130);
+  const p2r = 100 + ((seedB >>> 16) % 45);
+  const p2r2 = p2r * p2r;
 
-  const c3x = 92;
-  const c3y = 358;
-  const c3r2 = 88 * 88;
+  const p3x = 45 + (seedC % 130);
+  const p3y = 290 + ((seedC >>> 8) % 85);
+  const p3r = 75 + ((seedC >>> 16) % 40);
+  const p3r2 = p3r * p3r;
 
-  for (let y = 0; y < KARTU_HEIGHT; y++) {
-    const ty = y / (KARTU_HEIGHT - 1);
-    const rowOffset = y * KARTU_WIDTH;
+  const wave1 = new Int16Array(KARTU_WIDTH);
+  const wave2 = new Int16Array(KARTU_WIDTH);
+  const wave3 = new Int16Array(KARTU_WIDTH);
+  if (motif === "topographic-waves") {
+    const freq1 = 0.008 + (seedA & 0x1f) * 0.00025;
+    const freq2 = 0.011 + (seedB & 0x1f) * 0.00025;
+    const phase1 = (seedA >>> 5) & 0xff;
+    const phase2 = (seedB >>> 5) & 0xff;
+    const amp1 = 24 + ((seedA >>> 13) % 22);
+    const amp2 = 20 + ((seedB >>> 13) % 20);
     for (let x = 0; x < KARTU_WIDTH; x++) {
-      const dist = roundedRectDistance(
-        x + 0.5,
-        y + 0.5,
-        0,
-        0,
-        KARTU_WIDTH,
-        KARTU_HEIGHT,
-        radius,
+      wave1[x] = Math.round(135 + Math.sin(x * freq1 + phase1) * amp1);
+      wave2[x] = Math.round(230 + Math.cos(x * freq2 + phase2) * amp2);
+      wave3[x] = Math.round(
+        310 + Math.sin(x * (freq1 * 0.85) + phase2) * (amp1 * 0.75),
       );
-      if (dist >= 0.8) continue;
-
-      const tx = x / (KARTU_WIDTH - 1);
-      const t = tx * 0.55 + ty * 0.45;
-      let r = Math.round(45 + t * 34);
-      let g = Math.round(21 + t * 18);
-      let b = Math.round(39 + t * 30);
-
-      // Subtle diagonal security lines
-      if ((x + y) % 9 === 0) {
-        r += 4;
-        g += 2;
-        b += 4;
-      }
-
-      // Decorative translucent circles
-      const d1 = (x - c1x) * (x - c1x) + (y - c1y) * (y - c1y);
-      if (d1 <= c1r2) {
-        r = Math.min(255, r + 22);
-        g = Math.min(255, g + 10);
-        b = Math.min(255, b + 20);
-      }
-      const d2 = (x - c2x) * (x - c2x) + (y - c2y) * (y - c2y);
-      if (d2 <= c2r2) {
-        r = Math.min(255, r + 16);
-        g = Math.min(255, g + 7);
-        b = Math.min(255, b + 15);
-      }
-      const d3 = (x - c3x) * (x - c3x) + (y - c3y) * (y - c3y);
-      if (d3 <= c3r2) {
-        r = Math.min(255, r + 15);
-        g = Math.min(255, g + 6);
-        b = Math.min(255, b + 14);
-      }
-
-      // Subtle inner border highlight
-      if (dist > -1.6 && dist <= 0) {
-        r = Math.min(255, r + 35);
-        g = Math.min(255, g + 16);
-        b = Math.min(255, b + 32);
-      }
-
-      const alpha =
-        dist > -0.8 ? Math.max(0, Math.min(255, Math.round((0.8 - dist) * 160))) : 255;
-      buf[rowOffset + x] = packRgba(r, g, b, alpha);
     }
   }
 
-  // Header & subtitle
+  const chevSlopeDir = (seedA & 1) === 0 ? 1 : -1;
+  const chevBand1 = 360 + (seedA % 160);
+  const chevBand2 = 540 + (seedB % 160);
+  const chevBand3 = 170 + (seedC % 110);
+
+  const gridStep = 34 + (seedA % 14);
+  const gridOffX = (seedB >>> 4) % gridStep;
+  const gridOffY = (seedC >>> 4) % gridStep;
+
+  const gradX = new Int32Array(KARTU_WIDTH);
+  const gradY = new Int32Array(KARTU_HEIGHT);
+  const wWeight =
+    gradientMode === 0
+      ? 148
+      : gradientMode === 1
+        ? 140
+        : gradientMode === 2
+          ? 128
+          : 90;
+  const hWeight = 256 - wWeight;
+  for (let x = 0; x < KARTU_WIDTH; x++) {
+    const u = gradientMode === 2 ? KARTU_WIDTH - 1 - x : x;
+    gradX[x] = ((u * wWeight) / (KARTU_WIDTH - 1)) | 0;
+  }
+  for (let y = 0; y < KARTU_HEIGHT; y++) {
+    const v = gradientMode === 1 ? KARTU_HEIGHT - 1 - y : y;
+    gradY[y] = ((v * hWeight) / (KARTU_HEIGHT - 1)) | 0;
+  }
+
+  const motifId =
+    motif === "orbital-spheres"
+      ? 0
+      : motif === "cyber-chevrons"
+        ? 1
+        : motif === "topographic-waves"
+          ? 2
+          : motif === "diamond-prism"
+            ? 3
+            : motif === "sunburst-rays"
+              ? 4
+              : 5;
+
+  const p1RingBand = p1r * 3;
+  const p2RingR = p2r + 28;
+  const p2RingR2 = p2RingR * p2RingR;
+  const p2RingBand = p2RingR * 2;
+  const haloR2 = (p1r + 50) * (p1r + 50);
+  const raySeed = seedA & 7;
+
+  for (let y = 0; y < KARTU_HEIGHT; y += 2) {
+    const gyVal = gradY[y] ?? 0;
+    const row0 = y * KARTU_WIDTH;
+    const row1 = (y + 1) * KARTU_WIDTH;
+    const dy1 = y - p1y;
+    const dy1Sq = dy1 * dy1;
+    const dy1Abs = dy1 < 0 ? -dy1 : dy1;
+    const dy2 = y - p2y;
+    const dy2Sq = dy2 * dy2;
+    const dy2Abs = dy2 < 0 ? -dy2 : dy2;
+    const dy3 = y - p3y;
+    const dy3Sq = dy3 * dy3;
+    const dy3Abs = dy3 < 0 ? -dy3 : dy3;
+    const chevY = chevSlopeDir > 0 ? y : KARTU_HEIGHT - y;
+    const hexGy = (y + gridOffY) % gridStep;
+
+    for (let x = 0; x < KARTU_WIDTH; x += 2) {
+      const t256 = (gradX[x] ?? 0) + gyVal;
+      let r = sR + ((dR * t256) >> 8);
+      let g = sG + ((dG * t256) >> 8);
+      let b = sB + ((dB * t256) >> 8);
+
+      if (motifId === 0) {
+        if (((x + y) & 7) === 0) {
+          r += 4;
+          g += 3;
+          b += 4;
+        }
+        const dx1 = x - p1x;
+        const d1 = dx1 * dx1 + dy1Sq;
+        if (d1 <= p1r2) {
+          r += tR;
+          g += tG;
+          b += tB;
+        }
+        const diff1 = d1 - p1r2;
+        if ((diff1 < 0 ? -diff1 : diff1) <= p1RingBand) {
+          r = (r * 3 + aR) >> 2;
+          g = (g * 3 + aG) >> 2;
+          b = (b * 3 + aB) >> 2;
+        }
+        const dx2 = x - p2x;
+        const d2 = dx2 * dx2 + dy2Sq;
+        if (d2 <= p2r2) {
+          r += (tR * 3) >> 2;
+          g += (tG * 3) >> 2;
+          b += (tB * 3) >> 2;
+        }
+        const dx3 = x - p3x;
+        const d3 = dx3 * dx3 + dy3Sq;
+        if (d3 <= p3r2) {
+          r += (tR * 3) >> 2;
+          g += (tG * 3) >> 2;
+          b += (tB * 3) >> 2;
+        }
+        const diff2 = d2 - p2RingR2;
+        if ((diff2 < 0 ? -diff2 : diff2) <= p2RingBand) {
+          r = (r * 3 + aR) >> 2;
+          g = (g * 3 + aG) >> 2;
+          b = (b * 3 + aB) >> 2;
+        }
+      } else if (motifId === 1) {
+        const diag = x + chevY;
+        const raw1 = diag - chevBand1;
+        const dist1 = raw1 < 0 ? -raw1 : raw1;
+        const raw2 = diag - chevBand2;
+        const dist2 = raw2 < 0 ? -raw2 : raw2;
+        const raw3 = x - y - chevBand3;
+        const dist3 = raw3 < 0 ? -raw3 : raw3;
+        if (dist1 < 46) {
+          r += tR;
+          g += tG;
+          b += tB;
+          if (dist1 >= 42) {
+            r = (r * 3 + aR) >> 2;
+            g = (g * 3 + aG) >> 2;
+            b = (b * 3 + aB) >> 2;
+          }
+        }
+        if (dist2 < 32) {
+          r += (tR * 3) >> 2;
+          g += (tG * 3) >> 2;
+          b += (tB * 3) >> 2;
+          if (dist2 >= 28) {
+            r = (r * 3 + aR) >> 2;
+            g = (g * 3 + aG) >> 2;
+            b = (b * 3 + aB) >> 2;
+          }
+        }
+        if (dist3 < 20) {
+          r += tR >> 1;
+          g += tG >> 1;
+          b += tB >> 1;
+        }
+        if ((x & 15) === 0 && (y & 15) === 0) {
+          r = (r * 3 + aR) >> 2;
+          g = (g * 3 + aG) >> 2;
+          b = (b * 3 + aB) >> 2;
+        }
+      } else if (motifId === 2) {
+        const w1 = wave1[x] ?? 140;
+        const w2 = wave2[x] ?? 230;
+        const w3 = wave3[x] ?? 310;
+        if (y >= w1) {
+          r += tR >> 1;
+          g += tG >> 1;
+          b += tB >> 1;
+        }
+        if (y >= w2) {
+          r += (tR * 3) >> 2;
+          g += (tG * 3) >> 2;
+          b += (tB * 3) >> 2;
+        }
+        if (y >= w3) {
+          r += tR >> 1;
+          g += tG >> 1;
+          b += tB >> 1;
+        }
+        const dw1 = y >= w1 ? y - w1 : w1 - y;
+        const dw2 = y >= w2 ? y - w2 : w2 - y;
+        const dw3 = y >= w3 ? y - w3 : w3 - y;
+        if (dw1 <= 2 || dw2 <= 2 || dw3 <= 2) {
+          r = (r * 3 + aR) >> 2;
+          g = (g * 3 + aG) >> 2;
+          b = (b * 3 + aB) >> 2;
+        } else if (dw1 % 22 <= 1) {
+          r += 8;
+          g += 8;
+          b += 8;
+        }
+      } else if (motifId === 3) {
+        const dx1 = x >= p1x ? x - p1x : p1x - x;
+        const dx2 = x >= p2x ? x - p2x : p2x - x;
+        const dx3 = x >= p3x ? x - p3x : p3x - x;
+        const m1 = dx1 + dy1Abs;
+        const m2 = dx2 + dy2Abs;
+        const m3 = dx3 + dy3Abs;
+        if (m1 <= p1r) {
+          r += tR;
+          g += tG;
+          b += tB;
+        }
+        if (
+          (m1 >= p1r - 2 && m1 <= p1r + 2) ||
+          (m1 >= p1r + 20 && m1 <= p1r + 24)
+        ) {
+          r = (r * 3 + aR) >> 2;
+          g = (g * 3 + aG) >> 2;
+          b = (b * 3 + aB) >> 2;
+        }
+        if (m2 <= p2r) {
+          r += (tR * 3) >> 2;
+          g += (tG * 3) >> 2;
+          b += (tB * 3) >> 2;
+        }
+        if (m2 >= p2r - 2 && m2 <= p2r + 2) {
+          r = (r * 3 + aR) >> 2;
+          g = (g * 3 + aG) >> 2;
+          b = (b * 3 + aB) >> 2;
+        }
+        if (m3 <= p3r) {
+          r += tR >> 1;
+          g += tG >> 1;
+          b += tB >> 1;
+        }
+        if (((x + y) & 22) === 0 || ((x - y + 1024) & 22) === 0) {
+          r += 5;
+          g += 5;
+          b += 5;
+        }
+      } else if (motifId === 4) {
+        const dx = x - p1x;
+        const d2 = dx * dx + dy1Sq;
+        const ax = dx < 0 ? -dx : dx;
+        const ay = dy1Abs;
+        const sector =
+          ((dx >= 0 ? 1 : 0) << 3) |
+          ((dy1 >= 0 ? 1 : 0) << 2) |
+          ((ax > ay ? 1 : 0) << 1) |
+          (ax > ay * 2 || ay > ax * 2 ? 1 : 0);
+        if (((sector + raySeed) & 1) === 0) {
+          r += (tR * 3) >> 2;
+          g += (tG * 3) >> 2;
+          b += (tB * 3) >> 2;
+        }
+        if (d2 <= p1r2) {
+          r += tR >> 1;
+          g += tG >> 1;
+          b += tB >> 1;
+        }
+        const diffA = d2 - p1r2;
+        const diffB = d2 - haloR2;
+        if (
+          (diffA < 0 ? -diffA : diffA) <= p1RingBand ||
+          (diffB < 0 ? -diffB : diffB) <= p1RingBand
+        ) {
+          r = (r * 3 + aR) >> 2;
+          g = (g * 3 + aG) >> 2;
+          b = (b * 3 + aB) >> 2;
+        }
+        if ((y & 3) === 0) {
+          r += 4;
+          g += 4;
+          b += 4;
+        }
+      } else {
+        const gx = (x + gridOffX) % gridStep;
+        if (gx <= 1 || hexGy <= 1) {
+          r += 7;
+          g += 7;
+          b += 7;
+        }
+        if (gx <= 3 && hexGy <= 3) {
+          r = (r * 3 + aR) >> 2;
+          g = (g * 3 + aG) >> 2;
+          b = (b * 3 + aB) >> 2;
+        }
+        const dx1 = x - p1x;
+        const dx3 = x - p3x;
+        if (dx1 * dx1 + dy1Sq <= p1r2 || dx3 * dx3 + dy3Sq <= p3r2) {
+          r += (tR * 3) >> 2;
+          g += (tG * 3) >> 2;
+          b += (tB * 3) >> 2;
+        }
+        const band = x - y - 240;
+        if ((band < 0 ? -band : band) < 28) {
+          r += tR >> 1;
+          g += tG >> 1;
+          b += tB >> 1;
+        }
+      }
+
+      const cr = r > 255 ? 255 : r < 0 ? 0 : r | 0;
+      const cg = g > 255 ? 255 : g < 0 ? 0 : g | 0;
+      const cb = b > 255 ? 255 : b < 0 ? 0 : b | 0;
+      const packed = packRgba(cr, cg, cb, 255);
+      buf[row0 + x] = packed;
+      buf[row0 + x + 1] = packed;
+      buf[row1 + x] = packed;
+      buf[row1 + x + 1] = packed;
+    }
+  }
+
+  // Apply crisp 1px rounded corner alpha mask only on the 4 corner 26x26 boxes
+  const cornerBoxes = [
+    [0, 26, 0, 26],
+    [KARTU_WIDTH - 26, KARTU_WIDTH, 0, 26],
+    [0, 26, KARTU_HEIGHT - 26, KARTU_HEIGHT],
+    [KARTU_WIDTH - 26, KARTU_WIDTH, KARTU_HEIGHT - 26, KARTU_HEIGHT],
+  ] as const;
+  for (const [xStart, xEnd, yStart, yEnd] of cornerBoxes) {
+    for (let y = yStart; y < yEnd; y++) {
+      const rowOff = y * KARTU_WIDTH;
+      for (let x = xStart; x < xEnd; x++) {
+        const idx = rowOff + x;
+        const a = mask.alpha[idx] ?? 0;
+        if (a === 0) {
+          buf[idx] = 0;
+        } else if (a < 255) {
+          buf[idx] = ((buf[idx] ?? 0) & 0x00ffffff) | (a << 24);
+        }
+      }
+    }
+  }
+}
+
+function drawAvatarRingAndCircle(
+  buf: Uint32Array,
+  theme: CardTheme,
+  avatar: DecodedRgbaImage | null | undefined,
+  initialChar: string,
+): void {
+  const [ringR, ringG, ringB] = theme.ringRgb;
+  const [glowR, glowG, glowB] = theme.glowRgb;
+  const [bgR, bgG, bgB] = theme.bgEndRgb;
+
+  const glowMaxR = AVATAR_R + 9;
+  const glowMaxR2 = glowMaxR * glowMaxR;
+  const rOuter2 = (AVATAR_R + 0.6) * (AVATAR_R + 0.6);
+  const rInner2 = (AVATAR_R - 0.6) * (AVATAR_R - 0.6);
+  const ringBorderR = AVATAR_R + 2.8;
+  const invDiam = 1 / (2 * AVATAR_R);
+
+  for (let py = AVATAR_CY - glowMaxR; py <= AVATAR_CY + glowMaxR; py++) {
+    if (py < 0 || py >= KARTU_HEIGHT) continue;
+    const dy = py - AVATAR_CY;
+    const dy2 = dy * dy;
+    const rowBase = py * KARTU_WIDTH;
+
+    for (let px = AVATAR_CX - glowMaxR; px <= AVATAR_CX + glowMaxR; px++) {
+      if (px < 0 || px >= KARTU_WIDTH) continue;
+      const dx = px - AVATAR_CX;
+      const d2 = dx * dx + dy2;
+      if (d2 > glowMaxR2) continue;
+
+      const idx = rowBase + px;
+
+      if (d2 <= rOuter2) {
+        const edgeAlpha =
+          d2 > rInner2
+            ? Math.max(
+                0,
+                Math.min(
+                  255,
+                  Math.round((AVATAR_R + 0.6 - Math.sqrt(d2)) * 212),
+                ),
+              )
+            : 255;
+
+        if (
+          avatar !== undefined &&
+          avatar !== null &&
+          avatar.width > 0 &&
+          avatar.height > 0
+        ) {
+          const u = (dx + AVATAR_R) * invDiam;
+          const v = (dy + AVATAR_R) * invDiam;
+          const side = Math.min(avatar.width, avatar.height);
+          const ox = (avatar.width - side) * 0.5;
+          const oy = (avatar.height - side) * 0.5;
+          const sx = Math.max(
+            0,
+            Math.min(avatar.width - 1, (ox + u * side) | 0),
+          );
+          const sy = Math.max(
+            0,
+            Math.min(avatar.height - 1, (oy + v * side) | 0),
+          );
+          const pOff = (sy * avatar.width + sx) * 4;
+          const sr = avatar.data[pOff] ?? bgR;
+          const sg = avatar.data[pOff + 1] ?? bgG;
+          const sb = avatar.data[pOff + 2] ?? bgB;
+          const sa = avatar.data[pOff + 3] ?? 255;
+          const cr = (sr * sa + bgR * (255 - sa)) >>> 8;
+          const cg = (sg * sa + bgG * (255 - sa)) >>> 8;
+          const cb = (sb * sa + bgB * (255 - sa)) >>> 8;
+          blendPixel(buf, idx, cr, cg, cb, edgeAlpha);
+        } else {
+          const t = (dy + AVATAR_R) * invDiam;
+          let r = Math.min(255, (bgR + 24 - t * 22) | 0);
+          let g = Math.min(255, (bgG + 20 - t * 18) | 0);
+          let b = Math.min(255, (bgB + 24 - t * 22) | 0);
+          const headD2 = dx * dx + (dy + 16) * (dy + 16);
+          const bodyDx = dx * 0.78;
+          const bodyDy = dy - 46;
+          const bodyD2 = bodyDx * bodyDx + bodyDy * bodyDy;
+          if (headD2 <= 21 * 21 || (dy > 14 && bodyD2 <= 42 * 42)) {
+            r = theme.labelRgb[0];
+            g = theme.labelRgb[1];
+            b = theme.labelRgb[2];
+          }
+          blendPixel(buf, idx, r, g, b, edgeAlpha);
+        }
+      }
+
+      if (d2 >= (AVATAR_R - 0.5) * (AVATAR_R - 0.5)) {
+        const dist = Math.sqrt(d2);
+        if (dist >= AVATAR_R + 0.2 && dist <= ringBorderR) {
+          blendPixel(buf, idx, ringR, ringG, ringB, 245);
+        } else if (dist > ringBorderR && dist <= glowMaxR) {
+          const norm = 1 - (dist - ringBorderR) / (glowMaxR - ringBorderR);
+          const a = Math.round(norm * norm * 150);
+          blendPixel(buf, idx, glowR, glowG, glowB, a);
+        }
+      }
+    }
+  }
+
+  if (avatar === undefined || avatar === null) {
+    const ch = initialChar.slice(0, 1).toUpperCase();
+    const w = measureTextWidth("bold20", ch, 0);
+    drawText(
+      buf,
+      "bold20",
+      ch,
+      AVATAR_CX - Math.round(w / 2),
+      AVATAR_CY - 28,
+      theme.bgStartRgb,
+      0,
+    );
+  }
+}
+
+function drawBarcode(
+  buf: Uint32Array,
+  userId: string,
+  darkRgb: readonly [number, number, number],
+): void {
+  const startX = 224;
+  const startY = 320;
+  const height = 38;
+  const widths = deriveBarcodeWidths(userId, 252);
+  let curX = startX;
+  for (let i = 0; i < widths.length; i++) {
+    const w = widths[i] ?? 1;
+    const isBar = i % 2 === 0;
+    if (isBar) {
+      drawFilledRect(buf, curX, startY, w, height, 250, 248, 252, 248);
+    } else {
+      drawFilledRect(
+        buf,
+        curX,
+        startY,
+        w,
+        height,
+        darkRgb[0],
+        darkRgb[1],
+        darkRgb[2],
+        225,
+      );
+    }
+    curX += w;
+  }
+}
+
+const USER_TEMPLATE_CACHE_MAX = 8;
+const userTemplateCache = new Map<string, Uint32Array>();
+
+function getUserBaseTemplate(userId: string, theme: CardTheme): Uint32Array {
+  const existing = userTemplateCache.get(userId);
+  if (existing !== undefined) return existing;
+
+  const buf = new Uint32Array(KARTU_WIDTH * KARTU_HEIGHT);
+
+  renderUniqueBackground(buf, theme);
+
   drawText(buf, "bold20", "KARTU IDENTITAS", 42, 22, [255, 255, 255], 1);
-  drawText(buf, "bold10", "GATCHAWEK", 42, 51, [217, 130, 199], 1);
+  drawText(buf, "bold10", "GATCHAWEK", 42, 51, theme.labelRgb, 1);
 
-  // Horizontal divider line
   drawFilledRect(buf, 42, 74, 470, 2, 255, 255, 255, 235);
+  drawFilledRect(
+    buf,
+    42,
+    76,
+    180,
+    1,
+    theme.accentLineRgb[0],
+    theme.accentLineRgb[1],
+    theme.accentLineRgb[2],
+    180,
+  );
 
-  // Gold smartcard chip
   drawSmartChip(buf, 532, 22, 66, 46);
 
-  // Static field labels
-  const labelColor = [217, 130, 199] as const;
+  const labelColor = theme.labelRgb;
   const col1X = 224;
   const col2X = 440;
 
@@ -328,143 +824,22 @@ function getBaseTemplate(): Uint32Array {
 
   drawText(buf, "bold10", "BERLAKU", 492, 323, labelColor, 1);
 
-  // Avatar outer neon-pink glow & border ring
-  const glowMaxR = AVATAR_R + 9;
-  for (let py = AVATAR_CY - glowMaxR; py <= AVATAR_CY + glowMaxR; py++) {
-    if (py < 0 || py >= KARTU_HEIGHT) continue;
-    for (let px = AVATAR_CX - glowMaxR; px <= AVATAR_CX + glowMaxR; px++) {
-      if (px < 0 || px >= KARTU_WIDTH) continue;
-      const dist = Math.hypot(px - AVATAR_CX, py - AVATAR_CY);
-      if (dist >= AVATAR_R + 0.5 && dist <= glowMaxR) {
-        const idx = py * KARTU_WIDTH + px;
-        if (dist <= AVATAR_R + 2.8) {
-          // Crisp light-pink border ring
-          blendPixel(buf, idx, 252, 211, 238, 245);
-        } else {
-          // Soft outer neon pink glow
-          const norm = 1 - (dist - (AVATAR_R + 2.8)) / (glowMaxR - (AVATAR_R + 2.8));
-          const a = Math.round(norm * norm * 145);
-          blendPixel(buf, idx, 244, 114, 182, a);
-        }
-      }
-    }
-  }
+  drawBarcode(buf, userId, theme.bgStartRgb);
 
-  cachedBaseTemplate = buf;
+  if (userTemplateCache.size >= USER_TEMPLATE_CACHE_MAX) {
+    const oldestKey = userTemplateCache.keys().next().value;
+    if (oldestKey !== undefined) userTemplateCache.delete(oldestKey);
+  }
+  userTemplateCache.set(userId, buf);
   return buf;
 }
 
-function drawAvatarCircle(
-  buf: Uint32Array,
-  avatar: DecodedRgbaImage | null | undefined,
-  initialChar: string,
-): void {
-  const rLimit = AVATAR_R + 1;
-  const rOuter2 = (AVATAR_R + 0.6) * (AVATAR_R + 0.6);
-  const rInner2 = (AVATAR_R - 0.6) * (AVATAR_R - 0.6);
-  const invDiam = 1 / (2 * AVATAR_R);
-
-  for (let py = AVATAR_CY - rLimit; py <= AVATAR_CY + rLimit; py++) {
-    if (py < 0 || py >= KARTU_HEIGHT) continue;
-    const dy = py - AVATAR_CY;
-    const dy2 = dy * dy;
-    const rowBase = py * KARTU_WIDTH;
-    for (let px = AVATAR_CX - rLimit; px <= AVATAR_CX + rLimit; px++) {
-      if (px < 0 || px >= KARTU_WIDTH) continue;
-      const dx = px - AVATAR_CX;
-      const d2 = dx * dx + dy2;
-      if (d2 > rOuter2) continue;
-      const edgeAlpha =
-        d2 > rInner2
-          ? Math.max(
-              0,
-              Math.min(255, Math.round((AVATAR_R + 0.6 - Math.sqrt(d2)) * 212)),
-            )
-          : 255;
-
-      const idx = rowBase + px;
-      if (avatar !== undefined && avatar !== null && avatar.width > 0 && avatar.height > 0) {
-        // Cover-crop sample from avatar
-        const u = (dx + AVATAR_R) * invDiam;
-        const v = (dy + AVATAR_R) * invDiam;
-        const side = Math.min(avatar.width, avatar.height);
-        const ox = (avatar.width - side) * 0.5;
-        const oy = (avatar.height - side) * 0.5;
-        const sx = Math.max(
-          0,
-          Math.min(avatar.width - 1, (ox + u * side) | 0),
-        );
-        const sy = Math.max(
-          0,
-          Math.min(avatar.height - 1, (oy + v * side) | 0),
-        );
-        const pOff = (sy * avatar.width + sx) * 4;
-        const sr = avatar.data[pOff] ?? 70;
-        const sg = avatar.data[pOff + 1] ?? 35;
-        const sb = avatar.data[pOff + 2] ?? 65;
-        const sa = avatar.data[pOff + 3] ?? 255;
-        const baseR = 64;
-        const baseG = 30;
-        const baseB = 58;
-        const cr = (sr * sa + baseR * (255 - sa)) >>> 8;
-        const cg = (sg * sa + baseG * (255 - sa)) >>> 8;
-        const cb = (sb * sa + baseB * (255 - sa)) >>> 8;
-        blendPixel(buf, idx, cr, cg, cb, edgeAlpha);
-      } else {
-        // Stylized fallback silhouette avatar
-        const t = (dy + AVATAR_R) * invDiam;
-        let r = (92 - t * 28) | 0;
-        let g = (44 - t * 14) | 0;
-        let b = (84 - t * 24) | 0;
-        const headD2 = dx * dx + (dy + 16) * (dy + 16);
-        const bodyDx = dx * 0.78;
-        const bodyDy = dy - 46;
-        const bodyD2 = bodyDx * bodyDx + bodyDy * bodyDy;
-        if (headD2 <= 21 * 21 || (dy > 14 && bodyD2 <= 42 * 42)) {
-          r = 216;
-          g = 150;
-          b = 202;
-        }
-        blendPixel(buf, idx, r, g, b, edgeAlpha);
-      }
-    }
-  }
-
-  if (avatar === undefined || avatar === null) {
-    const ch = initialChar.slice(0, 1).toUpperCase();
-    const w = measureTextWidth("bold20", ch, 0);
-    drawText(
-      buf,
-      "bold20",
-      ch,
-      AVATAR_CX - Math.round(w / 2),
-      AVATAR_CY - 28,
-      [55, 22, 48],
-      0,
-    );
-  }
-}
-
-function drawBarcode(buf: Uint32Array, userId: string): void {
-  const startX = 224;
-  const startY = 320;
-  const height = 38;
-  const widths = deriveBarcodeWidths(userId, 252);
-  let curX = startX;
-  for (let i = 0; i < widths.length; i++) {
-    const w = widths[i] ?? 1;
-    const isBar = i % 2 === 0;
-    if (isBar) {
-      drawFilledRect(buf, curX, startY, w, height, 250, 245, 252, 248);
-    } else {
-      drawFilledRect(buf, curX, startY, w, height, 34, 14, 30, 225);
-    }
-    curX += w;
-  }
-}
-
 export function renderKartuPixels(input: KartuRenderInput): Uint32Array {
-  const buf = new Uint32Array(getBaseTemplate());
+  const theme = deriveCardTheme(input.userId);
+  const buf = new Uint32Array(getUserBaseTemplate(input.userId, theme));
+
+  const col1X = 224;
+  const col2X = 440;
 
   const cleanDisplayName = sanitizeAsciiText(input.displayName, 20);
   const rawHandle = input.username.startsWith("@")
@@ -472,9 +847,8 @@ export function renderKartuPixels(input: KartuRenderInput): Uint32Array {
     : `@${input.username}`;
   const cleanHandle = sanitizeAsciiText(rawHandle, 20);
 
-  drawAvatarCircle(buf, input.avatar, cleanDisplayName);
+  drawAvatarRingAndCircle(buf, theme, input.avatar, cleanDisplayName);
 
-  // Centered @username below avatar
   const handleW = measureTextWidth("reg13", cleanHandle, 0);
   drawText(
     buf,
@@ -482,18 +856,14 @@ export function renderKartuPixels(input: KartuRenderInput): Uint32Array {
     cleanHandle,
     AVATAR_CX - Math.round(handleW / 2),
     281,
-    [232, 208, 226],
+    theme.handleRgb,
     0,
   );
 
-  // Display name header on the right
   drawText(buf, "bold26", cleanDisplayName, 224, 88, [255, 255, 255], 0);
 
   const white = [255, 255, 255] as const;
-  const col1X = 224;
-  const col2X = 440;
 
-  // Row 1: NIM | GOLONGAN DARAH
   drawText(buf, "reg15", sanitizeAsciiText(input.nim, 18), col1X, 147, white, 0);
   drawText(
     buf,
@@ -505,7 +875,6 @@ export function renderKartuPixels(input: KartuRenderInput): Uint32Array {
     0,
   );
 
-  // Row 2: TEMPAT / TGL LAHIR | KOLEKSI KARTU
   drawText(
     buf,
     "reg15",
@@ -525,7 +894,6 @@ export function renderKartuPixels(input: KartuRenderInput): Uint32Array {
     0,
   );
 
-  // Row 3: BERGABUNG | JABATAN
   drawText(
     buf,
     "reg15",
@@ -545,7 +913,6 @@ export function renderKartuPixels(input: KartuRenderInput): Uint32Array {
     0,
   );
 
-  // Row 4: ANDALAN UTAMA | POOL TERBANYAK
   drawText(
     buf,
     "reg15",
@@ -565,8 +932,6 @@ export function renderKartuPixels(input: KartuRenderInput): Uint32Array {
     0,
   );
 
-  // Bottom row: Barcode + BERLAKU
-  drawBarcode(buf, input.userId);
   drawText(
     buf,
     "reg13",
@@ -679,7 +1044,7 @@ export async function encodeRgbaToPng(
   for (let y = 0; y < height; y++) {
     const srcOff = y * rowBytes;
     const dstOff = y * stride;
-    scanlines[dstOff] = 0; // Filter type 0 (None)
+    scanlines[dstOff] = 0;
     scanlines.set(rawBytes.subarray(srcOff, srcOff + rowBytes), dstOff + 1);
   }
 
@@ -694,8 +1059,8 @@ export async function encodeRgbaToPng(
   const ihdrData = new Uint8Array(13);
   writeU32BE(ihdrData, 0, width);
   writeU32BE(ihdrData, 4, height);
-  ihdrData[8] = 8; // bit depth 8
-  ihdrData[9] = 6; // color type 6 (RGBA)
+  ihdrData[8] = 8;
+  ihdrData[9] = 6;
   ihdrData[10] = 0;
   ihdrData[11] = 0;
   ihdrData[12] = 0;
@@ -736,10 +1101,6 @@ function paethPredictor(a: number, b: number, c: number): number {
   return c;
 }
 
-/**
- * Decodes standard non-interlaced 8-bit PNG (RGB, RGBA, Grayscale, or Indexed Palette)
- * returned by Discord's avatar CDN into RGBA pixels. Returns null on unsupported/corrupt input.
- */
 export async function decodePngToRgba(
   pngBytes: Uint8Array,
 ): Promise<DecodedRgbaImage | null> {
@@ -874,7 +1235,8 @@ export async function decodePngToRgba(
         rgba[p * 4] = palette[idx * 3] ?? 0;
         rgba[p * 4 + 1] = palette[idx * 3 + 1] ?? 0;
         rgba[p * 4 + 2] = palette[idx * 3 + 2] ?? 0;
-        rgba[p * 4 + 3] = trns !== null && idx < trns.length ? (trns[idx] ?? 255) : 255;
+        rgba[p * 4 + 3] =
+          trns !== null && idx < trns.length ? (trns[idx] ?? 255) : 255;
       }
     } else if (colorType === 0) {
       for (let p = 0; p < totalPixels; p++) {
