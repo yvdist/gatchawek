@@ -39,6 +39,11 @@ jobs:
           set -euo pipefail
           file="d1-$(date -u +%F).sql"
           pnpm exec wrangler d1 export gatchawek --remote --output "$file" --skip-confirmation
+          # `d1 export` writes tables alphabetically, so `cards` is inserted
+          # before its parents exist and `wrangler d1 execute --file` fails
+          # with "no such table: main.members". Foreign keys off makes the
+          # dump importable (verified on a scratch database).
+          { echo 'PRAGMA foreign_keys=OFF;'; cat "$file"; } > "$file.restore" && mv "$file.restore" "$file"
           # Schema-only dumps are useless: fail loudly if data tables are empty.
           test -s "$file"
           grep -q 'INSERT INTO "cards"' "$file"

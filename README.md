@@ -64,8 +64,13 @@ Restore: uji dulu ke database baru, jangan langsung timpa produksi.
 ```bash
 pnpm exec wrangler d1 create gatchawek-restore
 pnpm exec wrangler d1 execute gatchawek-restore --remote --file d1-2026-11-21.sql
-pnpm exec wrangler d1 execute gatchawek-restore --remote --command "SELECT COUNT(*) FROM user_cards"
+pnpm exec wrangler d1 export gatchawek-restore --remote --output check.sql   # hitung baris lokal, harus sama
 ```
+
+Dump `d1 export` urut abjad tabel (`cards` sebelum `members`), jadi impor butuh `PRAGMA foreign_keys=OFF;` di
+baris pertama — tanpa itu gagal `no such table: main.members`. Workflow backup sudah menambahkan baris itu.
+Dump lama (sebelum perbaikan 2026-11-21) perlu `{ echo 'PRAGMA foreign_keys=OFF;'; cat dump.sql; } > fix.sql`
+dulu. Round-trip penuh sudah diuji 2026-11-21: 2.003 baris, 16 tabel, index `user_cards_card_idx` ikut.
 
 Dump-nya SQLite murni, jadi bisa diimpor juga ke SQLite/Turso kalau D1 sedang tidak bisa dipakai — tapi itu
 salinan beku: pemakaian baru di sana tidak otomatis balik ke D1. D1 Time Travel aktif otomatis (Free: 7 hari,
