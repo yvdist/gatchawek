@@ -22,7 +22,9 @@ async function followupTop(
   const db = createDb(env);
   const boards = await getTopBoards(db);
   await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
-    embeds: [buildTopEmbed(boards.collectors, boards.holoOwners)],
+    embeds: [
+      buildTopEmbed(boards.collectors, boards.holoOwners, boards.topLevels),
+    ],
   });
 }
 

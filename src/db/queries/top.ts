@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
-import { sql } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { pools } from "../schema.js";
 import { nativeBatch, type Db } from "../client.js";
+import { getLevelProgress } from "../../domain/level.js";
 
 export interface TopCollector {
   userId: string;
@@ -17,11 +17,19 @@ export interface TopHoloOwner {
   rank: number;
 }
 
+export interface TopLevelPlayer {
+  userId: string;
+  exp: number;
+  level: number;
+  rank: number;
+}
+
 export const TOP_LIMIT = 5;
 
 export interface TopBoards {
   collectors: TopCollector[];
   holoOwners: TopHoloOwner[];
+  topLevels: TopLevelPlayer[];
 }
 
 interface CollectorRow {
@@ -36,9 +44,14 @@ interface HoloRow {
   holo_total: number;
 }
 
+interface LevelRow {
+  user_id: string;
+  exp: number;
+}
+
 /**
- * SATU batch: top-5 kolektor per pool + top-5 holo global. Raw SQL via
- * nativeBatch (precedent: CAS writes in gacha.ts) because drizzle's
+ * SATU batch: top-5 kolektor per pool + top-5 holo global + top-5 level/EXP global.
+ * Raw SQL via nativeBatch (precedent: CAS writes in gacha.ts) because drizzle's
  * db.batch typing rejects GROUP BY builders in this version.
  */
 export async function getTopBoards(db: Db): Promise<TopBoards> {
@@ -48,13 +61,16 @@ export async function getTopBoards(db: Db): Promise<TopBoards> {
     .where(eq(pools.enabled, true))
     .orderBy(pools.sortOrder)
     .limit(25);
-  if (livePools.length === 0) return { collectors: [], holoOwners: [] };
+  if (livePools.length === 0) {
+    return { collectors: [], holoOwners: [], topLevels: [] };
+  }
   const stmts = [
     ...livePools.map(
       (p) =>
         sql`SELECT uc.user_id AS user_id, COUNT(DISTINCT c.member_id) AS n, ${p.id} AS pool_id, ${p.name} AS pool_name FROM user_cards uc INNER JOIN cards c ON uc.card_id = c.id WHERE c.pool_id = ${p.id} AND c.enabled = 1 GROUP BY uc.user_id ORDER BY n DESC, uc.user_id LIMIT ${TOP_LIMIT}`,
     ),
     sql`SELECT user_id, COALESCE(SUM(holo_qty), 0) AS holo_total FROM user_cards GROUP BY user_id ORDER BY holo_total DESC, user_id LIMIT ${TOP_LIMIT}`,
+    sql`SELECT id AS user_id, exp FROM users WHERE exp > 0 ORDER BY exp DESC, id LIMIT ${TOP_LIMIT}`,
   ];
   const results = await nativeBatch(db, stmts);
   const collectors: TopCollector[] = [];
@@ -70,7 +86,7 @@ export async function getTopBoards(db: Db): Promise<TopBoards> {
       });
     });
   });
-  const holoRows = (results[results.length - 1]?.results ??
+  const holoRows = (results[results.length - 2]?.results ??
     []) as unknown as HoloRow[];
   const holoOwners: TopHoloOwner[] = holoRows
     .filter((r) => r.holo_total > 0)
@@ -79,7 +95,17 @@ export async function getTopBoards(db: Db): Promise<TopBoards> {
       holoTotal: r.holo_total,
       rank: i + 1,
     }));
-  return { collectors: collectors.slice(0, TOP_LIMIT), holoOwners };
+  const levelRows = (results[results.length - 1]?.results ??
+    []) as unknown as LevelRow[];
+  const topLevels: TopLevelPlayer[] = levelRows
+    .filter((r) => r.exp > 0)
+    .map((r, i) => ({
+      userId: r.user_id,
+      exp: Number(r.exp),
+      level: getLevelProgress(Number(r.exp)).level,
+      rank: i + 1,
+    }));
+  return { collectors: collectors.slice(0, TOP_LIMIT), holoOwners, topLevels };
 }
 
 // Per-pool / per-scope helpers for tests and future callers.
@@ -98,6 +124,14 @@ export async function getTopHoloOwners(
 ): Promise<TopHoloOwner[]> {
   const { holoOwners } = await getTopBoards(db);
   return holoOwners.slice(0, limit);
+}
+
+export async function getTopLevelPlayers(
+  db: Db,
+  limit: number = TOP_LIMIT,
+): Promise<TopLevelPlayer[]> {
+  const { topLevels } = await getTopBoards(db);
+  return topLevels.slice(0, limit);
 }
 
 // Rejected scope notes (plan step 5): pity counters, separate holo trading,

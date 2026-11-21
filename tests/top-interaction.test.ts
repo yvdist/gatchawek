@@ -105,8 +105,8 @@ beforeAll(async () => {
     { id: "budi-01", poolId: "pejabat", groupId: "g1", memberId: "budi", serial: 3, photoNo: 1, rarity: "rare", imageFile: "b1.webp", enabled: true },
   ]);
   await db.insert(users).values([
-    { id: "u1", createdAt: 1 },
-    { id: "u2", createdAt: 1 },
+    { id: "u1", createdAt: 1, exp: 350 },
+    { id: "u2", createdAt: 1, exp: 120 },
   ]);
   await db.insert(userCards).values([
     // u1 owns both members (2 distinct), plus holo copies.
@@ -146,6 +146,18 @@ describe("getTopBoards", () => {
       holoTotal: 1,
       rank: 2,
     });
+    expect(boards.topLevels[0]).toMatchObject({
+      userId: "u1",
+      exp: 350,
+      level: 3,
+      rank: 1,
+    });
+    expect(boards.topLevels[1]).toMatchObject({
+      userId: "u2",
+      exp: 120,
+      level: 2,
+      rank: 2,
+    });
   });
 });
 
@@ -168,6 +180,8 @@ describe("/top", () => {
         embeds: { title: string; description: string }[];
       };
       expect(body.embeds[0]?.title).toContain("Papan Peringkat");
+      expect(body.embeds[0]?.description).toContain("Level & EXP teratas");
+      expect(body.embeds[0]?.description).toContain("Lv.3 (350 EXP)");
       expect(body.embeds[0]?.description).toContain("<@u1>");
       expect(body.embeds[0]?.description).toContain("✦×2");
     } finally {

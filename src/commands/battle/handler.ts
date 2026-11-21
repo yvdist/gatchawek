@@ -284,6 +284,7 @@ export async function handleBattleComponent(
                   calc: outcome.calc,
                   mode: outcome.mode,
                   winnerStats: outcome.winnerStats,
+                  winnerExp: outcome.winnerExp,
                   baseUrl: env.PUBLIC_BASE_URL,
                 }),
               ],

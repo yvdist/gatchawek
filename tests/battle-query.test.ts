@@ -31,6 +31,7 @@ import {
   resolveBattleCancelOrDecline,
   settleBattle,
 } from "../src/db/queries/battle.js";
+import { RARITY_EXP } from "../src/domain/level.js";
 import {
   handleBattle,
   handleBattleAutocomplete,
@@ -661,5 +662,94 @@ describe("battle interaction handlers", () => {
     } finally {
       vi.unstubAllGlobals();
     }
+  });
+
+  it("awards winner EXP equal to won card rarity in wager mode without reducing loser EXP, and 0 EXP in casual mode", async () => {
+    const now = Math.floor(Date.now() / 1000);
+    await db.insert(users).values([
+      { id: "exp-w1", createdAt: now, exp: 75 },
+      { id: "exp-w2", createdAt: now, exp: 120 },
+    ]);
+    await db.insert(userCards).values([
+      // Both players hold a rarity-3 (super_rare) card: ani-02
+      { userId: "exp-w1", cardId: "ani-02", quantity: 2, firstObtainedAt: now, lastObtainedAt: now },
+      { userId: "exp-w2", cardId: "ani-02", quantity: 2, firstObtainedAt: now, lastObtainedAt: now },
+    ]);
+
+    // 1. Casual battle: winner gains 0 EXP, loser loses 0 EXP, cards unchanged
+    const casualBattle = await createBattle(db, {
+      challengerId: "exp-w1",
+      targetId: "exp-w2",
+      targetIsBot: false,
+      challengerCardId: "ani-02",
+      mode: "casual",
+      now,
+    });
+    if (casualBattle.status !== "ok") throw new Error("expected casual ok");
+
+    // Rolls: challenger high rng (0.95) no crit (0.9), target low rng (0.05) no crit (0.9) -> exp-w1 wins
+    const casualRolls = [0.95, 0.9, 0.05, 0.9];
+    let cIdx = 0;
+    const casualSettled = await settleBattle(db, {
+      battleId: casualBattle.battleId,
+      targetCardId: "ani-02",
+      now: now + 1,
+      rand: () => casualRolls[cIdx++] ?? 0.5,
+    });
+    expect(casualSettled.status).toBe("resolved");
+    if (casualSettled.status !== "resolved") throw new Error("expected resolved");
+    expect(casualSettled.calc.winnerId).toBe("exp-w1");
+    expect(casualSettled.winnerExp.gainedExp).toBe(0);
+    expect(casualSettled.winnerExp.leveledUp).toBe(false);
+
+    const [w1AfterCasual] = await db.select().from(users).where(eq(users.id, "exp-w1"));
+    const [w2AfterCasual] = await db.select().from(users).where(eq(users.id, "exp-w2"));
+    expect(w1AfterCasual?.exp).toBe(75);
+    expect(w2AfterCasual?.exp).toBe(120);
+
+    // 2. Wager battle (rarity 3 vs rarity 3): winner gets opponent's card + super_rare EXP (+50),
+    // crosses 100 EXP threshold -> levels up from Lv 1 -> Lv 2; loser loses card only, keeps 120 EXP.
+    const wagerBattle = await createBattle(db, {
+      challengerId: "exp-w1",
+      targetId: "exp-w2",
+      targetIsBot: false,
+      challengerCardId: "ani-02",
+      mode: "wager",
+      now: now + 2,
+    });
+    if (wagerBattle.status !== "ok") throw new Error("expected wager ok");
+
+    const wagerRolls = [0.95, 0.9, 0.05, 0.9];
+    let wIdx = 0;
+    const wagerSettled = await settleBattle(db, {
+      battleId: wagerBattle.battleId,
+      targetCardId: "ani-02",
+      now: now + 3,
+      rand: () => wagerRolls[wIdx++] ?? 0.5,
+    });
+    expect(wagerSettled.status).toBe("resolved");
+    if (wagerSettled.status !== "resolved") throw new Error("expected resolved");
+    expect(wagerSettled.calc.winnerId).toBe("exp-w1");
+    expect(wagerSettled.winnerExp.gainedExp).toBe(RARITY_EXP.super_rare);
+    expect(wagerSettled.winnerExp.previousLevel).toBe(1);
+    expect(wagerSettled.winnerExp.currentLevel).toBe(2);
+    expect(wagerSettled.winnerExp.leveledUp).toBe(true);
+    expect(wagerSettled.winnerExp.progress.totalExp).toBe(75 + RARITY_EXP.super_rare);
+
+    const [w1AfterWager] = await db.select().from(users).where(eq(users.id, "exp-w1"));
+    const [w2AfterWager] = await db.select().from(users).where(eq(users.id, "exp-w2"));
+    expect(w1AfterWager?.exp).toBe(75 + RARITY_EXP.super_rare);
+    expect(w2AfterWager?.exp).toBe(120);
+
+    const [w1Card] = await db
+      .select()
+      .from(userCards)
+      .where(and(eq(userCards.userId, "exp-w1"), eq(userCards.cardId, "ani-02")));
+    const [w2Card] = await db
+      .select()
+      .from(userCards)
+      .where(and(eq(userCards.userId, "exp-w2"), eq(userCards.cardId, "ani-02")));
+    expect(w1Card?.quantity).toBe(3);
+    expect(w2Card?.quantity).toBe(1);
   });
 });

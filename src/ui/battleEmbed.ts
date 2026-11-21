@@ -13,6 +13,7 @@ import {
   type FighterRoll,
 } from "../domain/battle.js";
 import { cardDisplayName } from "../domain/gacha.js";
+import type { ExpGainSummary } from "../domain/level.js";
 import {
   RARITY_COLOR,
   RARITY_LABEL,
@@ -27,8 +28,8 @@ import { cardImageUrl } from "./gachaEmbed.js";
 
 function modeText(mode: BattleMode): string {
   return mode === "wager"
-    ? "🔥 Taruhan Kartu (Pemenang merebut 1 copy kartu lawan!)"
-    : "🎮 Santai (Kartu aman, catat Win/Loss)";
+    ? "🔥 Taruhan Kartu (Pemenang merebut 1 copy kartu lawan + EXP sesuai rarity!)"
+    : "🎮 Santai (Kartu aman, tanpa EXP, catat Win/Loss)";
 }
 
 export function buildBattlePendingEmbed(args: {
@@ -115,6 +116,7 @@ export function buildBattleResolvedEmbed(args: {
   calc: BattleCalculationResult;
   mode: BattleMode;
   winnerStats: { wins: number; losses: number };
+  winnerExp?: ExpGainSummary;
   baseUrl: string;
 }): APIEmbed {
   const winningCard =
@@ -142,6 +144,16 @@ export function buildBattleResolvedEmbed(args: {
     lines.push(
       `🔥 **Taruhan:** <@${args.calc.winnerId}> merebut 1× **${stolenName}** dari <@${args.calc.loserId}>!`,
     );
+    if (args.winnerExp !== undefined && args.winnerExp.gainedExp > 0) {
+      lines.push(
+        `⭐ **EXP:** <@${args.calc.winnerId}> mendapat **+${args.winnerExp.gainedExp} EXP** (${RARITY_STARS[stolenCard.rarity]} ${RARITY_LABEL[stolenCard.rarity]}) · Lv.${args.winnerExp.currentLevel} (${args.winnerExp.progress.currentExp}/${args.winnerExp.progress.nextLevelExp} EXP)`,
+      );
+      if (args.winnerExp.leveledUp) {
+        lines.push(
+          `🎉 **LEVEL UP!** <@${args.calc.winnerId}> naik ke **Lv.${args.winnerExp.currentLevel}**!`,
+        );
+      }
+    }
   }
   lines.push(
     `📊 Rekor <@${args.calc.winnerId}>: **${args.winnerStats.wins}W - ${args.winnerStats.losses}L**`,

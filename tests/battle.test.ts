@@ -234,4 +234,95 @@ describe("battleEmbed", () => {
     });
     expect(declined.description).toContain("Ditolak");
   });
+
+  it("shows winner EXP & LEVEL UP on wager resolve and omits EXP on casual resolve", () => {
+    const baseArgs = {
+      challengerId: "u1",
+      targetId: "u2",
+      challengerCard: {
+        cardId: "budi-01",
+        memberName: "Budi",
+        photoLabel: null,
+        groupBadge: "KMP",
+        photoNo: 1,
+        rarity: "super_rare" as const,
+        imageFile: "budi.webp",
+        quantity: 1,
+      },
+      targetCard: {
+        cardId: "ani-01",
+        memberName: "Ani",
+        photoLabel: null,
+        groupBadge: "KMP",
+        photoNo: 1,
+        rarity: "super_rare" as const,
+        imageFile: "ani.webp",
+        quantity: 1,
+      },
+      calc: {
+        winnerId: "u1",
+        loserId: "u2",
+        challengerRoll: {
+          base: 175,
+          dupBonus: 0,
+          rng: 80,
+          isCrit: false,
+          critBonus: 0,
+          total: 255,
+        },
+        targetRoll: {
+          base: 175,
+          dupBonus: 0,
+          rng: 10,
+          isCrit: false,
+          critBonus: 0,
+          total: 185,
+        },
+        tieBroken: false,
+      },
+      winnerStats: { wins: 1, losses: 0 },
+      baseUrl: "example.test",
+    };
+
+    const wagerEmbed = buildBattleResolvedEmbed({
+      ...baseArgs,
+      mode: "wager",
+      winnerExp: {
+        gainedExp: 50,
+        previousLevel: 1,
+        currentLevel: 2,
+        leveledUp: true,
+        progress: {
+          level: 2,
+          totalExp: 110,
+          currentExp: 10,
+          nextLevelExp: 200,
+          progressPct: 5,
+        },
+      },
+    });
+    expect(wagerEmbed.description).toContain("+50 EXP");
+    expect(wagerEmbed.description).toContain("Super Rare");
+    expect(wagerEmbed.description).toContain("LEVEL UP!");
+
+    const casualEmbed = buildBattleResolvedEmbed({
+      ...baseArgs,
+      mode: "casual",
+      winnerExp: {
+        gainedExp: 0,
+        previousLevel: 1,
+        currentLevel: 1,
+        leveledUp: false,
+        progress: {
+          level: 1,
+          totalExp: 60,
+          currentExp: 60,
+          nextLevelExp: 100,
+          progressPct: 60,
+        },
+      },
+    });
+    expect(casualEmbed.description).not.toContain("EXP");
+    expect(casualEmbed.description).not.toContain("LEVEL UP!");
+  });
 });

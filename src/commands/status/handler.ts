@@ -11,7 +11,7 @@ import {
   patchOriginal,
   postFollowup,
 } from "../../discord/rest.js";
-import { getStatusOverview } from "../../db/queries/gacha.js";
+import { getUserStatusOverview } from "../../db/queries/gacha.js";
 import { buildStatusEmbed } from "../../ui/gachaEmbed.js";
 import type { WaitUntil } from "../registry.js";
 
@@ -29,7 +29,7 @@ export function handleStatus(
       try {
         const db = createDb(env);
         const now = Math.floor(Date.now() / 1000);
-        const rows = await getStatusOverview(db, userId, now);
+        const { rows, userExp } = await getUserStatusOverview(db, userId, now);
         if (rows.length === 0) {
           await postFollowup(
             interaction.application_id,
@@ -43,7 +43,7 @@ export function handleStatus(
           interaction.application_id,
           interaction.token,
           env.DISCORD_BOT_TOKEN,
-          { embeds: [buildStatusEmbed(rows, userId)] },
+          { embeds: [buildStatusEmbed(rows, userId, userExp)] },
         );
       } catch {
         try {
