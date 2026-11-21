@@ -575,3 +575,31 @@ export async function swapCardMemberLabel(
   ]);
   return { status: "ok", memberName: newMemberName, photoLabel: newLabel };
 }
+
+/**
+ * Promosikan label foto menjadi nama member, lalu kosongkan label.
+ * Untuk kasus "kebalik" di mana label berisi nama orang utuh
+ * (mis. member "Isal" + label "Isal Kemesraan") — hasil akhir satu baris
+ * judul, konsisten dengan kartu tanpa label. Id/slug dipertahankan
+ * (alasan sama seperti swapCardMemberLabel).
+ */
+export async function promoteCardLabelToMember(
+  db: Db,
+  cardId: string,
+): Promise<{ status: "ok" | "not-found" | "no-label"; memberName: string; photoLabel: string | null }> {
+  const current = await db
+    .select({ id: cards.id, memberId: cards.memberId, photoLabel: cards.photoLabel, memberName: members.name })
+    .from(cards)
+    .innerJoin(members, eq(members.id, cards.memberId))
+    .where(eq(cards.id, cardId))
+    .limit(1);
+  const row = current[0];
+  if (row === undefined) return { status: "not-found", memberName: "", photoLabel: null };
+  if (row.photoLabel === null) return { status: "no-label", memberName: row.memberName, photoLabel: null };
+  const newMemberName = row.photoLabel;
+  await nativeBatch(db, [
+    db.update(members).set({ name: newMemberName, nameLower: newMemberName.toLowerCase() }).where(eq(members.id, row.memberId)),
+    db.update(cards).set({ photoLabel: null }).where(eq(cards.id, cardId)),
+  ]);
+  return { status: "ok", memberName: newMemberName, photoLabel: null };
+}
