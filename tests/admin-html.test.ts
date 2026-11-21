@@ -541,6 +541,18 @@ describe("render pending overlay", () => {
   });
 });
 
+describe("render ulang dari Sumber", () => {
+  it("offers source re-render for rendered cards with an http source", () => {
+    const html = cardDetailPage({ card: detail({ imageFile: "x-01.abcdef12.webp", imageKind: "static", sourcePageUrl: "https://cdn.example/x.jpg", renderable: false }), base: "example.test", message: null, ok: false, pools: [], poolGroups: [] });
+    expect(html).toContain("Render ulang dari Sumber");
+  });
+
+  it("hides source re-render when there is no source URL", () => {
+    const html = cardDetailPage({ card: detail({ imageFile: "x-01.abcdef12.webp", imageKind: "static", sourcePageUrl: null, renderable: false }), base: "example.test", message: null, ok: false, pools: [], poolGroups: [] });
+    expect(html).not.toContain("Render ulang dari Sumber");
+  });
+});
+
 describe("cardDetailPage kelola form", () => {
   const pools = [{ poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x" }];
   const poolGroups = [{ poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x", groupId: "g1", groupName: "Satu", groupBadge: "SATU" }];
