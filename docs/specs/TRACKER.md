@@ -31,7 +31,7 @@
 ### Fase 0
 - [x] P0-T1 Recon repo & data lama → `docs/PROJECT_STATE.md`
 - [x] P0-T2 Keputusan repo (satu repo, `games/adu-batang` + `packages/*`)
-- [ ] P0-T3 Scaffold workspace
+- [x] P0-T3 Scaffold workspace
 - [ ] P0-T4 Skrip `pnpm check`
 - [ ] P0-T5 Konfigurasi Cloudflare
 - [ ] P0-T6 DO "ping-pong"

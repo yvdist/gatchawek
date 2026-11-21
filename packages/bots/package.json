@@ -1,0 +1,16 @@
+{
+  "name": "@adu-batang/bots",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Heuristic bots: simulation opponents, practice mode and seat fillers.",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@adu-batang/engine": "workspace:*"
+  }
+}
