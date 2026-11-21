@@ -10,6 +10,7 @@ import {
 } from "../schema.js";
 import { nativeBatch, type Batchable, type Db } from "../client.js";
 import { slugifyBase } from "../../domain/submissions.js";
+import { badgeForGroupName, slugifyGroupId } from "../../domain/importGroups.js";
 import { RARITY_KEYS, type RarityKey } from "../../domain/rarity.js";
 import type { QueueRow } from "./inject.js";
 
@@ -432,6 +433,68 @@ export async function ensureImportGroup(
       enabled: true,
     })
     .onConflictDoNothing();
+}
+
+export const MAX_GROUP_NAME_LEN = 40;
+
+export type EnsureAdminGroupOutcome =
+  | { status: "ok"; groupId: string; name: string; created: boolean }
+  | { status: "invalid"; error: string }
+  | { status: "unknown-pool" };
+
+/**
+ * Resolve a typed group name inside the target pool, creating the group when
+ * it is not there yet. `groups.id` is globally unique, so a slug already used
+ * by another pool gets the pool id (and a counter) appended.
+ */
+export async function ensureAdminGroup(
+  db: Db,
+  poolId: string,
+  rawName: string,
+): Promise<EnsureAdminGroupOutcome> {
+  const name = rawName.trim().replace(/\s+/g, " ");
+  if (name === "") {
+    return { status: "invalid", error: "Nama grup baru wajib diisi." };
+  }
+  if (name.length > MAX_GROUP_NAME_LEN) {
+    return { status: "invalid", error: `Nama grup maks ${String(MAX_GROUP_NAME_LEN)} karakter.` };
+  }
+  const [poolRow] = await db
+    .select({ id: pools.id })
+    .from(pools)
+    .where(and(eq(pools.id, poolId), eq(pools.enabled, true)))
+    .limit(1);
+  if (poolRow === undefined) return { status: "unknown-pool" };
+  const nameLower = name.toLowerCase();
+  const poolGroupRows = await db
+    .select({ id: groups.id, name: groups.name, enabled: groups.enabled })
+    .from(groups)
+    .where(eq(groups.poolId, poolId));
+  const existing = poolGroupRows.find(
+    (g) => g.enabled && g.name.trim().toLowerCase() === nameLower,
+  );
+  if (existing !== undefined) {
+    return { status: "ok", groupId: existing.id, name: existing.name, created: false };
+  }
+  const base = slugifyGroupId(name);
+  if (base === "") {
+    return { status: "invalid", error: "Nama grup perlu mengandung huruf atau angka." };
+  }
+  const idRows = await db.select({ id: groups.id }).from(groups);
+  const taken = new Set(idRows.map((r) => r.id));
+  const suffix = slugifyGroupId(poolId);
+  let groupId = base;
+  if (taken.has(groupId)) groupId = suffix === "" ? base : `${base}-${suffix}`;
+  for (let n = 2; taken.has(groupId); n += 1) {
+    groupId = suffix === "" ? `${base}-${String(n)}` : `${base}-${suffix}-${String(n)}`;
+  }
+  await ensureImportGroup(db, {
+    poolId,
+    groupId,
+    name,
+    badge: badgeForGroupName(name),
+  });
+  return { status: "ok", groupId, name, created: true };
 }
 
 export type ImportAdminCardOutcome =

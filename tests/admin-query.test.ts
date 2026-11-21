@@ -15,6 +15,7 @@ import {
   users,
 } from "../src/db/schema.js";
 import {
+  ensureAdminGroup,
   getAdminCard,
   getAdminCounts,
   importAdminCard,
@@ -501,3 +502,49 @@ describe("admin card filters and manage mutation", () => {
     expect(untouched?.memberName).toBe("Rapih Amat");
   });
 });
+
+describe("ensureAdminGroup", () => {
+  it("reuses an existing enabled group in the pool", async () => {
+    await expect(ensureAdminGroup(db, "pejabat", "  satu  ")).resolves.toEqual({
+      status: "ok",
+      groupId: "g1",
+      name: "Satu",
+      created: false,
+    });
+  });
+
+  it("creates a group and suffixes a slug taken by another pool", async () => {
+    await db.insert(pools).values([
+      // "meme" already exists from the render-requests fixture.
+      { id: "ahli-ngebul", name: "Ahli Ngebul", emoji: "x", staminaMax: 10, regenIntervalSec: 100, resetCooldownSec: 3600, memberCount: 0, enabled: true },
+    ]);
+    await expect(ensureAdminGroup(db, "meme", "  Archi ")).resolves.toEqual({
+      status: "ok",
+      groupId: "archi",
+      name: "Archi",
+      created: true,
+    });
+    await expect(ensureAdminGroup(db, "meme", "archi")).resolves.toEqual({
+      status: "ok",
+      groupId: "archi",
+      name: "Archi",
+      created: false,
+    });
+    await expect(ensureAdminGroup(db, "ahli-ngebul", "Archi")).resolves.toEqual({
+      status: "ok",
+      groupId: "archi-ahli-ngebul",
+      name: "Archi",
+      created: true,
+    });
+    const listed = await listAdminPoolGroups(db);
+    expect(listed.map((g) => `${g.poolId}:${g.groupId}`)).toEqual(
+      expect.arrayContaining(["meme:archi", "ahli-ngebul:archi-ahli-ngebul"]),
+    );
+  });
+
+  it("rejects blank names and unknown pools", async () => {
+    await expect(ensureAdminGroup(db, "meme", "   ")).resolves.toMatchObject({ status: "invalid" });
+    await expect(ensureAdminGroup(db, "nope", "X")).resolves.toStrictEqual({ status: "unknown-pool" });
+  });
+});
+
