@@ -36,6 +36,76 @@
       "when": 1795182327029,
       "tag": "0004_battle_arena",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1795234991156,
+      "tag": "0005_secret_pity",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1795234991157,
+      "tag": "0006_wish_pity",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1795237470390,
+      "tag": "0007_card_render_requested",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1795241600931,
+      "tag": "0008_card_gives",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1795247478352,
+      "tag": "0009_album_tokens",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1795251264227,
+      "tag": "0010_user_melt_points",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1795252343563,
+      "tag": "0011_user_exp",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1795257824111,
+      "tag": "0012_user_cards_card_idx",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1795258597011,
+      "tag": "0013_pool_hidden",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1795273878908,
+      "tag": "0014_game_tables",
+      "breakpoints": true
     }
   ]
 }

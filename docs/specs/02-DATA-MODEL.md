@@ -11,6 +11,9 @@
 > **Catatan implementasi:** SQL di bawah adalah *referensi bentuk tabel*. Implementasi sebenarnya ditulis sebagai schema **Drizzle** (`sqliteTable`) di repo bot dan di-migrate dengan `drizzle-kit`, bukan file `.sql` manual. Satu D1, satu folder migrasi, hanya migrasi additive. Query game ditaruh di lapisan `db/queries` dengan gaya yang sama dengan bot (optimistic locking + `db.batch()` untuk mutasi atomik).
 
 > Nama tabel koleksi lama tidak diketahui spec ini. Fase 0 mencatatnya di `docs/PROJECT_STATE.md` dan menyesuaikan kolom `source_card_id` / view `v_owned_cards`.
+>
+> **Hasil Fase 0:** tabel koleksi = `cards`, kepemilikan = `user_cards(user_id, card_id, quantity, holo_qty)`, identitas = `users` (PK Discord id). Implementasi Drizzle ada di `src/db/schema-game.ts`, migrasi `migrations/0014_game_tables.sql`. Adapter `getOwnedCards` ada di `src/db/queries/ownership.ts`.
+> Kolom enum (`kind`, `class`, `status`, `mode`, `kind` reward) divalidasi di TypeScript + Zod (pola schema bot), bukan `CHECK ... IN`; hanya rentang numerik (`rarity`, `cost`) yang dijaga `CHECK`.
 
 ```sql
 -- 0001_game_cards.sql
@@ -40,10 +43,11 @@ CREATE TABLE game_cards (
 );
 CREATE INDEX idx_gc_status ON game_cards(status, kind, rarity);
 
--- 0002_users_decks.sql
-CREATE TABLE users (
-  id            TEXT PRIMARY KEY,                 -- uuid
-  discord_id    TEXT NOT NULL UNIQUE,
+-- 0002_profiles_decks.sql
+-- Catatan Fase 0: tabel `users` SUDAH ADA di bot (PK = Discord id) dan tidak boleh diubah.
+-- Karena itu identitas game memakai `game_profiles` dan setiap `user_id` menunjuk `users(id)`.
+CREATE TABLE game_profiles (
+  user_id       TEXT PRIMARY KEY REFERENCES users(id),
   username      TEXT NOT NULL,
   avatar_url    TEXT,
   created_at    INTEGER NOT NULL,
@@ -51,7 +55,7 @@ CREATE TABLE users (
 );
 CREATE TABLE decks (
   id         TEXT PRIMARY KEY,
-  user_id    TEXT NOT NULL REFERENCES users(id),
+  user_id    TEXT NOT NULL REFERENCES users(id),   -- users.id = Discord id (tabel lama)
   name       TEXT NOT NULL,
   cards      TEXT NOT NULL,                       -- JSON: [{"id":"gc_x","n":2}]
   is_starter INTEGER NOT NULL DEFAULT 0,
