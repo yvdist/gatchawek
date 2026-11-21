@@ -69,7 +69,8 @@ describe("POST /interactions signature verification", () => {
   });
 
   it("serves GET /health", async () => {
-    const res = await app.request("/health");
+    // Workers always bind env; the Sentry middleware reads env.SENTRY_DSN.
+    const res = await app.request("/health", {}, {});
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual({ status: "ok" });
   });

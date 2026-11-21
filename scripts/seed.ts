@@ -285,7 +285,14 @@ async function main(): Promise<void> {
       console.log("applying seed to remote D1...");
       await runD1Execute(["DB", "--remote", "--file", tmpFile]);
     } else {
-      await runD1Execute(["DB", "--local", "--file", tmpFile]);
+      const localArgs = ["DB", "--local"];
+      // Opt-in scratch state dir so tests/rehearsals never touch .wrangler/state.
+      const persistTo = process.env.SEED_PERSIST_TO;
+      if (persistTo !== undefined && persistTo !== "") {
+        localArgs.push("--persist-to", persistTo);
+      }
+      localArgs.push("--file", tmpFile);
+      await runD1Execute(localArgs);
     }
     console.log(
       `seeded ${loaded.pools.length} pool(s), ${loaded.groups.length} group(s), ${cardPoolIds.size} card(s)`,

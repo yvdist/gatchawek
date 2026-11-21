@@ -7,17 +7,19 @@ import { promisify } from "node:util";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { loadImage } from "@napi-rs/canvas";
+import { collectCardInputs } from "../scripts/lib/card-inputs.js";
 
 const execAsync = promisify(exec);
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
 const HAS_ASSETS = existsSync(path.join(REPO_ROOT, "assets"));
 
 let fixture = "";
+let persistDir = "";
 let env: NodeJS.ProcessEnv = {};
 
 async function wranglerD1(args: string): Promise<unknown[]> {
   const { stdout } = await execAsync(
-    `pnpm exec wrangler d1 execute DB ${args} --json`,
+    `pnpm exec wrangler d1 execute DB ${args} --persist-to "${persistDir}" --json`,
     { cwd: REPO_ROOT, maxBuffer: 64 * 1024 * 1024, env },
   );
   const parsed: unknown = JSON.parse(stdout);
@@ -71,18 +73,20 @@ beforeAll(async () => {
       recursive: true,
     });
   }
-  env = { ...process.env, MANIFEST_ROOT: fixture };
-}, 120_000);
+  // Scratch D1 state: the repo-local .wrangler/state accumulates rows from
+  // older datasets, so counts here must start from a migrated empty DB.
+  persistDir = await mkdtemp(path.join(tmpdir(), "gatchawek-seed-d1-"));
+  env = { ...process.env, MANIFEST_ROOT: fixture, SEED_PERSIST_TO: persistDir };
+  await execAsync(
+    `pnpm exec wrangler d1 migrations apply DB --local --persist-to "${persistDir}"`,
+    { cwd: REPO_ROOT, maxBuffer: 64 * 1024 * 1024, env },
+  );
+}, 180_000);
 
 afterAll(async () => {
   if (!HAS_ASSETS) return;
   await rm(fixture, { recursive: true, force: true });
-  // Fixture seeds apply to the repo local D1; restore canonical state.
-  const tsxPath = path.join(REPO_ROOT, "node_modules", "tsx", "dist", "cli.mjs");
-  await execAsync(`"${process.execPath}" "${tsxPath}" scripts/seed.ts`, {
-    cwd: REPO_ROOT,
-    maxBuffer: 64 * 1024 * 1024,
-  });
+  await rm(persistDir, { recursive: true, force: true });
 }, 300_000);
 
 describe.skipIf(!HAS_ASSETS)("seed idempotency", () => {
@@ -104,11 +108,30 @@ describe.skipIf(!HAS_ASSETS)("seed idempotency", () => {
     );
     const files2 = (await readdir(path.join(fixture, "public", "cards"))).sort();
 
-    expect(counts1).toEqual({ pools: 3, groups: 3, members: 102, cards: 122, groups_live: 3, members_live: 102, cards_live: 122 });
+    // Expectations derive from the fixture dataset and its raw assets. Both
+    // drift (photos get added or dropped, raw images live outside git), so a
+    // literal count turns that drift into a false alarm.
+    const { loaded, inputs } = await collectCardInputs(fixture);
+    const memberCount = loaded.groups.reduce(
+      (n, g) => n + g.manifest.members.length,
+      0,
+    );
+    const liveMemberCount = loaded.groups.reduce(
+      (n, g) => n + g.manifest.members.filter((m) => m.enabled).length,
+      0,
+    );
+    expect(counts1.pools).toBe(loaded.pools.length);
+    expect(counts1.groups).toBe(loaded.groups.length);
+    expect(counts1.groups_live).toBe(loaded.groups.length);
+    expect(counts1.members).toBe(memberCount);
+    expect(counts1.members_live).toBe(liveMemberCount);
+    // One row per card that has a raw image; nothing else is inserted.
+    expect(counts1.cards_live).toBe(inputs.length);
+    expect(counts1.cards).toBeGreaterThanOrEqual(inputs.length);
     expect(counts2).toEqual(counts1);
     expect(lock2).toBe(lock1);
     expect(files2).toEqual(files1);
-    expect(files1).toHaveLength(122);
+    expect(files1).toHaveLength(inputs.length);
   }, 300_000);
 
   it("removing a photo disables the card and prunes its file", async () => {
