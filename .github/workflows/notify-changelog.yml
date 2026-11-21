@@ -1,0 +1,74 @@
+name: Notify changelog
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    if: github.event.commits != null && github.event.commits != ''
+    steps:
+      - name: Post commits to #bot-changelog
+        env:
+          CHANGELOG_WEBHOOK_URL: ${{ secrets.CHANGELOG_WEBHOOK_URL }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CHANGELOG_WEBHOOK_URL:-}" ]; then
+            echo "CHANGELOG_WEBHOOK_URL not set; skipping."
+            exit 0
+          fi
+
+          N=$(jq '.commits | length' "$GITHUB_EVENT_PATH")
+          if [ "$N" -eq 0 ]; then
+            echo "No commits in push event; skipping."
+            exit 0
+          fi
+
+          # Build the Discord webhook payload entirely in jq so commit
+          # messages with quotes/emoji/newlines can never break the JSON.
+          jq -n \
+            --arg repo "${GITHUB_REPOSITORY:-}" \
+            --arg branch "${GITHUB_REF_NAME:-main}" \
+            --slurpfile ev "$GITHUB_EVENT_PATH" \
+            '
+            ($ev[0].commits) as $commits
+            | ($commits | length) as $n
+            | ($commits[:10]) as $shown
+            | {
+                content: "🚀 Update bot — \($repo) @ \($branch) (\($n) commit)",
+                allowed_mentions: { parse: [] },
+                embeds: [
+                  ({
+                    title: "Perubahan baru di main",
+                    fields: ($shown | map({
+                      name: "\((.id // "")[0:7]) \(((.message // "") | split("\n")[0] | .[0:240]))",
+                      value: "\(.author.name // .author.username // "unknown") · \(.url // "")"
+                    }))
+                  }
+                  + (if ($ev[0].compare // "") != ""
+                     then { url: $ev[0].compare } else {} end)
+                  + (if $n > 10
+                     then { footer: { text: "… dan \($n - 10) commit lain" } }
+                     else {} end)
+                  )
+                ]
+              }
+            ' > /tmp/changelog-payload.json
+
+          echo "Posting $N commit(s), payload:"
+          jq -c '{ content, fields: (.embeds[0].fields | length) }' /tmp/changelog-payload.json
+
+          CODE=$(curl -sS -o /tmp/changelog-resp.txt -w "%{http_code}" \
+            -X POST -H "Content-Type: application/json" \
+            --data @/tmp/changelog-payload.json \
+            "${CHANGELOG_WEBHOOK_URL}?wait=true")
+          if [ "${CODE:0:1}" != "2" ]; then
+            echo "Discord webhook POST failed: HTTP $CODE"
+            cat /tmp/changelog-resp.txt
+            exit 1
+          fi
+          echo "Posted to #bot-changelog (HTTP $CODE)."
