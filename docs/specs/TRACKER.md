@@ -7,7 +7,7 @@
 
 | Fase | Nama | Status | Selesai pada | Catatan |
 |---|---|---|---|---|
-| 0 | Recon & Fondasi Repo | BLOCKED | | Scaffold, `pnpm check`, DO echo, schema+migrasi (lokal), CI & README selesai. Tertahan **satu verifikasi**: migrasi `0014` ke D1 staging belum bisa jalan karena kuota row read D1 akun habis sampai 00:00 UTC — lihat Blockers. |
+| 0 | Recon & Fondasi Repo | DONE | 2026-11-21 | Scaffold workspace, `pnpm check` hijau, DO echo Hibernation, schema + migrasi `0014` (lokal **dan staging**), CI, README. Tabel bot tidak tersentuh. |
 | 1 | Engine Inti + Mode Duel | TODO | | |
 | 2 | Konten Kartu & Balancing | TODO | | |
 | 3 | Backend, Auth, Realtime | TODO | | |
@@ -35,7 +35,7 @@
 - [x] P0-T4 Skrip `pnpm check`
 - [x] P0-T5 Konfigurasi Cloudflare
 - [x] P0-T6 DO "ping-pong"
-- [ ] P0-T7 Schema Drizzle & migrasi baru — **lokal ✅** (`0014_game_tables.sql` applied, 8 tabel); **staging tertunda**: kuota baca D1 akun habis (lihat Blockers)
+- [x] P0-T7 Schema Drizzle & migrasi baru — `0014_game_tables.sql` (8 tabel + 3 index) applied di lokal **dan staging**; `getOwnedCards` read-only di `src/db/queries/`; test bot tetap hijau
 - [x] P0-T8 CI minimal — `.github/workflows/check.yml` (install + `pnpm check`, PR & branch non-main); deploy tetap manual
 - [x] P0-T9 `.env.example` & README repo — `games/adu-batang/.dev.vars.example` + bagian "Game — Adu Batang" di `README.md` (perintah, secret, deploy staging/prod, CI)
 - [x] P0-T10 Salin task fase ke `TRACKER.md` + ringkasan temuan — lihat `docs/PROJECT_STATE.md` §1–7
@@ -68,7 +68,7 @@
 
 | Tanggal | Fase | Kebutuhan | Status |
 |---|---|---|---|
-| 2026-11-21 | 0 | Kuota **row read D1 free tier** akun habis sampai 00:00 UTC (07:00 WIB) — semua SELECT remote (termasuk bookkeeping migrasi) ditolak `code 7500`. Setelah reset, jalankan: `pnpm exec wrangler d1 migrations apply DB --env staging --remote` (menambah 8 tabel game ke staging; additive). Tidak perlu ubah kode. Opsi lain: upgrade plan D1 atau tunggu besok. | MENUNGGU |
+| 2026-11-21 | 0 | Kuota **row read D1 free tier** akun habis sampai 00:00 UTC (07:00 WIB) — semua SELECT remote (termasuk bookkeeping migrasi) ditolak `code 7500`. Setelah reset, jalankan: `pnpm exec wrangler d1 migrations apply DB --env staging --remote` (menambah 8 tabel game ke staging; additive). Tidak perlu ubah kode. Opsi lain: upgrade plan D1 atau tunggu besok. | SELESAI 2026-11-21 — 8 tabel + 3 index terpasang di `gatchawek-staging`, baris `d1_migrations` `0014_game_tables.sql` ada. Detail cara apply: Decision Log. |
 
 ## Decision Log
 
@@ -78,6 +78,7 @@
 | 2026-11-21 | 0 | Identitas game memakai tabel baru `game_profiles` (PK `user_id` → `users.id`), **bukan** tabel `users` baru seperti spec `02` §2. | `users` sudah ada di bot dengan PK = Discord id dan tabel lama tidak boleh diubah; membuat `users` kedua butuh sinkronisasi identitas yang tidak perlu. | `02-DATA-MODEL.md` §2 diperbarui; semua `user_id` game menunjuk `users.id`. |
 | 2026-11-21 | 0 | Migrasi game ditulis sebagai `migrations/0014_game_tables.sql`, dan metadata Drizzle (`migrations/meta`) dirapikan: journal 0005–0013 direkonstruksi, snapshot 0013 (bot saja) + 0014 (lengkap) ditambahkan. | Journal/meta di repo hanya sampai 0004 padahal SQL 0005–0013 sudah ada, sehingga `drizzle-kit generate` membuat `0005_*` yang menabrak nomor lama dan mencoba membuat ulang tabel yang sudah ada. Setelah perbaikan, `drizzle-kit generate` melaporkan tidak ada perubahan schema. | Tidak ada SQL lama yang diubah; `drizzle.config.ts` sekarang memuat `schema.ts` + `schema-game.ts`. |
 | 2026-11-21 | 0 | Kolom enum (`kind`, `class`, `status`, `mode`, `kind` reward) dijaga TypeScript + Zod; hanya `rarity`/`cost` yang memakai `CHECK` SQL. | Mengikuti pola schema bot (`text(..., { enum })` tanpa CHECK); CHECK non-numerik tidak bisa ditambah belakangan tanpa recreate tabel. | Sedikit menyimpang dari SQL referensi `02` §2; validasi runtime tetap dilakukan di perbatasan. |
+| 2026-11-21 | 0 | `0014` ke D1 staging dijalankan dengan `wrangler d1 execute --remote --file` berisi isi `migrations/0014_game_tables.sql` + `INSERT INTO d1_migrations (name) values ('0014_game_tables.sql')` (persis query bookkeeping milik wrangler), **bukan** `wrangler d1 migrations apply`. | Sisa kuota row read akun tinggal belasan baris (cron bot mengonsumsi kuota harian), sedangkan `migrations apply`/`migrations list` membaca **seluruh 15 baris** `d1_migrations` sehingga selalu ditolak `code 7500`; query 1 baris & DDL (0 row read) tetap lolos. Hasil akhir identik: DDL + baris bookkeeping. | Tidak ada perubahan kode/berkas migrasi; state staging = state yang dihasilkan `migrations apply`. |
 | 2026-11-21 | 0 | Satu repo bersama bot (keputusan owner): bot tetap di root (`src/`, `scripts/`, `migrations/`, `wrangler.jsonc`, `package.json`), game di `games/adu-batang/` + `packages/*`. **Tidak ada file bot yang dipindah atau diubah.** | Diminta spec `03` §1 dan sudah diputuskan owner sebelum fase dimulai; diverifikasi `git diff --stat HEAD~1 -- src scripts migrations wrangler.jsonc package.json shared drizzle.config.ts pnpm-workspace.yaml` kosong. | `pnpm-workspace.yaml` diubah hanya untuk menambah `packages` (root tetap paket bot); perintah bot lama tetap berlaku. |
 
 ## Temuan & utang teknis
@@ -89,7 +90,8 @@
 - `pools.hidden=1` pada pool `pejabat`: perlu keputusan (Decision Log Fase 2) apakah kartu pool hidden boleh dipakai sebagai kartu game.
 - Foto mentah kartu hanya ada di `assets/raw/` (gitignored, tidak di R2), jadi `art_key` game harus memakai objek R2 hasil render (`cards.image_file`).
 - `users` bot memakai Discord ID sebagai PK; identitas game ada di `game_profiles` (lihat Decision Log) — adapter Fase 3/7 memakai `users.id` langsung.
-- **Migrasi staging belum dijalankan** (kuota D1 habis hari ini); lokal sudah. Lihat Blockers.
+- **Migrasi staging sudah jalan** (2026-11-21): `gatchawek-staging` berisi 8 tabel game + 3 index dan baris bookkeeping `0014_game_tables.sql`; diverifikasi lewat `sqlite_master` + `pragma table_info`.
+- **Sisa kuota row read D1 akun praktis habis setiap saat** (cron bot tiap 5 menit + `/gacha` dkk memakai kuota yang sama dengan database game). Hari ini `select 1` dan query 1 baris lolos, tapi query ≥11 baris (`sqlite_master`, seluruh `d1_migrations`) ditolak `code 7500`. Karena itu pembacaan remote harus dipecah kecil, dan setiap fase harus tetap menganggap D1 read sebagai sumber daya langka (katalog tetap di-bundle, satu tulis per match).
 - Bundle Worker game 602 KiB (159 KiB gzip) karena `@sentry/cloudflare`; batas Workers free 3 MiB — masih longgar, pantau tiap fase.
 - `migrations/meta` bot sempat tertinggal (0005–0013 tanpa snapshot); sudah direkonstruksi Fase 0. Jangan menulis SQL migrasi manual lagi.
 - `getOwnedCards` sengaja tidak join `cards`/`pools` (hemat query baca); penyaringan pool hidden/disabled dilakukan pemanggil saat menyusun deck.
