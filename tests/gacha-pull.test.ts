@@ -144,6 +144,17 @@ async function seedMinimal(): Promise<void> {
       imageFile: "bb-02.x.webp",
       enabled: true,
     },
+    {
+      id: "bb-03",
+      poolId: POOL.id,
+      groupId: "g1",
+      memberId: "bb",
+      serial: 5,
+      photoNo: 3,
+      rarity: "secret",
+      imageFile: "bb-03.x.webp",
+      enabled: true,
+    },
   ]);
 }
 
@@ -200,12 +211,12 @@ describe("executePull labels and progress", () => {
     expect(first.groupOwned).toBe(1);
     expect(first.groupTotal).toBe(2);
 
-    // pull 2: roll into rare (0.7 in [96/177, 154/177)); weights common 96/rare 58/super_rare 23 renormalized over total 177 → index 0 of 2 rare cards → aa-02
+    // pull 2: roll into rare (0.8 in [300/391, 370/391)); weights common 300/rare 70/super_rare 20/secret 1 renormalized over total 391 → index 0 of 2 rare cards → aa-02
     const second = await executePull(db, {
       userId,
       pool: POOL,
       now: now + 10,
-      rand: scripted([0.7, 0.0]),
+      rand: scripted([0.8, 0.0]),
     });
     expect(second.status).toBe("ok");
     if (second.status !== "ok") return;
@@ -218,7 +229,7 @@ describe("executePull labels and progress", () => {
       userId,
       pool: POOL,
       now: now + 20,
-      rand: scripted([0.7, 0.0]),
+      rand: scripted([0.8, 0.0]),
     });
     expect(third.status).toBe("ok");
     if (third.status !== "ok") return;
@@ -282,13 +293,13 @@ describe("executePull holo", () => {
   it("banks holo_qty without touching quantity under the threshold", async () => {
     const userId = "pull-holo";
     const now = 7_000_000;
-    // rarity roll 0.95 → super_rare (common 96 + rare 58 + super_rare 23 = 177; window [154/177, 1));
+    // rarity roll 0.96 → super_rare (common 300 + rare 70 = 370; window [370/391, 390/391));
     // index 0 of 1; holo roll 0.01 < 0.08.
     const out = await executePull(db, {
       userId,
       pool: POOL,
       now,
-      rand: scripted([0.95, 0.0, 0.01]),
+      rand: scripted([0.96, 0.0, 0.01]),
     });
     expect(out.status).toBe("ok");
     if (out.status !== "ok") return;
@@ -316,7 +327,7 @@ describe("executePull holo", () => {
       userId,
       pool: POOL,
       now,
-      rand: scripted([0.95, 0.0, 0.5]),
+      rand: scripted([0.96, 0.0, 0.5]),
     });
     expect(out.status).toBe("ok");
     if (out.status !== "ok") return;
@@ -324,6 +335,65 @@ describe("executePull holo", () => {
     expect(out.isHolo).toBe(false);
     expect(out.isFirstClaim).toBe(false);
     expect(out.quantity).toBe(1);
+  });
+});
+describe("executePull secret pity", () => {
+  it("forces a secret card on the 200th pull without one", async () => {
+    const userId = "pull-pity-trip";
+    const now = 14_000_000;
+    await db.insert(users).values({ id: userId, createdAt: now });
+    await db.insert(userPoolStates).values({
+      userId,
+      poolId: POOL.id,
+      stamina: POOL.staminaMax,
+      staminaAnchorAt: now,
+      version: 0,
+      pitySecret: 199,
+    });
+    // rand would pick common, but pity skips the roll entirely.
+    const out = await executePull(db, {
+      userId,
+      pool: POOL,
+      now,
+      rand: scripted([0.0, 0.0, 0.0]),
+    });
+    expect(out.status).toBe("ok");
+    if (out.status !== "ok") return;
+    expect(out.card.rarity).toBe("secret");
+    expect(out.card.id).toBe("bb-03");
+    const rows = await db
+      .select()
+      .from(userPoolStates)
+      .where(eq(userPoolStates.userId, userId));
+    expect(rows[0]?.pitySecret).toBe(0);
+  });
+
+  it("rolls normally one pull before pity and increments the counter", async () => {
+    const userId = "pull-pity-near";
+    const now = 15_000_000;
+    await db.insert(users).values({ id: userId, createdAt: now });
+    await db.insert(userPoolStates).values({
+      userId,
+      poolId: POOL.id,
+      stamina: POOL.staminaMax,
+      staminaAnchorAt: now,
+      version: 0,
+      pitySecret: 198,
+    });
+    const out = await executePull(db, {
+      userId,
+      pool: POOL,
+      now,
+      rand: scripted([0.0, 0.0]),
+    });
+    expect(out.status).toBe("ok");
+    if (out.status !== "ok") return;
+    expect(out.card.rarity).toBe("common");
+    const rows = await db
+      .select()
+      .from(userPoolStates)
+      .where(eq(userPoolStates.userId, userId));
+    expect(rows[0]?.pitySecret).toBe(199);
   });
 });
 

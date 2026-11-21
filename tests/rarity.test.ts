@@ -23,7 +23,7 @@ function lcg(seed: number): () => number {
 const FULL: readonly RarityKey[] = RARITY_KEYS;
 
 describe("pickRarity distribution", () => {
-  it("exposes 6-star Secret metadata and 96/58/23/16/6/1 weights", () => {
+  it("exposes 6-star Secret metadata and 300/70/20/7/2/1 weights", () => {
     expect(RARITY_KEYS).toContain("holo");
     expect(RARITY_KEYS).toContain("secret");
     expect(RARITY_STARS.holo).toBe("★★★★★");
@@ -31,11 +31,11 @@ describe("pickRarity distribution", () => {
     expect(RARITY_STARS.secret).toBe("★★★★★★");
     expect(RARITY_LABEL.secret).toBe("Secret");
     expect(RARITY_WEIGHTS).toEqual({
-      common: 96,
-      rare: 58,
-      super_rare: 23,
-      ultra_rare: 16,
-      holo: 6,
+      common: 300,
+      rare: 70,
+      super_rare: 20,
+      ultra_rare: 7,
+      holo: 2,
       secret: 1,
     });
   });

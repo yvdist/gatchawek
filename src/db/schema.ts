@@ -157,6 +157,7 @@ export const userPoolStates = sqliteTable(
     staminaAnchorAt: integer("stamina_anchor_at").notNull(),
     lastResetAt: integer("last_reset_at"),
     version: integer("version").notNull().default(0),
+    pitySecret: integer("pity_secret").notNull().default(0),
   },
   (t) => [primaryKey({ columns: [t.userId, t.poolId] })],
 );
