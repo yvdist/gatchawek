@@ -18,10 +18,14 @@
 - Seluruh mutasi state kritis (tarik kartu, reset kuota, settlement trade) wajib bersifat atomik menggunakan `db.batch()` dengan optimistic locking (`version` atau `settle_token`).
 
 ## 4. Verification Before Finishing a Task
-Sebelum melakukan commit dan menyatakan satu fase selesai, wajib jalankan dan pastikan lulus:
-1. `npm run typecheck` (atau `tsc --noEmit`)
-2. `npm test` (unit & integration test)
-3. `npm run lint`
+Sebelum commit, wajib lulus (default = sempit, se-cakupan perubahan):
+1. `pnpm run typecheck`
+2. `pnpm vitest run` pada file test yang relevan dengan perubahan (mis. `tests/melt.test.ts` untuk perubahan melt) + suite tetangga yang bersentuhan langsung
+3. `pnpm exec eslint` pada file yang diubah (repo-wide `pnpm run lint` gagal pre-existing karena script survei milik user di root — di luar scope, jangan sentuh)
+
+Full `pnpm test` HANYA bila diminta eksplisit atau perubahannya menyentuh kontrak lintas-modul (schema DB, registry command, domain stamina/rarity). Full suite ~2 menit dan menghambat deploy untuk fix kecil — jangan jadikan default.
+
+## 5. Git Workflow & Version Control
 
 - **Mulai Tugas (Branching):** Sebelum menulis atau mengubah kode apa pun, wajib pastikan berada di `main`, jalankan `git pull origin main`, lalu buat dan pindah ke branch baru dengan format `<tipe>/<deskripsi-singkat>` (contoh: `feat/dismantle-melt-points`). Dilarang bekerja atau commit langsung ke branch `main`.
 - **Selesai Tugas (PR & Merge via `gh`):** Setelah push, JANGAN berhenti di branch — selalu selesaikan sampai merge agar tidak ada PR menggantung yang harus dibuat manual:
