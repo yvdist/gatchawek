@@ -170,9 +170,13 @@ export async function renderPool(
   return { updated, failed, stopped429 };
 }
 
-export function renderFileName(cardId: string, buffer: Buffer): string {
+export function renderFileName(
+  cardId: string,
+  buffer: Buffer,
+  ext: "webp" | "gif" = "webp",
+): string {
   const hash = createHash("sha256").update(buffer).digest("hex").slice(0, 8);
-  return `${cardId}.${hash}.webp`;
+  return `${cardId}.${hash}.${ext}`;
 }
 
 export interface WranglerRunner {
@@ -189,12 +193,13 @@ export async function wranglerR2Upload(
   buffer: Buffer,
 ): Promise<void> {
   const dir = await mkdtemp(path.join(tmpdir(), "gatchawek-r2-"));
+  const contentType = fileName.endsWith(".gif") ? "image/gif" : "image/webp";
   try {
     const tmpFile = path.join(dir, fileName);
     await writeFile(tmpFile, buffer);
     await execFileAsync(
       wrangler.cmd,
-      [...wrangler.preArgs, "r2", "object", "put", `${bucket}/${fileName}`, "--file", tmpFile, "--content-type", "image/webp", "--remote"],
+      [...wrangler.preArgs, "r2", "object", "put", `${bucket}/${fileName}`, "--file", tmpFile, "--content-type", contentType, "--remote"],
       { cwd: root, maxBuffer: 64 * 1024 * 1024 },
     );
   } finally {

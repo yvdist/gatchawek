@@ -4,9 +4,12 @@ import * as path from "node:path";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import {
+  ANIM_H,
+  ANIM_W,
   CARD_H,
   CARD_W,
   buildCardImage,
+  isAnimatedRarity,
   registerFonts,
 } from "../scripts/lib/build-cards.js";
 import { RARITY_KEYS } from "../shared/manifest.schema.js";
@@ -53,10 +56,11 @@ describe("buildCardImage v3", () => {
         focusY: 0.35,
       });
       expect(buf.length).toBeGreaterThan(1000);
-      expect(buf.length).toBeLessThan(150 * 1024);
+      const animated = isAnimatedRarity(rarity);
+      expect(buf.length).toBeLessThan(animated ? 2 * 1024 * 1024 : 150 * 1024);
       const decoded = await loadImage(buf);
-      expect(decoded.width).toBe(CARD_W);
-      expect(decoded.height).toBe(CARD_H);
+      expect(decoded.width).toBe(animated ? ANIM_W : CARD_W);
+      expect(decoded.height).toBe(animated ? ANIM_H : CARD_H);
       buffers.push(buf);
     }
     const uniqueHashes = new Set(buffers.map((b) => b.toString("base64").slice(0, 120)));
@@ -79,7 +83,7 @@ describe("buildCardImage v3", () => {
       focusY: 0.35,
     });
     const decoded = await loadImage(buf);
-    expect(decoded.width).toBe(CARD_W);
-    expect(decoded.height).toBe(CARD_H);
+    expect(decoded.width).toBe(ANIM_W);
+    expect(decoded.height).toBe(ANIM_H);
   });
 });
