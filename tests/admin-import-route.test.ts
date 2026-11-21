@@ -769,6 +769,23 @@ describe("admin /admin/import routes", () => {
     }
   });
 
+  it("surfaces the GitHub error message on dispatch failure", async () => {
+    const db = createDb(env);
+    await db.insert(members).values({ id: "err-kid", poolId: "ahli-ngebul", groupId: "default", name: "Err Kid", nameLower: "err kid", fullName: null, photoTotal: 1, sortOrder: 7, enabled: true });
+    await db.insert(cards).values({ id: "err-kid-01", poolId: "ahli-ngebul", groupId: "default", memberId: "err-kid", serial: 952, photoNo: 1, rarity: "rare", photoLabel: null, imageFile: "https://cdn.example/err.jpg", sourcePageUrl: null, enabled: true, holoEnabled: false });
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ message: "Resource not accessible by personal access token" }), { status: 403, headers: { "content-type": "application/json" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.append("ids", "err-kid-01");
+      const res = await app.request("/admin/cards/render-remote", { method: "POST", headers: { Cookie: authCookie }, body: fd }, env);
+      expect(res.status).toBe(302);
+      expect(decodeURIComponent(res.headers.get("location") ?? "")).toContain("Resource not accessible");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("rejects render requests without a selection", async () => {
     const res = await app.request(
       "/admin/cards/render-remote",
