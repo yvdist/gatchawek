@@ -41,6 +41,10 @@ import {
   handleGiveAutocomplete,
   handleGiveClick,
 } from "./commands/give/handler.js";
+import {
+  handleAlbumAutocomplete,
+  handleAlbumWebRequest,
+} from "./commands/album/handler.js";
 import { handleScheduled } from "./scheduled.js";
 import type { Env } from "./env.js";
 import { registerAdminRoutes } from "./admin/routes.js";
@@ -71,6 +75,18 @@ app.get("/cards/:file", async (c) => {
   const etag = obj.httpEtag;
   if (etag !== undefined && etag !== "") headers.set("ETag", etag);
   return new Response(await obj.arrayBuffer(), { headers });
+});
+app.on(["GET", "HEAD"], "/album/:token", async (c) => {
+  const token = c.req.param("token") ?? "";
+  const res = await handleAlbumWebRequest({
+    token,
+    userAgent: c.req.header("User-Agent"),
+    method: c.req.method,
+    env: c.env,
+  });
+  c.header("Cache-Control", "no-store, no-cache, must-revalidate");
+  c.header("Referrer-Policy", "no-referrer");
+  return c.html(res.html, res.status);
 });
 registerAdminRoutes(app);
 
@@ -244,6 +260,9 @@ app.post("/interactions", async (c) => {
     }
     if (autocomplete.data.name === "unwish") {
       return c.json(await handleUnwishAutocomplete(autocomplete, c.env));
+    }
+    if (autocomplete.data.name === "album") {
+      return c.json(await handleAlbumAutocomplete(autocomplete, c.env));
     }
     return c.json(ephemeralResponse("Autocomplete tidak tersedia."));
   }

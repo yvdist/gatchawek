@@ -317,3 +317,21 @@ export const gives = sqliteTable(
     index("gives_target_idx").on(t.targetId, t.status),
   ],
 );
+
+export const albumTokens = sqliteTable(
+  "album_tokens",
+  {
+    token: text("token").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => users.id),
+    displayName: text("display_name").notNull(),
+    avatarUrl: text("avatar_url"),
+    poolId: text("pool_id"),
+    settleToken: text("settle_token"),
+    createdAt: integer("created_at").notNull(),
+    expiresAt: integer("expires_at").notNull(),
+    usedAt: integer("used_at"),
+  },
+  (t) => [index("album_tokens_user_idx").on(t.userId, t.createdAt)],
+);
