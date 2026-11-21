@@ -128,7 +128,8 @@ async function runPullTask(
 ): Promise<void> {
   try {
     await followupPull(env, appId, token, userId, poolId, rand);
-  } catch {
+  } catch (e) {
+    console.error("gacha pull failed:", e);
     try {
       await patchOriginal(appId, token, env.DISCORD_BOT_TOKEN, {
         content: "D1 sibuk/kuota habis, coba lagi.",

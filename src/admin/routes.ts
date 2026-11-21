@@ -23,6 +23,7 @@ import {
   RENDER_BATCH_MAX,
   setAdminCardEnabled,
   setAdminCardImage,
+  promoteCardLabelToMember,
   swapCardMemberLabel,
   type AdminCardKindFilter,
   type AdminQueueStatus,
@@ -393,6 +394,18 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       .catch(() => "");
     const keep = from === "" ? "" : `&from=${encodeURIComponent(from)}`;
     return c.redirect(`/admin/cards/${encodeURIComponent(id)}?ok=${ok}&msg=${encodeURIComponent(msg)}${keep}`);
+  });
+
+  admin.post("/cards/:id/promote-label", async (c) => {
+    const id = c.req.param("id");
+    const outcome = await promoteCardLabelToMember(createDb(c.env), id);
+    if (outcome.status === "not-found") return c.text("Kartu tidak ditemukan", 404);
+    const msg =
+      outcome.status === "no-label"
+        ? "Label sudah kosong — tidak ada yang dipromosikan."
+        : `Label dipromosikan menjadi nama member ("${outcome.memberName}"). Minta render ulang bila kartu static.`;
+    const ok = outcome.status === "ok" ? "1" : "0";
+    return c.redirect(`/admin/cards/${encodeURIComponent(id)}?ok=${ok}&msg=${encodeURIComponent(msg)}`);
   });
 
   admin.get("/inject", async (c) => {

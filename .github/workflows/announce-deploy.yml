@@ -1,0 +1,59 @@
+name: Announce deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: "Deploy note (optional, e.g. version / what went live)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Post deploy notice to #bot-changelog
+        env:
+          CHANGELOG_WEBHOOK_URL: ${{ secrets.CHANGELOG_WEBHOOK_URL }}
+          NOTE: ${{ inputs.note }}
+        run: |
+          set -euo pipefail
+          if [ -z "${CHANGELOG_WEBHOOK_URL:-}" ]; then
+            echo "CHANGELOG_WEBHOOK_URL not set; skipping."
+            exit 0
+          fi
+
+          jq -n \
+            --arg actor "${GITHUB_ACTOR:-}" \
+            --arg sha "${GITHUB_SHA:-}" \
+            --arg note "${NOTE:-}" \
+            '
+            ($sha[0:7]) as $short
+            | {
+                content: "✅ Deploy live @ \($short) by \($actor)",
+                allowed_mentions: { parse: [] },
+                embeds: [
+                  ({ title: "Bot redeployed" }
+                  + (if $note != ""
+                     then { description: $note[0:2000] }
+                     else { description: "Deployed commit: \($short)" } end))
+                ]
+              }
+            ' > /tmp/deploy-payload.json
+
+          echo "Posting deploy notice, payload:"
+          jq -c '{ content }' /tmp/deploy-payload.json
+
+          CODE=$(curl -sS -o /tmp/deploy-resp.txt -w "%{http_code}" \
+            -X POST -H "Content-Type: application/json" \
+            --data @/tmp/deploy-payload.json \
+            "${CHANGELOG_WEBHOOK_URL}?wait=true")
+          if [ "${CODE:0:1}" != "2" ]; then
+            echo "Discord webhook POST failed: HTTP $CODE"
+            cat /tmp/deploy-resp.txt
+            exit 1
+          fi
+          echo "Posted to #bot-changelog (HTTP $CODE)."
