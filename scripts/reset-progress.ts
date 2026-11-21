@@ -3,7 +3,7 @@
  *
  * Menghapus: user_cards, pulls, trades (semua), battles (semua).
  * Mereset: user_pool_states -> stamina penuh, anchor = now,
- *   last_reset_at = NULL (cooldown dibuka), version + 1, pity_secret = 0.
+ *   last_reset_at = NULL (cooldown dibuka), version + 1, pity_wish = 0.
  * users dibiarkan (identitas Discord tetap).
  *
  * Katalog (pools/groups/members/cards) TIDAK disentuh.
@@ -75,7 +75,7 @@ async function main(): Promise<void> {
     "DELETE FROM battles;",
     // Stamina penuh per pool + cooldown dibuka + pity nol. anchor = now agar
     // tidak ada regen tertunda yang bocor dari era sebelum reset.
-    `UPDATE user_pool_states SET stamina = (SELECT stamina_max FROM pools WHERE pools.id = user_pool_states.pool_id), stamina_anchor_at = ${now}, last_reset_at = NULL, version = version + 1, pity_secret = 0;`,
+    `UPDATE user_pool_states SET stamina = (SELECT stamina_max FROM pools WHERE pools.id = user_pool_states.pool_id), stamina_anchor_at = ${now}, last_reset_at = NULL, version = version + 1, pity_wish = 0;`,
   ];
   for (const sql of statements) {
     await d1Execute(sql, target);
