@@ -41,11 +41,13 @@ app.get("/health", (c) => c.json({ status: "ok" }, 200));
 /** Card frames from R2 (persistent; Worker assets can't hold runtime files). */
 app.get("/cards/:file", async (c) => {
   const file = c.req.param("file");
-  if (!/^[a-z0-9-]+\.[0-9a-f]{8}\.webp$/.test(file)) return c.text("Not found", 404);
+  if (!/^[a-z0-9-]+\.[0-9a-f]{8}\.(webp|gif)$/.test(file)) {
+    return c.text("Not found", 404);
+  }
   const obj = await c.env.CARDS.get(file);
   if (obj === null) return c.text("Not found", 404);
   const headers = new Headers();
-  headers.set("Content-Type", "image/webp");
+  headers.set("Content-Type", file.endsWith(".gif") ? "image/gif" : "image/webp");
   headers.set("Cache-Control", "public, max-age=31536000, immutable");
   const etag = obj.httpEtag;
   if (etag !== undefined && etag !== "") headers.set("ETag", etag);

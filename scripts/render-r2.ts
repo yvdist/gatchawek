@@ -4,7 +4,7 @@ import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import { registerFonts } from "./lib/build-cards.js";
+import { cardFileExtension, registerFonts } from "./lib/build-cards.js";
 import { resolveManifestRoot } from "./lib/manifests.js";
 import {
   renderFileName,
@@ -146,12 +146,15 @@ async function main(): Promise<void> {
     }
   }
 
+  const rarityById = new Map(cards.map((c) => [c.id, c.rarity]));
+
   const result = await renderPool(
     cards,
     {
       rawDir,
       upload: async (cardId, buffer) => {
-        const fileName = renderFileName(cardId, buffer);
+        const ext = cardFileExtension(rarityById.get(cardId) ?? "");
+        const fileName = renderFileName(cardId, buffer, ext);
         await wranglerR2Upload(root, wrangler, bucket, fileName, buffer);
         return fileName;
       },
