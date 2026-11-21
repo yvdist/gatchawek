@@ -1,7 +1,8 @@
 # Project Rules & Architecture Guidelines
 
 ## 1. Source of Truth
-- Source of truth is the code plus `Guide_Tambah_Data_Kartu_Cepat.md` (card-data guide). The old `docs/Spec_*` Phase 1–5 spec is retired; do not treat it as binding.
+- Bot gacha v1 sudah selesai dan frozen. Seluruh dokumentasinya ada di `archive/docs/` dan **bukan** acuan kerja: `Spec_*` fase 1–5 sudah retired, `PR_REVIEW_RECAP.md` dan catatan insiden hanya arsip historis — jangan dibaca sebagai konteks kecuali tugasnya menyentuh perilaku bot lama.
+- Source of truth data kartu tetap `archive/docs/Guide_Tambah_Data_Kartu_Cepat.md`; pakai hanya saat menambah atau mengubah data kartu.
 - Work incrementally per task; do not widen scope before the active task's acceptance criteria pass.
 
 ## 2. Extensibility & Data-Driven Design

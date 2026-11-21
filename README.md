@@ -144,7 +144,7 @@ di-approve.
 
 ### Catatan insiden (PDF)
 
-Catatan di `docs/*.md` bisa dirender jadi PDF siap-baca: `pnpm note:pdf docs/insiden-2026-11-21-d1-quota.md`
+Catatan di `archive/docs/*.md` bisa dirender jadi PDF siap-baca: `pnpm note:pdf archive/docs/insiden-2026-11-21-d1-quota.md`
 (butuh Chrome/Chromium; set `CHROME_PATH` kalau tidak terdeteksi). Hasilnya di `out/`.
 Unggah ke R2 lalu buka `/notes/<file>.pdf`: `pnpm exec wrangler r2 object put gatchawek-cards/notes/<file>.pdf --file out/<file>.pdf --remote`.
 Route ini tidak menyentuh D1, jadi catatan tetap bisa dibaca walau database menolak query.

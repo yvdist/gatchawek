@@ -1,8 +1,8 @@
 /**
- * Render a note from `docs/*.md` into a print-ready PDF with headless Chrome,
+ * Render a note from `archive/docs/*.md` into a print-ready PDF with headless Chrome,
  * so an incident write-up can be shared as a file instead of a wall of chat.
  *
- *   pnpm note:pdf docs/insiden-2026-11-21-d1-quota.md
+ *   pnpm note:pdf archive/docs/insiden-2026-11-21-d1-quota.md
  *
  * Supports the markdown subset the notes use: headings, paragraphs, bullets,
  * ordered lists, fenced code blocks, bold, inline code, and `---`.
@@ -188,6 +188,6 @@ function build(mdPath: string, outPath: string): void {
   console.log(`note: ${mdPath} -> ${outPath} (${String(statSync(outPath).size)} bytes)`);
 }
 
-const mdPath = process.argv[2] ?? "docs/insiden-2026-11-21-d1-quota.md";
+const mdPath = process.argv[2] ?? "archive/docs/insiden-2026-11-21-d1-quota.md";
 const name = (mdPath.split(/[\\/]/).pop() ?? "note.md").replace(/\.md$/, "");
 build(mdPath, process.argv[3] ?? join("out", `${name}.pdf`));
