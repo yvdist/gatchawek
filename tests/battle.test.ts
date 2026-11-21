@@ -235,7 +235,7 @@ describe("battleEmbed", () => {
     expect(declined.description).toContain("Ditolak");
   });
 
-  it("shows winner EXP & LEVEL UP on wager resolve and omits EXP on casual resolve", () => {
+  it("shows winner EXP on wager resolve and omits EXP on casual resolve", () => {
     const baseArgs = {
       challengerId: "u1",
       targetId: "u2",
@@ -303,7 +303,7 @@ describe("battleEmbed", () => {
     });
     expect(wagerEmbed.description).toContain("+50 EXP");
     expect(wagerEmbed.description).toContain("Super Rare");
-    expect(wagerEmbed.description).toContain("LEVEL UP!");
+    expect(wagerEmbed.description).not.toContain("LEVEL UP!");
 
     const casualEmbed = buildBattleResolvedEmbed({
       ...baseArgs,

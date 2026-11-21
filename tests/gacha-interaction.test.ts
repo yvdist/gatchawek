@@ -275,6 +275,57 @@ describe("handleGacha followup", () => {
       vi.unstubAllGlobals();
     }
   });
+
+  it("posts a dedicated Level Up notification followup when a pull crosses a level threshold", async () => {
+    const userId = "g-levelup-1";
+    const now = Math.floor(Date.now() / 1000);
+    const db = createDb(env);
+    // Common pull gives +10 EXP -> 95 + 10 = 105 EXP (Lv 1 -> Lv 2)
+    await db.insert(users).values({ id: userId, createdAt: now, exp: 95 });
+
+    const calls: { url: string; body: unknown }[] = [];
+    const fetchMock = vi.fn(async (url: string, init: { body: string }) => {
+      calls.push({ url, body: JSON.parse(init.body) });
+      return { ok: true, text: async () => "" };
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const interaction = slash("pejabat", userId);
+      if (interaction.member !== undefined) {
+        interaction.member.nick = "Dr. John";
+        interaction.member.user.avatar = "avahash";
+      }
+      const { tasks, waitUntil } = captureTasks();
+      handleGacha(interaction, env, waitUntil);
+      await Promise.all(tasks);
+
+      expect(calls).toHaveLength(2);
+      const pullBody = calls[0]?.body as {
+        embeds?: { title?: string; description?: string }[];
+      };
+      expect(pullBody.embeds?.[0]?.title).toContain("🎴");
+      expect(pullBody.embeds?.[0]?.description).toContain("+10 EXP");
+
+      const notifBody = calls[1]?.body as {
+        embeds?: {
+          title?: string;
+          description?: string;
+          thumbnail?: { url?: string };
+          footer?: { text?: string };
+        }[];
+      };
+      expect(notifBody.embeds?.[0]?.title).toBe("🌟 Level Up!");
+      expect(notifBody.embeds?.[0]?.description).toContain(
+        "**Dr. John** naik ke **Level 2**!",
+      );
+      expect(notifBody.embeds?.[0]?.thumbnail?.url).toBe(
+        `https://cdn.discordapp.com/avatars/${userId}/avahash.png?size=256`,
+      );
+      expect(notifBody.embeds?.[0]?.footer?.text).toContain("Tarik Gacha");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
 });
 
 describe("handleGacha followup edge cases", () => {

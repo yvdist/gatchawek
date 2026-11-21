@@ -9,9 +9,10 @@ import type { Env } from "../../env.js";
 import {
   deferredResponse,
   ephemeralResponse,
-  invokerId,
+  extractInteractionUserProfile,
   patchOriginal,
   postFollowup,
+  type DiscordUserProfile,
 } from "../../discord/rest.js";
 import {
   executePull,
@@ -22,6 +23,7 @@ import {
   buildPullEmbed,
   cardImageUrl,
 } from "../../ui/gachaEmbed.js";
+import { buildLevelUpEmbed } from "../../ui/levelUpEmbed.js";
 import { parseGachaAgainCustomId } from "../../domain/gacha.js";
 import {
   buildWaShareText,
@@ -54,11 +56,12 @@ async function followupPull(
   env: Env,
   appId: string,
   token: string,
-  userId: string,
+  userProfile: DiscordUserProfile,
   poolId: string,
   rand: () => number,
   origin: string | undefined,
 ): Promise<void> {
+  const userId = userProfile.userId;
   const db = createDb(env);
   const now = Math.floor(Date.now() / 1000);
   const pool = await getPoolConfig(db, poolId);
@@ -114,6 +117,22 @@ async function followupPull(
         ],
         components: [againButton(pool.id, userId), buildWaShareRow(shareUrl)],
       });
+      if (outcome.exp.leveledUp) {
+        try {
+          await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
+            embeds: [
+              buildLevelUpEmbed({
+                user: userProfile,
+                exp: outcome.exp,
+                source: "gacha",
+                nowSec: now,
+              }),
+            ],
+          });
+        } catch (e) {
+          reportError("gacha level-up notification failed", e);
+        }
+      }
       return;
     }
     case "empty": {
@@ -144,13 +163,13 @@ async function runPullTask(
   env: Env,
   appId: string,
   token: string,
-  userId: string,
+  userProfile: DiscordUserProfile,
   poolId: string,
   rand: () => number,
   origin: string | undefined,
 ): Promise<void> {
   try {
-    await followupPull(env, appId, token, userId, poolId, rand, origin);
+    await followupPull(env, appId, token, userProfile, poolId, rand, origin);
   } catch (e) {
     console.error("gacha pull failed:", e);
     reportError("gacha pull failed", e);
@@ -170,9 +189,9 @@ export function handleGacha(
   waitUntil: WaitUntil,
   origin?: string,
 ): APIInteractionResponse {
-  const userId = invokerId(interaction);
+  const userProfile = extractInteractionUserProfile(interaction);
   const poolId = poolOption(interaction);
-  if (userId === null || poolId === null) {
+  if (userProfile === null || poolId === null) {
     return ephemeralResponse("Pool belum tersedia. Coba lagi nanti.");
   }
   waitUntil(
@@ -180,7 +199,7 @@ export function handleGacha(
       env,
       interaction.application_id,
       interaction.token,
-      userId,
+      userProfile,
       poolId,
       cryptoRandom,
       origin,
@@ -199,8 +218,8 @@ export function handleGachaAgain(
   if (target === null) {
     return ephemeralResponse("Tombol kedaluwarsa.");
   }
-  const clicker = invokerId(interaction);
-  if (clicker === null || clicker !== target.ownerId) {
+  const clicker = extractInteractionUserProfile(interaction);
+  if (clicker === null || clicker.userId !== target.ownerId) {
     return ephemeralResponse(
       `Tombol ini milik <@${target.ownerId}>.`,
     );

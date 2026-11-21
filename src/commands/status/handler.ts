@@ -7,6 +7,7 @@ import { createDb } from "../../db/client.js";
 import {
   deferredResponse,
   ephemeralResponse,
+  extractInteractionUserProfile,
   invokerId,
   patchOriginal,
   postFollowup,
@@ -25,6 +26,7 @@ export function handleStatus(
   if (userId === null) {
     return ephemeralResponse("Tidak bisa membaca identitasmu.");
   }
+  const userProfile = extractInteractionUserProfile(interaction);
   waitUntil(
     (async () => {
       try {
@@ -52,7 +54,16 @@ export function handleStatus(
           interaction.application_id,
           interaction.token,
           env.DISCORD_BOT_TOKEN,
-          { embeds: [buildStatusEmbed(rowsWithMelt, userId, userExp)] },
+          {
+            embeds: [
+              buildStatusEmbed(
+                rowsWithMelt,
+                userId,
+                userExp,
+                userProfile?.avatarUrl,
+              ),
+            ],
+          },
         );
       } catch {
         try {

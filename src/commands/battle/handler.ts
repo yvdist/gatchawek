@@ -15,6 +15,7 @@ import {
   invokerId,
   patchOriginal,
   postFollowup,
+  resolveDiscordUserProfile,
 } from "../../discord/rest.js";
 import {
   canActOnBattle,
@@ -37,6 +38,8 @@ import {
   buildBattlePendingEmbed,
   buildBattleResolvedEmbed,
 } from "../../ui/battleEmbed.js";
+import { buildLevelUpEmbed } from "../../ui/levelUpEmbed.js";
+import { reportError } from "../../observability.js";
 import { cryptoRandom } from "../pamer/handler.js";
 import type { WaitUntil } from "../registry.js";
 
@@ -291,6 +294,33 @@ export async function handleBattleComponent(
               components: [],
             },
           );
+          if (outcome.winnerExp.leveledUp) {
+            try {
+              const winnerProfile = await resolveDiscordUserProfile({
+                userId: outcome.calc.winnerId,
+                guildId: interaction.guild_id,
+                botToken: env.DISCORD_BOT_TOKEN,
+                interaction,
+              });
+              await postFollowup(
+                interaction.application_id,
+                interaction.token,
+                env.DISCORD_BOT_TOKEN,
+                {
+                  embeds: [
+                    buildLevelUpEmbed({
+                      user: winnerProfile,
+                      exp: outcome.winnerExp,
+                      source: "battle",
+                      nowSec: now,
+                    }),
+                  ],
+                },
+              );
+            } catch (e) {
+              reportError("battle level-up notification failed", e);
+            }
+          }
           return;
         }
 

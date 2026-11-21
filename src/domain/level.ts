@@ -158,3 +158,43 @@ export function formatProgressBar(
   const filled = Math.round(ratio * safeWidth);
   return "█".repeat(filled) + "░".repeat(safeWidth - filled);
 }
+
+/** Sleek pill-style progress bar used in level-up notifications and status cards. */
+export function formatSleekProgressBar(
+  current: number,
+  total: number,
+  width = 10,
+): string {
+  const safeWidth = Math.max(1, Math.floor(width));
+  const ratio =
+    total > 0 && Number.isFinite(current)
+      ? Math.min(1, Math.max(0, current / total))
+      : 0;
+  const filled = Math.round(ratio * safeWidth);
+  return "▰".repeat(filled) + "▱".repeat(safeWidth - filled);
+}
+
+export interface LevelTier {
+  readonly badge: string;
+  readonly title: string;
+  readonly color: number;
+}
+
+const LEVEL_TIERS: readonly (LevelTier & { readonly minLevel: number })[] = [
+  { minLevel: 50, badge: "👑", title: "Legend", color: 0xffd700 },
+  { minLevel: 35, badge: "🔥", title: "Grandmaster", color: 0xf43f5e },
+  { minLevel: 20, badge: "🔮", title: "Master", color: 0xa855f7 },
+  { minLevel: 10, badge: "💎", title: "Enthusiast", color: 0x38bdf8 },
+  { minLevel: 5, badge: "⚡", title: "Collector", color: 0x10b981 },
+  { minLevel: 1, badge: "🌱", title: "Newcomer", color: 0xf59e0b },
+];
+
+export function getLevelTier(level: number): LevelTier {
+  const safeLevel = Number.isFinite(level) ? Math.max(1, Math.floor(level)) : 1;
+  for (const tier of LEVEL_TIERS) {
+    if (safeLevel >= tier.minLevel) {
+      return { badge: tier.badge, title: tier.title, color: tier.color };
+    }
+  }
+  return { badge: "🌱", title: "Newcomer", color: 0xf59e0b };
+}
