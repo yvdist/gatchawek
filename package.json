@@ -22,7 +22,8 @@
     "ingest": "tsx scripts/ingest.ts",
     "approve": "tsx scripts/approve.ts",
     "reset:progress": "tsx scripts/reset-progress.ts --yes",
-    "reset:progress:remote": "tsx scripts/reset-progress.ts --remote --yes"
+    "reset:progress:remote": "tsx scripts/reset-progress.ts --remote --yes",
+    "note:pdf": "tsx scripts/build-note-pdf.ts"
   },
   "keywords": [],
   "author": "",

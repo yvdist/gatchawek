@@ -8,3 +8,4 @@ public/cards/
 data/reports/
 data/submissions/
 data/ingest-state.json
+out/

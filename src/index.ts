@@ -97,6 +97,22 @@ app.use("/admin", maintenanceGate);
 app.use("/admin/*", maintenanceGate);
 
 app.get("/health", (c) => c.json({ status: "ok" }, 200));
+/**
+ * Rendered notes (PDF) from R2. Kept off the database on purpose: an incident
+ * write-up must stay readable while D1 is refusing queries.
+ */
+app.on(["GET", "HEAD"], "/notes/:file", async (c) => {
+  const file = c.req.param("file");
+  if (!/^[a-z0-9-]+\.pdf$/.test(file)) return c.text("Not found", 404);
+  const obj = await c.env.CARDS.get(`notes/${file}`);
+  if (obj === null) return c.text("Not found", 404);
+  const headers = new Headers();
+  headers.set("Content-Type", "application/pdf");
+  headers.set("Cache-Control", "public, max-age=3600");
+  headers.set("Referrer-Policy", "no-referrer");
+  headers.set("Content-Disposition", `inline; filename="${file}"`);
+  return new Response(await obj.arrayBuffer(), { headers });
+});
 /** Card frames from R2 (persistent; Worker assets can't hold runtime files). */
 app.get("/cards/:file", async (c) => {
   const file = c.req.param("file");
