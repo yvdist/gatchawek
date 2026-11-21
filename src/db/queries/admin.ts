@@ -20,8 +20,8 @@ export type AdminCardKindFilter = "all" | "todo" | CardImageKind;
 // shortcut: excluded pools live in code until `pools` gets a render flag; add a column + migration when a second pool needs it.
 export const RENDER_EXCLUDED_POOL_IDS: readonly string[] = ["pejabat"];
 export const RENDER_BATCH_MAX = 50;
-/** A render request counts as in progress for this long (cron runs every 15 min). */
-export const RENDER_PENDING_SEC = 1800;
+/** A render request counts as in progress for this long (manual renders land in ~1 min). */
+export const RENDER_PENDING_SEC = 300;
 
 const isRemote = sql`${cards.imageFile} LIKE 'http%'`;
 const inExcludedPool = (): SQL => inArray(cards.poolId, [...RENDER_EXCLUDED_POOL_IDS]);

@@ -256,7 +256,7 @@ export function cardsPage(args: {
     ? `<form id="renderForm" method="post" action="/admin/cards/render-remote"><input type="hidden" name="back" value="${escapeHtml(listUrl)}">`
     : "";
   const bulkClose = showBulk
-    ? `<div class="actionbar"><span class="pick-group"><label class="pick-all"><input type="checkbox" id="pickAll"> Pilih semua (${Math.min(RENDER_BATCH_MAX, selectable)})</label>${staleCount > 0 ? `<button type="button" class="btn-ghost btn-sm" id="pickStale">Pilih yang gagal (${staleCount})</button>` : ""}</span><button type="submit" id="renderBtn" class="btn" disabled title="Kartu dirender jadi bingkai di cloud dalam 15–30 menit. Cron juga merender otomatis tiap 15 menit.">Minta render (0/${RENDER_BATCH_MAX})</button></div></form>${RENDER_SCRIPT}`
+    ? `<div class="actionbar"><span class="pick-group"><label class="pick-all"><input type="checkbox" id="pickAll"> Pilih semua (${Math.min(RENDER_BATCH_MAX, selectable)})</label>${staleCount > 0 ? `<button type="button" class="btn-ghost btn-sm" id="pickStale">Pilih yang gagal (${staleCount})</button>` : ""}</span><button type="submit" id="renderBtn" class="btn" disabled title="Kartu dirender jadi bingkai di cloud dalam 1–5 menit. Cron juga merender otomatis tiap 15 menit.">Minta render (0/${RENDER_BATCH_MAX})</button></div></form>${RENDER_SCRIPT}`
     : "";
   const hasFilter = args.q !== "" || args.poolId !== "" || args.groupId !== "" || args.rarity !== "";
   const clear = !hasFilter ? "" : `<a class="search-x" href="/admin/cards${escapeHtml(tabQs(args.kind))}" aria-label="Hapus pencarian" title="Hapus pencarian">×</a>`;
@@ -287,7 +287,7 @@ export function cardsPage(args: {
     ),
   ).join("");
   const filters = `<form method="get" action="/admin/cards" class="filters" aria-label="Filter pool, grup, dan rarity"><input type="hidden" name="kind" value="${escapeHtml(args.kind)}"><input type="hidden" name="q" value="${escapeHtml(args.q)}"><select name="pool" aria-label="Filter pool" onchange="this.form.submit()">${poolOptions}</select><select name="group" aria-label="Filter grup" onchange="this.form.submit()">${groupOptions}</select><select name="rarity" aria-label="Filter rarity" onchange="this.form.submit()">${rarityOptions}</select></form>`;
-  const legend = `<details class="legend-box"><summary aria-label="Arti tampilan kartu" title="Arti tampilan kartu">?</summary><div class="legend-pop"><span><i class="lg-r"></i>Sudah dirender: bingkai kartu final</span><span><i class="lg-f"></i>Foto asli: pool ini memang tidak dirender</span><span><i class="lg-p"></i>Belum dirender: foto mentah, bisa dipilih untuk render</span><span><i class="lg-p lg-pend"></i>Sedang dirender: diminta kurang dari 30 menit lalu</span><span><i class="lg-p lg-stale"></i>Render gagal?: diminta lebih dari 30 menit lalu, belum jadi</span><span><i class="lg-p lg-empty"></i>Tanpa image: belum ada foto sama sekali</span><span class="legend-note">Render butuh 15–30 menit. Cron juga merender otomatis tiap 15 menit.</span></div></details>`;
+  const legend = `<details class="legend-box"><summary aria-label="Arti tampilan kartu" title="Arti tampilan kartu">?</summary><div class="legend-pop"><span><i class="lg-r"></i>Sudah dirender: bingkai kartu final</span><span><i class="lg-f"></i>Foto asli: pool ini memang tidak dirender</span><span><i class="lg-p"></i>Belum dirender: foto mentah, bisa dipilih untuk render</span><span><i class="lg-p lg-pend"></i>Sedang dirender: diminta kurang dari 5 menit lalu</span><span><i class="lg-p lg-stale"></i>Render gagal?: diminta lebih dari 5 menit lalu, belum jadi</span><span><i class="lg-p lg-empty"></i>Tanpa image: belum ada foto sama sekali</span><span class="legend-note">Render butuh 1–5 menit. Cron juga merender otomatis tiap 15 menit.</span></div></details>`;
   return shell(
     "kartu",
     "cards",
@@ -324,8 +324,8 @@ export function cardDetailPage(args: {
       : `<nav class="pager" aria-label="Kartu lain di daftar ini">${step(args.prev, "prev")}${step(args.next, "next")}</nav>`;
   const note: Record<CardState, string> = {
     empty: "Kartu ini belum punya image. Upload file atau pakai URL di bawah.",
-    pending: "Render sedang berjalan. Hasilnya muncul dalam 15–30 menit setelah diminta.",
-    stale: "Render diminta lebih dari 30 menit lalu tapi belum jadi. Coba minta render lagi.",
+    pending: "Render sedang berjalan. Hasilnya muncul dalam 1–5 menit setelah diminta.",
+    stale: "Render diminta lebih dari 5 menit lalu tapi belum jadi. Coba minta render lagi.",
     raw: "Foto ini belum dirender jadi kartu.",
     final: "Pool ini tidak dirender. Foto asli ini sudah bentuk akhirnya.",
     rendered: "",

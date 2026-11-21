@@ -351,7 +351,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const skipNote = skipped > 0 ? ` (${String(skipped)} dilewati)` : "";
     return to(
       true,
-      `Render ${String(renderable.length)} kartu diminta${skipNote}. Cek lagi dalam 15–30 menit.`,
+      `Render ${String(renderable.length)} kartu diminta${skipNote}. Cek lagi dalam 1–5 menit.`,
     );
   });
 
@@ -610,7 +610,7 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       nowSec,
     );
     return c.redirect(
-      `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent("Perubahan kartu disimpan. Render ulang otomatis diminta — selesai dalam 15–30 menit.")}${keep}`,
+      `/admin/cards/${encodeURIComponent(id)}?ok=1&msg=${encodeURIComponent("Perubahan kartu disimpan. Render ulang otomatis diminta — selesai dalam 1–5 menit.")}${keep}`,
     );
   });
 
