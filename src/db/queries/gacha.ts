@@ -38,6 +38,7 @@ interface PoolState {
   anchorAt: number;
   lastResetAt: number | null;
   version: number;
+  pitySecret: number;
 }
 
 function toPoolConfig(row: typeof pools.$inferSelect): PoolConfig {
@@ -73,7 +74,7 @@ export async function ensureUserAndState(
 ): Promise<PoolState> {
   await nativeBatch(db, [
     sql`INSERT OR IGNORE INTO users (id, created_at) VALUES (${userId}, ${now})`,
-    sql`INSERT OR IGNORE INTO user_pool_states (user_id, pool_id, stamina, stamina_anchor_at, last_reset_at, version) VALUES (${userId}, ${pool.id}, ${pool.staminaMax}, ${now}, NULL, 0)`,
+    sql`INSERT OR IGNORE INTO user_pool_states (user_id, pool_id, stamina, stamina_anchor_at, last_reset_at, version, pity_secret) VALUES (${userId}, ${pool.id}, ${pool.staminaMax}, ${now}, NULL, 0, 0)`,
   ]);
   const rows = await db
     .select()
@@ -94,6 +95,7 @@ export async function ensureUserAndState(
     anchorAt: row.staminaAnchorAt,
     lastResetAt: row.lastResetAt,
     version: row.version,
+    pitySecret: row.pitySecret,
   };
 }
 
@@ -235,9 +237,18 @@ export async function executePull(
 
   const rarities = await getEnabledRarities(db, pool.id);
   if (rarities.length === 0) return { status: "pool-empty" };
-  const rarity = pickRarity(rand(), rarities);
+  // Hard pity: 200th consecutive pull without a Secret forces one, when the
+  // pool has an enabled Secret card. Counter runs 0..199; the roll is
+  // skipped entirely on a forced pull.
+  let forcedSecret: CandidateCard[] | null = null;
+  if (state.pitySecret >= 199 && rarities.includes("secret")) {
+    const secretCandidates = await getCandidatesByRarity(db, pool.id, "secret");
+    if (secretCandidates.length > 0) forcedSecret = secretCandidates;
+  }
+  const rarity = forcedSecret !== null ? "secret" : pickRarity(rand(), rarities);
   if (rarity === null) return { status: "pool-empty" };
-  const candidates = await getCandidatesByRarity(db, pool.id, rarity);
+  const candidates =
+    forcedSecret ?? (await getCandidatesByRarity(db, pool.id, rarity));
   if (candidates.length === 0) return { status: "pool-empty" };
   const card = candidates[pickIndex(rand(), candidates.length)];
   if (card === undefined) return { status: "pool-empty" };
@@ -265,6 +276,7 @@ WHERE EXISTS ${versionGuard}`,
         stamina: consumed.stamina,
         staminaAnchorAt: consumed.anchorAt,
         version: newVersion,
+        pitySecret: rarity === "secret" ? 0 : state.pitySecret + 1,
       })
       .where(
         and(

@@ -35,14 +35,14 @@
 
 | key | Bintang | Label | Bobot default | Warna embed |
 | --- | --- | --- | --- | --- |
-| `common` | ★ | Common | 96 | `#9CA3AF` |
-| `rare` | ★★ | Rare | 58 | `#A855F7` |
-| `super_rare` | ★★★ | Super Rare | 23 | `#F59E0B` |
-| `ultra_rare` | ★★★★ | Ultra Rare | 16 | `#EC4899` |
-| `holo` | ★★★★★ | Holo | 6 | `#FFD700` |
+| `common` | ★ | Common | 300 | `#9CA3AF` |
+| `rare` | ★★ | Rare | 70 | `#A855F7` |
+| `super_rare` | ★★★ | Super Rare | 20 | `#F59E0B` |
+| `ultra_rare` | ★★★★ | Ultra Rare | 7 | `#EC4899` |
+| `holo` | ★★★★★ | Holo | 2 | `#FFD700` |
 | `secret` | ★★★★★★ | Secret | 1 | `#22D3EE` |
 
-Total bobot 200 ⇒ peluang 48/29/11,5/8/3/0,5%.
+Total bobot 400 ⇒ peluang 75/17,5/5/1,75/0,5/0,25%.
 
 Konstanta ini hidup di `src/domain/rarity.ts` (satu sumber kebenaran, dipakai juga oleh scripts dan `/help`).
 
@@ -133,7 +133,7 @@ Aturan validasi (Zod di `shared/manifest.schema.ts`):
 - `imageUrl` https langsung ke file gambar. `sourcePageUrl` wajib. `license` dan `author` boleh `null`. `focus` opsional (default x 0.5, y 0.35).
 - `badge` huruf besar, maksimal 8 karakter.
 - `enabled` opsional, default true. `false` = takedown.
-- Distribusi rarity per grup yang jauh dari 48/29/11,5/8/3/0,5 hanya **peringatan**, bukan error.
+- Distribusi rarity per grup yang jauh dari 75/17,5/5/1,75/0,5/0,25 hanya **peringatan**, bukan error.
 
 ### 4.2.1 Inject komunitas (`community-inject`)
 
@@ -388,7 +388,7 @@ Jika kuota masih penuh, tolak tanpa menghabiskan cooldown. Jika belum siap, tamp
 
 1. Satu batch: `INSERT OR IGNORE` ke `users` dan `user_pool_states` (stamina = max, anchor = now, version = 0), lalu `SELECT` state dan konfigurasi pool.
 2. `consume()` murni. Jika `null`, balas ephemeral dengan `<t:next:R>`.
-3. Pilih rarity berdasar bobot, **hanya dari rarity yang punya minimal satu kartu `enabled` di pool**. RNG: `crypto.getRandomValues(new Uint32Array(1))[0] / 2**32`. Lalu pilih kartu seragam dalam rarity itu.
+3. Pilih rarity berdasar bobot, **hanya dari rarity yang punya minimal satu kartu `enabled` di pool**. RNG: `crypto.getRandomValues(new Uint32Array(1))[0] / 2**32`. Lalu pilih kartu seragam dalam rarity itu. **Hard pity Secret**: bila `user_pool_states.pity_secret >= 199` dan pool punya kartu `secret` enabled, rarity dipaksa `secret` tanpa roll. Counter naik +1 tiap tarikan non-Secret dan kembali 0 saat Secret, dalam CAS yang sama dengan stamina.
 4. Baca kepemilikan sebelum tulis: apakah kartu sudah dimiliki, dan apakah member sudah dimiliki (`EXISTS` via join `cards`). Hasilnya menentukan label.
 5. Satu `db.batch()`:
    - (a) CAS state: `UPDATE user_pool_states SET stamina = ?1, stamina_anchor_at = ?2, version = version + 1 WHERE user_id = ?3 AND pool_id = ?4 AND version = ?5`
