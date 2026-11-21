@@ -30,7 +30,7 @@
 
 ### Fase 0
 - [x] P0-T1 Recon repo & data lama → `docs/PROJECT_STATE.md`
-- [ ] P0-T2 Keputusan repo (satu repo, `games/adu-batang` + `packages/*`)
+- [x] P0-T2 Keputusan repo (satu repo, `games/adu-batang` + `packages/*`)
 - [ ] P0-T3 Scaffold workspace
 - [ ] P0-T4 Skrip `pnpm check`
 - [ ] P0-T5 Konfigurasi Cloudflare
@@ -75,7 +75,12 @@
 | Tanggal | Fase | Keputusan | Alasan | Dampak ke spec |
 |---|---|---|---|---|
 | 2026-11-21 | 0 | Lokasi spec pack = `docs/specs/` (bukan `docs/`), folder game = `games/adu-batang/` (bukan `arena/`). | Spec pack disalin owner ke `docs/`, folder game sudah disiapkan bernama `games/adu-batang`; prompt fase di `PROMPTS.md` menunjuk `docs/specs/`. Salinan duplikat `games/adu-batang/game-specs/` dihapus setelah diverifikasi identik (`diff -rq` kosong) agar tidak ada dua sumber kebenaran. | Semua path `arena/` di `03-ARCHITECTURE.md` §1 dibaca sebagai `games/adu-batang/`; `docs/specs/` menjadi lokasi canonical pack. |
+| 2026-11-21 | 0 | Satu repo bersama bot (keputusan owner): bot tetap di root (`src/`, `scripts/`, `migrations/`, `wrangler.jsonc`, `package.json`), game di `games/adu-batang/` + `packages/*`. **Tidak ada file bot yang dipindah atau diubah.** | Diminta spec `03` §1 dan sudah diputuskan owner sebelum fase dimulai; diverifikasi `git diff --stat HEAD~1 -- src scripts migrations wrangler.jsonc package.json shared drizzle.config.ts pnpm-workspace.yaml` kosong. | `pnpm-workspace.yaml` diubah hanya untuk menambah `packages` (root tetap paket bot); perintah bot lama tetap berlaku. |
 
 ## Temuan & utang teknis
 
-- (diisi agent: hal yang ditunda, bug yang diketahui, ide perbaikan)
+- **Kuota baca D1** free tier (100k row read/hari) sudah pernah habis dan memblokir recon produksi hari ini (`code 7500`).
+  Jumlah kartu D1 **produksi** belum terverifikasi; angka di `PROJECT_STATE.md` berasal dari manifest + lock file. Verifikasi ulang setelah 00:00 UTC.
+- `pools.hidden=1` pada pool `pejabat`: perlu keputusan (Decision Log Fase 2) apakah kartu pool hidden boleh dipakai sebagai kartu game.
+- Foto mentah kartu hanya ada di `assets/raw/` (gitignored, tidak di R2), jadi `art_key` game harus memakai objek R2 hasil render (`cards.image_file`).
+- `users` bot memakai Discord ID sebagai PK; tabel `users` game di spec memakai uuid + `discord_id`. Adapter wajib (Fase 3/7).
