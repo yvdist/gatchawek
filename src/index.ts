@@ -206,6 +206,8 @@ app.post("/interactions", async (c) => {
   return c.json({ error: "Unhandled interaction type" }, 400);
 });
 
+export { app };
+
 export default {
   fetch: app.fetch,
   async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {

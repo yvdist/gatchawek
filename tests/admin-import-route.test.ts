@@ -614,6 +614,72 @@ describe("admin /admin/import routes", () => {
     }
   });
 
+  it("blocks a repeat request while pending and returns to the card page", async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.append("ids", "render-kid-01");
+      fd.append("back", "/admin/cards/render-kid-01");
+      const res = await app.request(
+        "/admin/cards/render-remote",
+        { method: "POST", headers: { Cookie: authCookie }, body: fd },
+        env,
+      );
+      expect(fetchMock).not.toHaveBeenCalled();
+      const loc = res.headers.get("location") ?? "";
+      expect(loc.startsWith("/admin/cards/render-kid-01?")).toBe(true);
+      expect(loc).toContain("ok=0");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("returns to the list view the request came from", async () => {
+    const fd = new FormData();
+    fd.append("back", "/admin/cards?kind=todo&q=jo");
+    const res = await app.request(
+      "/admin/cards/render-remote",
+      { method: "POST", headers: { Cookie: authCookie }, body: fd },
+      env,
+    );
+    expect((res.headers.get("location") ?? "").startsWith("/admin/cards?kind=todo&q=jo&ok=0")).toBe(true);
+  });
+
+  it("ignores off-panel return targets", async () => {
+    const fd = new FormData();
+    fd.append("back", "https://evil.example/x");
+    const res = await app.request(
+      "/admin/cards/render-remote",
+      { method: "POST", headers: { Cookie: authCookie }, body: fd },
+      env,
+    );
+    expect((res.headers.get("location") ?? "").startsWith("/admin/cards?kind=remote")).toBe(true);
+  });
+
+  it("keeps the list context after a card-page action", async () => {
+    const fd = new FormData();
+    fd.append("enabled", "1");
+    fd.append("from", "/admin/cards?kind=todo&q=jo");
+    const res = await app.request(
+      "/admin/cards/render-kid-01/enabled",
+      { method: "POST", headers: { Cookie: authCookie }, body: fd },
+      env,
+    );
+    expect(res.headers.get("location")).toBe(
+      `/admin/cards/render-kid-01?from=${encodeURIComponent("/admin/cards?kind=todo&q=jo")}`,
+    );
+    const bad = new FormData();
+    bad.append("enabled", "1");
+    bad.append("from", "https://evil.example/");
+    const res2 = await app.request(
+      "/admin/cards/render-kid-01/enabled",
+      { method: "POST", headers: { Cookie: authCookie }, body: bad },
+      env,
+    );
+    expect(res2.headers.get("location")).toBe("/admin/cards/render-kid-01");
+  });
+
   it("rejects render requests without a selection", async () => {
     const res = await app.request(
       "/admin/cards/render-remote",
