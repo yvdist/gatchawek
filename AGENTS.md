@@ -32,3 +32,7 @@ Sebelum melakukan commit dan menyatakan satu fase selesai, wajib jalankan dan pa
   3. `gh pr merge --squash --delete-branch` (squash = satu commit per fase, konsisten dengan aturan satu-commit-per-fase).
   4. Kembali ke `main` dan sinkron: `git checkout main && git pull origin main`, lalu verifikasi `git status` bersih.
 - **Keamanan Secret:** Pastikan file `.dev.vars`, `.env`, dan kredensial rahasia lainnya masuk ke dalam `.gitignore` dan tidak pernah ikut ter-commit.
+
+## 6. Changelog Channel Language (English-only)
+- Semua pesan yang diposting ke channel Discord `#bot-changelog` wajib berbahasa Inggris (judul, isi, footer, label link) agar terlihat profesional.
+- Berlaku untuk `.github/workflows/notify-changelog.yml` dan `.github/workflows/announce-deploy.yml`; jangan masukkan nama repo (`GITHUB_REPOSITORY`) ke teks pesan.

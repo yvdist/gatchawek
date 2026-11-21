@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       note:
-        description: "Catatan deploy (opsional, mis. versi / apa yang live)"
+        description: "Deploy note (optional, e.g. version / what went live)"
         required: false
         default: ""
 
@@ -33,13 +33,13 @@ jobs:
             '
             ($sha[0:7]) as $short
             | {
-                content: "✅ Deploy live @ \($short) oleh \($actor)",
+                content: "✅ Deploy live @ \($short) by \($actor)",
                 allowed_mentions: { parse: [] },
                 embeds: [
-                  ({ title: "Bot sudah di-deploy ulang" }
+                  ({ title: "Bot redeployed" }
                   + (if $note != ""
                      then { description: $note[0:2000] }
-                     else { description: "Commit yang di-deploy: \($short)" } end))
+                     else { description: "Deployed commit: \($short)" } end))
                 ]
               }
             ' > /tmp/deploy-payload.json
