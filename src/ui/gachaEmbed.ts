@@ -135,11 +135,16 @@ export function buildStatusEmbed(
         : row.resetReady
           ? "siap dipakai"
           : `bisa lagi <t:${row.resetReadyAt}:R>`;
+    const melt =
+      row.meltPoints === null || row.meltPoints === undefined
+        ? []
+        : [`🔥 Poin lebur: ${row.meltPoints}`];
     return [
       `${row.pool.emoji} **${row.pool.name}**`,
       `🎲 Sisa tarik (/gacha pool:${row.pool.id}): ${row.stamina}/${row.max}, ${tick}`,
       `🔄 Reset: ${reset}`,
       `📚 Koleksi: ${row.owned}/${row.total} member`,
+      ...melt,
     ].join("\n");
   });
   const headerLines = [`<@${userId}>`];

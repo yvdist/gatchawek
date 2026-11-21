@@ -41,6 +41,7 @@ import {
   handleGiveAutocomplete,
   handleGiveClick,
 } from "./commands/give/handler.js";
+import { handleDismantleAutocomplete } from "./commands/dismantle/handler.js";
 import {
   handleAlbumAutocomplete,
   handleAlbumWebRequest,
@@ -251,6 +252,14 @@ app.post("/interactions", async (c) => {
       return c.json(
         await handleGiveAutocomplete(
           autocomplete as unknown as Parameters<typeof handleGiveAutocomplete>[0],
+          c.env,
+        ),
+      );
+    }
+    if (autocomplete.data.name === "dismantle") {
+      return c.json(
+        await handleDismantleAutocomplete(
+          autocomplete as unknown as Parameters<typeof handleDismantleAutocomplete>[0],
           c.env,
         ),
       );

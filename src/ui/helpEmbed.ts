@@ -16,8 +16,8 @@ export interface HelpEmbedArgs {
 
 function fmtPct(weight: number, total: number): string {
   if (total <= 0) return "0%";
-  const pct = (weight / total) * 100;
-  return `${Number.isInteger(pct) ? pct : pct.toFixed(1)}%`;
+  const pct = Math.round((weight / total) * 10000) / 100;
+  return `${pct}%`;
 }
 
 function rateTable(): string {

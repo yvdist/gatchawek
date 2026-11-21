@@ -35,14 +35,14 @@
 
 | key | Bintang | Label | Bobot default | Warna embed |
 | --- | --- | --- | --- | --- |
-| `common` | ★ | Common | 60 | `#9CA3AF` |
-| `rare` | ★★ | Rare | 15 | `#A855F7` |
-| `super_rare` | ★★★ | Super Rare | 12 | `#F59E0B` |
-| `ultra_rare` | ★★★★ | Ultra Rare | 8 | `#EC4899` |
-| `holo` | ★★★★★ | Holo | 4 | `#FFD700` |
-| `secret` | ★★★★★★ | Secret | 1 | `#22D3EE` |
+| `common` | ★ | Common | 6270 | `#9CA3AF` |
+| `rare` | ★★ | Rare | 1570 | `#A855F7` |
+| `super_rare` | ★★★ | Super Rare | 1250 | `#F59E0B` |
+| `ultra_rare` | ★★★★ | Ultra Rare | 875 | `#EC4899` |
+| `holo` | ★★★★★ | Holo | 25 | `#FFD700` |
+| `secret` | ★★★★★★ | Secret | 10 | `#22D3EE` |
 
-Total bobot 100 ⇒ peluang 60/15/12/8/4/1%.
+Total bobot 10000 ⇒ peluang 62,7/15,7/12,5/8,75/0,25/0,1%.
 
 Konstanta ini hidup di `src/domain/rarity.ts` (satu sumber kebenaran, dipakai juga oleh scripts dan `/help`).
 
@@ -133,7 +133,7 @@ Aturan validasi (Zod di `shared/manifest.schema.ts`):
 - `imageUrl` https langsung ke file gambar. `sourcePageUrl` wajib. `license` dan `author` boleh `null`. `focus` opsional (default x 0.5, y 0.35).
 - `badge` huruf besar, maksimal 8 karakter.
 - `enabled` opsional, default true. `false` = takedown.
-- Distribusi rarity per grup yang jauh dari 60/15/12/8/4/1 hanya **peringatan**, bukan error.
+- Distribusi rarity per grup yang jauh dari bobot di §2 hanya **peringatan**, bukan error.
 
 ### 4.2.1 Inject komunitas (`community-inject`)
 

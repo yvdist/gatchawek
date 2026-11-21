@@ -10,12 +10,12 @@ export const RARITY_KEYS = [
 export type RarityKey = (typeof RARITY_KEYS)[number];
 
 export const RARITY_WEIGHTS: Record<RarityKey, number> = {
-  common: 60,
-  rare: 15,
-  super_rare: 12,
-  ultra_rare: 8,
-  holo: 4,
-  secret: 1,
+  common: 6270,
+  rare: 1570,
+  super_rare: 1250,
+  ultra_rare: 875,
+  holo: 25,
+  secret: 10,
 };
 
 export const RARITY_LABEL: Record<RarityKey, string> = {

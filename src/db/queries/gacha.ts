@@ -464,6 +464,7 @@ export interface PoolStatusRow {
   resetDeniedReason: "full" | "cooldown" | null;
   owned: number;
   total: number;
+  meltPoints?: number | null;
 }
 
 export interface UserStatusOverview {

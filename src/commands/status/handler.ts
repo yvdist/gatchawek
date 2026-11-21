@@ -12,6 +12,7 @@ import {
   postFollowup,
 } from "../../discord/rest.js";
 import { getUserStatusOverview } from "../../db/queries/gacha.js";
+import { getMeltBalances } from "../../db/queries/melt.js";
 import { buildStatusEmbed } from "../../ui/gachaEmbed.js";
 import type { WaitUntil } from "../registry.js";
 
@@ -29,7 +30,15 @@ export function handleStatus(
       try {
         const db = createDb(env);
         const now = Math.floor(Date.now() / 1000);
-        const { rows, userExp } = await getUserStatusOverview(db, userId, now);
+        const [{ rows, userExp }, balances] = await Promise.all([
+          getUserStatusOverview(db, userId, now),
+          getMeltBalances(db, userId),
+        ]);
+        const byPool = new Map(balances.map((b) => [b.poolId, b.points]));
+        const rowsWithMelt = rows.map((row) => ({
+          ...row,
+          meltPoints: byPool.get(row.pool.id) ?? null,
+        }));
         if (rows.length === 0) {
           await postFollowup(
             interaction.application_id,
@@ -43,7 +52,7 @@ export function handleStatus(
           interaction.application_id,
           interaction.token,
           env.DISCORD_BOT_TOKEN,
-          { embeds: [buildStatusEmbed(rows, userId, userExp)] },
+          { embeds: [buildStatusEmbed(rowsWithMelt, userId, userExp)] },
         );
       } catch {
         try {
