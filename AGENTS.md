@@ -33,6 +33,11 @@ Sebelum melakukan commit dan menyatakan satu fase selesai, wajib jalankan dan pa
   4. Kembali ke `main` dan sinkron: `git checkout main && git pull origin main`, lalu verifikasi `git status` bersih.
 - **Keamanan Secret:** Pastikan file `.dev.vars`, `.env`, dan kredensial rahasia lainnya masuk ke dalam `.gitignore` dan tidak pernah ikut ter-commit.
 
-## 6. Changelog Channel Language (English-only)
+## 6. Changelog Channel Language (English-only) & PR-Body Hygiene
 - Semua pesan yang diposting ke channel Discord `#bot-changelog` wajib berbahasa Inggris (judul, isi, footer, label link) agar terlihat profesional.
-- Berlaku untuk `.github/workflows/notify-changelog.yml` dan `.github/workflows/announce-deploy.yml`; jangan masukkan nama repo (`GITHUB_REPOSITORY`) ke teks pesan.
+- Berlaku untuk `.github/workflows/notify-changelog.yml` dan `.github/workflows/announce-deploy.yml`; jangan masukkan nama repo ke teks pesan (URL commit dibungkus link markdown `view commit`).
+- **PR-body hygiene (semua agent: OMP, Antigravity, Gemini, Claude, dsb.):** notifikasi changelog otomatis mengambil ringkasan + highlight dari body PR via `gh pr view`. Agar hasilnya bagus, setiap PR body WAJIB memuat:
+  1. Paragraf pertama = ringkasan English 1-3 kalimat (jadi field 📌 Summary).
+  2. Daftar bullet `-` = poin perubahan penting English (jadi field ✨ Highlights, maks 4 diambil).
+  3. Bahasa Inggris; tanpa nama repo di teks.
+- Jika PR di-merge tanpa body yang layak, workflow otomatis fallback ke daftar commit polos.
