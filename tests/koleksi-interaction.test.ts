@@ -535,7 +535,7 @@ describe("handleHelp", () => {
     if (res.type !== InteractionResponseType.ChannelMessageWithSource) return;
     expect(res.data.flags).toBeUndefined();
     const embed = res.data.embeds?.[0];
-    expect(embed?.description).toContain("75%");
+    expect(embed?.description).toContain("60%");
     expect(embed?.description).toContain("★★★★");
     expect(embed?.description).toContain("★★★★★★");
     expect(embed?.description).toContain("Pejabat");
