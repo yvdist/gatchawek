@@ -28,6 +28,7 @@ import {
   buildAlbumLinkRow,
   buildAlbumUrl,
 } from "../../ui/albumEmbed.js";
+import { pageOrigin } from "../../domain/share.js";
 import {
   albumBinderPage,
   albumCrawlerPreviewPage,
@@ -55,6 +56,7 @@ export function handleAlbum(
   interaction: APIChatInputApplicationCommandInteraction,
   env: Env,
   waitUntil: WaitUntil,
+  origin?: string,
 ): APIInteractionResponse {
   const caller = extractCallerIdentity(interaction);
   if (caller === null) {
@@ -95,7 +97,10 @@ export function handleAlbum(
           return;
         }
 
-        const albumUrl = buildAlbumUrl(env.PUBLIC_BASE_URL, outcome.token);
+        const albumUrl = buildAlbumUrl(
+          pageOrigin(origin, env.PUBLIC_BASE_URL),
+          outcome.token,
+        );
         const embed = buildAlbumEmbed({
           userId: caller.userId,
           albumUrl,

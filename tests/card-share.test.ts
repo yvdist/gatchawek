@@ -12,8 +12,13 @@ import {
   cardShareTitle,
   type SharedCardData,
 } from "../src/ui/cardShareHtml.js";
-import { buildWaShareText, buildWaShareUrl } from "../src/domain/share.js";
+import {
+  buildWaShareText,
+  buildWaShareUrl,
+  pageOrigin,
+} from "../src/domain/share.js";
 import { getShareableCard } from "../src/db/queries/share.js";
+import { app } from "../src/index.js";
 import type { Env } from "../src/env.js";
 
 const REPO_ROOT = fileURLToPath(new URL("..", import.meta.url));
@@ -165,6 +170,48 @@ describe("human page", () => {
     expect(html).toContain(`class="photocard"`);
     expect(html).toContain(`COMMON`);
     expect(html).not.toContain(`grid-template-columns`);
+  });
+});
+
+describe("pageOrigin", () => {
+  it("follows the request that answered, not the pinned public host", () => {
+    expect(pageOrigin("https://gatchawek-temp.example.workers.dev", "example.test")).toBe(
+      "https://gatchawek-temp.example.workers.dev",
+    );
+  });
+
+  it("falls back to the pinned public host and adds its scheme", () => {
+    expect(pageOrigin(undefined, "example.test")).toBe("https://example.test");
+    expect(pageOrigin("", "example.test")).toBe("https://example.test");
+    expect(pageOrigin(undefined, "https://example.test/")).toBe("https://example.test");
+  });
+});
+
+describe("GET /kartu/:id caching", () => {
+  it("marks the page cacheable and points OG url at the host that served it", async () => {
+    const res = await app.request(
+      "https://gatchawek-temp.example.workers.dev/kartu/alik-01",
+      { headers: { "User-Agent": "WhatsApp/2.23" } },
+      env,
+    );
+    expect(res.status).toBe(200);
+    expect(res.headers.get("Cache-Control")).toBe("public, max-age=3600");
+    const html = await res.text();
+    expect(html).toContain(
+      `<meta property="og:url" content="https://gatchawek-temp.example.workers.dev/kartu/alik-01">`,
+    );
+    // Images still come from the deployment that owns the R2 bucket.
+    expect(html).toContain(
+      `<meta property="og:image" content="https://example.test/cards/alik-01.665ba5d8.webp">`,
+    );
+  });
+
+  it("never caches a 404, so an unshared card can come back", async () => {
+    for (const path of ["/kartu/alik-off", "/kartu/nope"]) {
+      const res = await app.request(path, {}, env);
+      expect(res.status).toBe(404);
+      expect(res.headers.get("Cache-Control")).toBe("no-store");
+    }
   });
 });
 

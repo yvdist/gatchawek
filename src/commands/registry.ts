@@ -55,6 +55,8 @@ export type CommandHandlerWithWait = (
   interaction: APIChatInputApplicationCommandInteraction,
   env: Env,
   waitUntil: WaitUntil,
+  /** Origin of the request that carried the interaction; link-backs use it. */
+  origin?: string,
 ) => APIInteractionResponse | Promise<APIInteractionResponse>;
 
 export const commandDefinitions = [

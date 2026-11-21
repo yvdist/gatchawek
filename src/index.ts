@@ -144,15 +144,16 @@ app.on(["GET", "HEAD"], "/kartu/:id", async (c) => {
   const cardId = c.req.param("id") ?? "";
   const db = createDb(c.env);
   const card = await getShareableCard(db, cardId);
-  c.header("Cache-Control", "public, max-age=3600");
   c.header("Referrer-Policy", "no-referrer");
   if (card === null || card.enabled !== true) {
+    // Never cache a 404: a hidden or taken-down card can come back, and a
+    // cached 404 outlives the request that hid it (max-age is an hour).
+    c.header("Cache-Control", "no-store");
     return c.text("Not found", 404);
   }
-  const base = c.env.PUBLIC_BASE_URL;
-  const imageUrl = cardImageUrl(base, card.imageFile);
-  const cleanBase = base.replace(/^https?:\/\//, "").replace(/\/+$/, "");
-  const pageUrl = `https://${cleanBase}/kartu/${card.cardId}`;
+  c.header("Cache-Control", "public, max-age=3600");
+  const imageUrl = cardImageUrl(c.env.PUBLIC_BASE_URL, card.imageFile);
+  const pageUrl = `${new URL(c.req.url).origin}/kartu/${card.cardId}`;
   const data = { ...card, imageUrl };
   if (
     c.req.method.toUpperCase() === "HEAD" ||
@@ -202,6 +203,9 @@ app.post("/interactions", async (c) => {
   if (interaction.type === InteractionType.Ping) {
     return c.json({ type: InteractionResponseType.Pong });
   }
+  // Pages and share links must resolve on the deployment that answered, not
+  // on the pinned PUBLIC_BASE_URL host (a temp worker answers on its own).
+  const origin = new URL(c.req.url).origin;
   const until = maintenanceUntil(c.env.MAINTENANCE_UNTIL, Date.now());
   if (until !== null) {
     return c.json(maintenanceReply(interaction, until));
@@ -213,7 +217,12 @@ app.post("/interactions", async (c) => {
       return c.json({ error: "Unknown command" }, 400);
     }
     return c.json(
-      await handler(command, c.env, (p) => c.executionCtx.waitUntil(p)),
+      await handler(
+        command,
+        c.env,
+        (p) => c.executionCtx.waitUntil(p),
+        origin,
+      ),
     );
   }
   if (interaction.type === InteractionType.MessageComponent) {
@@ -223,8 +232,11 @@ app.post("/interactions", async (c) => {
     const [ns, action] = customId.split(":");
     if (ns === "gacha" && action === "again") {
       return c.json(
-        await handleGachaAgain(component, c.env, (p) =>
-          c.executionCtx.waitUntil(p),
+        await handleGachaAgain(
+          component,
+          c.env,
+          (p) => c.executionCtx.waitUntil(p),
+          origin,
         ),
       );
     }
