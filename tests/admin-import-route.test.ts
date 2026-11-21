@@ -751,6 +751,24 @@ describe("admin /admin/import routes", () => {
     expect(loc).not.toContain("frame lama");
   });
 
+  it("re-renders a static card from its source URL", async () => {
+    const db = createDb(env);
+    await db.insert(members).values({ id: "resrc-kid", poolId: "ahli-ngebul", groupId: "default", name: "Resrc Kid", nameLower: "resrc kid", fullName: null, photoTotal: 1, sortOrder: 6, enabled: true });
+    await db.insert(cards).values({ id: "resrc-kid-01", poolId: "ahli-ngebul", groupId: "default", memberId: "resrc-kid", serial: 951, photoNo: 1, rarity: "rare", photoLabel: null, imageFile: "resrc-kid-01.abcdef12.webp", sourcePageUrl: "https://cdn.example/resrc.jpg", enabled: true, holoEnabled: false });
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.append("ids", "resrc-kid-01");
+      const res = await app.request("/admin/cards/render-remote", { method: "POST", headers: { Cookie: authCookie }, body: fd }, env);
+      expect(res.status).toBe(302);
+      expect(res.headers.get("location") ?? "").toContain("ok=1");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("rejects render requests without a selection", async () => {
     const res = await app.request(
       "/admin/cards/render-remote",

@@ -163,6 +163,10 @@ describe("getAdminCard / setters", () => {
       imageFile: "https://cdn/new.png",
       imageKind: "remote",
     });
+    await expect(setAdminCardImage(db, "teddy-01", "https://cdn/new.png", "https://cdn/new.png")).resolves.toBe(true);
+    await expect(getAdminCard(db, "teddy-01")).resolves.toMatchObject({
+      sourcePageUrl: "https://cdn/new.png",
+    });
     await expect(setAdminCardImage(db, "teddy-01", "")).resolves.toBe(true);
     await expect(setAdminCardEnabled(db, "teddy-03", true)).resolves.toBe(true);
     await expect(getAdminCard(db, "teddy-03")).resolves.toMatchObject({ enabled: true });
