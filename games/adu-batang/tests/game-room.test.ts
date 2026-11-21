@@ -1,7 +1,5 @@
 import { build } from "esbuild";
 import { Miniflare } from "miniflare";
-import { mkdtemp, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -14,24 +12,25 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
 let runtime: Miniflare | undefined;
-let dir = "";
 let baseUrl = "";
 
 beforeAll(async () => {
-  dir = await mkdtemp(path.join(tmpdir(), "adu-batang-do-"));
-  const outfile = path.join(dir, "worker.mjs");
-  await build({
+  // Bundle in memory: a file on disk makes workerd resolve ".." outside its
+  // starting directory, which fails on Linux CI.
+  const bundled = await build({
     entryPoints: [path.join(HERE, "fixtures", "test-worker.ts")],
     bundle: true,
     format: "esm",
     platform: "neutral",
     target: "es2022",
-    outfile,
+    write: false,
     logLevel: "silent",
   });
+  const script = bundled.outputFiles?.[0]?.text;
+  if (script === undefined) throw new Error("esbuild tidak menghasilkan bundle");
   runtime = new Miniflare({
     modules: true,
-    scriptPath: outfile,
+    script,
     // Newest date the locally installed workerd (via Miniflare) accepts.
     compatibilityDate: "2026-08-06",
     port: 0,
@@ -46,7 +45,6 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await runtime?.dispose();
-  await rm(dir, { recursive: true, force: true });
 });
 
 async function echoThroughRoom(room: string, text: string): Promise<string> {
