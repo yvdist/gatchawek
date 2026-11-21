@@ -95,3 +95,4 @@
 - Bundle Worker game 602 KiB (159 KiB gzip) karena `@sentry/cloudflare`; batas Workers free 3 MiB — masih longgar, pantau tiap fase.
 - `migrations/meta` bot sempat tertinggal (0005–0013 tanpa snapshot); sudah direkonstruksi Fase 0. Jangan menulis SQL migrasi manual lagi.
 - `getOwnedCards` sengaja tidak join `cards`/`pools` (hemat query baca); penyaringan pool hidden/disabled dilakukan pemanggil saat menyusun deck.
+- `wrangler` memperingatkan bahwa `env.staging.vars` tidak mewarisi `INGEST_CHANNEL_ID`, `INGEST_GUILD_ID`, `MAINTENANCE_UNTIL` dari top-level `wrangler.jsonc`. Ini konfigurasi bot (di luar scope Fase 0, tidak disentuh): perlu diputuskan apakah var itu diulang di `env.staging.vars` atau sengaja kosong di staging.
