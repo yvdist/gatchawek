@@ -2,6 +2,7 @@ import { sql } from "drizzle-orm";
 import { createDb } from "./db/client.js";
 import { enqueueMessage } from "./db/queries/inject.js";
 import { injectQueue } from "./db/schema.js";
+import { maintenanceUntil } from "./domain/maintenance.js";
 import { formatBulkRejectionReply, formatRejectionReply, parseBulkSubmission, parseSubmission } from "./domain/submissions.js";
 import type { Env } from "./env.js";
 
@@ -276,5 +277,12 @@ export async function syncInjectChannel(
 
 /** Cloudflare Cron entry (every 5 min): thin wrapper over syncInjectChannel. */
 export async function handleScheduled(env: Env): Promise<void> {
+  const until = maintenanceUntil(env.MAINTENANCE_UNTIL, Date.now());
+  if (until !== null) {
+    // The poll only reads inject_queue, but a failed read every 5 minutes
+    // burns the write/error budget during an outage for no gain.
+    console.log(`ingest: maintenance until ${new Date(until).toISOString()}`);
+    return;
+  }
   await syncInjectChannel(env);
 }

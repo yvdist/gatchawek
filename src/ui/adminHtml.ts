@@ -22,6 +22,7 @@ import {
   RARITY_STARS,
   type RarityKey,
 } from "../domain/rarity.js";
+import { wibClock } from "../domain/maintenance.js";
 
 export type AdminPage =
   | "login"
@@ -91,6 +92,11 @@ function shell(title: string, active: AdminPage, body: string): string {
 export function loginPage(error: string | null): string {
   const err = error === null ? "" : `<p class="alert is-err" role="alert">${escapeHtml(error)}</p>`;
   return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>login · admin</title><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${FONTS}"><link rel="stylesheet" href="${BASE}">${STYLE}</head><body><main class="loginwrap"><div class="login"><div class="fan" aria-hidden="true"><i class="r-rare"></i><i class="r-secret"></i><i class="r-holo"></i></div><div class="card login-card"><h1>Gatchawek admin</h1><p class="lede">Masukkan password owner untuk mengelola katalog kartu.</p>${err}<form method="post" action="/admin/login"><div class="field"><label for="loginPw">Password</label><input id="loginPw" type="password" name="password" required autocomplete="current-password" autofocus></div><button class="btn" type="submit">Masuk</button></form></div></div></main></body></html>`;
+}
+
+/** Scheduled database outage: shown instead of any admin page, no DB read. */
+export function maintenancePage(untilMs: number): string {
+  return `<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>maintenance · admin</title><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link rel="stylesheet" href="${FONTS}"><link rel="stylesheet" href="${BASE}">${STYLE}</head><body><nav class="topbar"><div class="topbar-inner"><span class="brand"><span class="brand-text">Admin</span></span></div></nav><main class="wrap"><div class="pagehead"><h1>Maintenance database</h1><p class="lede">Panel berhenti membaca database sampai <strong>${wibClock(untilMs)}</strong>. Bot dan panel pulih sendiri setelah jam itu — tidak perlu deploy ulang.</p></div><article class="card"><p>Penyebabnya kuota baca harian D1 yang habis (reset 00:00 UTC). Kartu, koleksi, dan pull user tidak berubah: tidak ada data yang hilang.</p><p><a class="btn" href="/admin">Coba lagi</a></p></article></main></body></html>`;
 }
 
 /** D1 free-tier daily read quota is spent: every SELECT fails until midnight UTC. */

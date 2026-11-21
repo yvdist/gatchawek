@@ -1,10 +1,11 @@
-import { Hono } from "hono";
+import { Hono, type MiddlewareHandler } from "hono";
 import { sentry } from "@sentry/hono/cloudflare";
 import {
   InteractionResponseType,
   InteractionType,
   type APIChatInputApplicationCommandInteraction,
   type APIInteraction,
+  type APIInteractionResponse,
   type APIMessageComponentInteraction,
 } from "discord-api-types/v10";
 import { verifyDiscordRequest } from "./discord/verify.js";
@@ -48,7 +49,8 @@ import {
 } from "./commands/album/handler.js";
 import { getShareableCard } from "./db/queries/share.js";
 import { createDb, isD1DailyQuotaError } from "./db/client.js";
-import { quotaPage } from "./ui/adminHtml.js";
+import { maintenancePage, quotaPage } from "./ui/adminHtml.js";
+import { maintenanceMessage, maintenanceUntil } from "./domain/maintenance.js";
 import { isLinkPreviewCrawler } from "./domain/album.js";
 import { cardImageUrl } from "./ui/gachaEmbed.js";
 import {
@@ -81,6 +83,18 @@ app.onError((error, c) => {
   }
   return c.text("Internal Server Error", 500);
 });
+
+// Scheduled outage window: admin answers without a single database read.
+const maintenanceGate: MiddlewareHandler<{ Bindings: Env }> = async (c, next) => {
+  const until = maintenanceUntil(c.env.MAINTENANCE_UNTIL, Date.now());
+  if (until !== null) {
+    c.header("Cache-Control", "no-store");
+    return c.html(maintenancePage(until), 503);
+  }
+  await next();
+};
+app.use("/admin", maintenanceGate);
+app.use("/admin/*", maintenanceGate);
 
 app.get("/health", (c) => c.json({ status: "ok" }, 200));
 /** Card frames from R2 (persistent; Worker assets can't hold runtime files). */
@@ -134,6 +148,20 @@ app.on(["GET", "HEAD"], "/kartu/:id", async (c) => {
 });
 registerAdminRoutes(app);
 
+/** Discord's answer while the outage window is open; never touches the DB. */
+function maintenanceReply(
+  interaction: APIInteraction,
+  untilMs: number,
+): APIInteractionResponse {
+  if (interaction.type === InteractionType.ApplicationCommandAutocomplete) {
+    return {
+      type: InteractionResponseType.ApplicationCommandAutocompleteResult,
+      data: { choices: [] },
+    };
+  }
+  return ephemeralResponse(maintenanceMessage(untilMs));
+}
+
 app.post("/interactions", async (c) => {
   const signature = c.req.header("X-Signature-Ed25519");
   const timestamp = c.req.header("X-Signature-Timestamp");
@@ -157,6 +185,10 @@ app.post("/interactions", async (c) => {
   }
   if (interaction.type === InteractionType.Ping) {
     return c.json({ type: InteractionResponseType.Pong });
+  }
+  const until = maintenanceUntil(c.env.MAINTENANCE_UNTIL, Date.now());
+  if (until !== null) {
+    return c.json(maintenanceReply(interaction, until));
   }
   if (interaction.type === InteractionType.ApplicationCommand) {
     const command = interaction as APIChatInputApplicationCommandInteraction;
