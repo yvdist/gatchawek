@@ -6,7 +6,7 @@ import {
   RARITY_KEYS,
   RARITY_LABEL,
   RARITY_STARS,
-  RARITY_WEIGHTS,
+  type RarityKey,
 } from "../src/domain/rarity.js";
 
 const emptyCatalog = { pools: [] };
@@ -34,15 +34,19 @@ describe("help hardening (phase 5)", () => {
     }
   });
 
-  it("rate dihitung dari RARITY_WEIGHTS", () => {
+  it("mencetak peluang tier secara persis", () => {
     const embed = buildEmbed();
-    let total = 0;
-    for (const k of RARITY_KEYS) total += RARITY_WEIGHTS[k];
+    const expected: Record<RarityKey, string> = {
+      common: "62.7%",
+      rare: "15.7%",
+      super_rare: "12.5%",
+      ultra_rare: "8.75%",
+      holo: "0.25%",
+      secret: "0.1%",
+    };
     for (const key of RARITY_KEYS) {
-      const raw = total > 0 ? (RARITY_WEIGHTS[key] / total) * 100 : 0;
-      const pct = Number.isInteger(raw) ? `${String(raw)}%` : `${raw.toFixed(1)}%`;
       expect(embed.description).toContain(
-        `${RARITY_STARS[key]} ${RARITY_LABEL[key]} — ${pct}`,
+        `${RARITY_STARS[key]} ${RARITY_LABEL[key]} — ${expected[key]}`,
       );
     }
   });
