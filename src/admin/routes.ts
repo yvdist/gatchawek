@@ -9,6 +9,7 @@ import {
 } from "./auth.js";
 import { createDb } from "../db/client.js";
 import {
+  ensureAdminGroup,
   ensureImportGroup,
   getAdminCard,
   countAdminCardKinds,
@@ -45,6 +46,8 @@ import {
   importPage,
   injectPage,
   loginPage,
+  NEW_GROUP_OPTION,
+  type CardManageDraft,
   type ImportBatchItemResult,
 } from "../ui/adminHtml.js";
 
@@ -536,18 +539,6 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       groupId: card.groupId,
       imageKind: card.imageKind,
     };
-    const fail = (message: string): Response =>
-      c.html(
-        cardDetailPage({
-          card,
-          base: c.env.PUBLIC_BASE_URL,
-          message,
-          ok: false,
-          back,
-          pools,
-          poolGroups,
-        }),
-      );
     const memberName =
       typeof form["memberName"] === "string" ? form["memberName"] : "";
     const photoLabelRaw = form["photoLabel"];
@@ -558,9 +549,48 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
     const rarityRaw =
       typeof form["rarity"] === "string" ? form["rarity"] : "";
     const poolId = typeof form["poolId"] === "string" ? form["poolId"] : "";
-    const groupId =
-      typeof form["groupId"] === "string" ? form["groupId"] : "";
+    const groupIdRaw =
+      typeof form["groupId"] === "string" ? form["groupId"].trim() : "";
+    const groupName =
+      typeof form["groupName"] === "string" ? form["groupName"].trim() : "";
     const holoEnabled = form["holoEnabled"] === "1";
+    // Keep what the admin typed visible when the save is rejected below.
+    const draft: CardManageDraft = {
+      memberName,
+      photoLabel,
+      rarity: (RARITY_KEYS as readonly string[]).includes(rarityRaw)
+        ? (rarityRaw as (typeof RARITY_KEYS)[number])
+        : card.rarity,
+      poolId,
+      groupId: groupIdRaw,
+      groupName,
+      holoEnabled,
+    };
+    const fail = (message: string): Response =>
+      c.html(
+        cardDetailPage({
+          card,
+          base: c.env.PUBLIC_BASE_URL,
+          message,
+          ok: false,
+          back,
+          pools,
+          poolGroups,
+          draft,
+        }),
+      );
+    let groupId = groupIdRaw;
+    if (groupId === "" || groupId === NEW_GROUP_OPTION) {
+      if (groupName === "") {
+        return fail("Pilih grup yang ada, atau isi nama grup baru.");
+      }
+      const ensured = await ensureAdminGroup(db, poolId, groupName);
+      if (ensured.status === "unknown-pool") {
+        return fail("Pool tujuan tidak ditemukan.");
+      }
+      if (ensured.status === "invalid") return fail(ensured.error);
+      groupId = ensured.groupId;
+    }
     const outcome = await updateAdminCardDetails(db, id, {
       memberName,
       photoLabel,
@@ -573,7 +603,9 @@ export function registerAdminRoutes(app: Hono<{ Bindings: Env }>): void {
       return c.text("Kartu tidak ditemukan", 404);
     }
     if (outcome.status === "unknown-group") {
-      return fail("Pool/grup tidak ditemukan.");
+      return fail(
+        "Grup tujuan bukan bagian pool yang dipilih. Pilih grup dari daftar, atau isi nama grup baru.",
+      );
     }
     if (outcome.status === "invalid") {
       return fail(outcome.error);

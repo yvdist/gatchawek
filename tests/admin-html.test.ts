@@ -571,17 +571,80 @@ describe("static re-render pending state", () => {
 });
 
 describe("cardDetailPage kelola form", () => {
-  const pools = [{ poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x" }];
-  const poolGroups = [{ poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x", groupId: "g1", groupName: "Satu", groupBadge: "SATU" }];
+  const pools = [
+    { poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x" },
+    { poolId: "ahli-ngebul", poolName: "Ahli Ngebul", poolEmoji: "x" },
+  ];
+  const poolGroups = [
+    { poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x", groupId: "g1", groupName: "Satu", groupBadge: "SATU" },
+    { poolId: "pejabat", poolName: "Pejabat", poolEmoji: "x", groupId: "g2", groupName: "Dua", groupBadge: "DUA" },
+    { poolId: "ahli-ngebul", poolName: "Ahli Ngebul", poolEmoji: "x", groupId: "ng1", groupName: "Default", groupBadge: "NGEBUL" },
+  ];
+  const card = detail({ poolId: "pejabat" });
 
   it("renders a manage form with member, label, pool, group, rarity, and holo fields", () => {
-    const html = cardDetailPage({ card: detail(), base: "example.test", message: null, ok: false, pools, poolGroups });
+    const html = cardDetailPage({ card, base: "example.test", message: null, ok: false, pools, poolGroups });
     expect(html).toContain('name="memberName"');
     expect(html).toContain('name="photoLabel"');
     expect(html).toContain('name="poolId"');
     expect(html).toContain('name="groupId"');
     expect(html).toContain('name="rarity"');
     expect(html).toContain('name="holoEnabled"');
+  });
+
+  it("lists only the current pool's groups and offers a new group", () => {
+    const html = cardDetailPage({ card, base: "example.test", message: null, ok: false, pools, poolGroups });
+    expect(html).toContain('<option value="g1" selected>Satu</option>');
+    expect(html).toContain('<option value="g2">Dua</option>');
+    expect(html).not.toContain('<option value="ng1"');
+    expect(html).toContain("+ Grup baru…");
+    expect(html).toContain('name="groupName"');
+    expect(html).toContain('<div class="field is-hidden" id="mGroupNew">');
+  });
+
+  it("keeps a submitted pool/group visible when a save fails", () => {
+    const html = cardDetailPage({
+      card,
+      base: "example.test",
+      message: "Pool tidak ditemukan.",
+      ok: false,
+      pools,
+      poolGroups,
+      draft: {
+        memberName: "Teddy",
+        photoLabel: null,
+        rarity: "ultra_rare",
+        poolId: "ahli-ngebul",
+        groupId: "ng1",
+        groupName: "",
+        holoEnabled: false,
+      },
+    });
+    expect(html).toContain('<option value="ahli-ngebul" selected>');
+    expect(html).toContain('<option value="ng1" selected>Default</option>');
+  });
+
+  it("reveals the new-group name field for the sentinel option", () => {
+    const html = cardDetailPage({
+      card,
+      base: "example.test",
+      message: null,
+      ok: false,
+      pools,
+      poolGroups,
+      draft: {
+        memberName: "Teddy",
+        photoLabel: null,
+        rarity: "ultra_rare",
+        poolId: "ahli-ngebul",
+        groupId: "__new__",
+        groupName: "Archi",
+        holoEnabled: false,
+      },
+    });
+    expect(html).toContain('<option value="__new__" selected>+ Grup baru…</option>');
+    expect(html).toContain('name="groupName" value="Archi"');
+    expect(html).toContain('<div class="field" id="mGroupNew">');
   });
 });
 

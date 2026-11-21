@@ -751,6 +751,40 @@ describe("admin /admin/import routes", () => {
     expect(loc).not.toContain("frame lama");
   });
 
+  it("creates a new group from the Kelola form", async () => {
+    const fd = new FormData();
+    fd.append("memberName", "Static Kid");
+    fd.append("photoLabel", "#stillsmile");
+    fd.append("rarity", "rare");
+    fd.append("poolId", "ahli-ngebul");
+    fd.append("groupId", "__new__");
+    fd.append("groupName", "Archi");
+    const res = await app.request(`/admin/cards/static-kid-01/update`, { method: "POST", headers: { Cookie: authCookie }, body: fd }, env);
+    expect(res.status).toBe(302);
+    expect(decodeURIComponent(res.headers.get("location") ?? "")).toContain("Perubahan kartu disimpan.");
+    const db = createDb(env);
+    const updated = await getAdminCard(db, "static-kid-01");
+    expect(updated?.groupId).toBe("archi");
+    const [group] = await db.select().from(groups).where(eq(groups.id, "archi")).limit(1);
+    expect(group).toMatchObject({ poolId: "ahli-ngebul", name: "Archi", badge: "ARCHI" });
+  });
+
+  it("rejects a group from another pool and keeps the submitted pool visible", async () => {
+    const fd = new FormData();
+    fd.append("memberName", "Static Kid");
+    fd.append("photoLabel", "");
+    fd.append("rarity", "rare");
+    fd.append("poolId", "pejabat");
+    fd.append("groupId", "default");
+    const res = await app.request(`/admin/cards/static-kid-01/update`, { method: "POST", headers: { Cookie: authCookie }, body: fd }, env);
+    expect(res.status).toBe(200);
+    const html = await res.text();
+    expect(html).toContain("Grup tujuan bukan bagian pool yang dipilih.");
+    expect(html).toContain('<option value="pejabat" selected>');
+    const card = await getAdminCard(createDb(env), "static-kid-01");
+    expect(card?.poolId).toBe("ahli-ngebul");
+  });
+
   it("re-renders a static card from its source URL", async () => {
     const db = createDb(env);
     await db.insert(members).values({ id: "resrc-kid", poolId: "ahli-ngebul", groupId: "default", name: "Resrc Kid", nameLower: "resrc kid", fullName: null, photoTotal: 1, sortOrder: 6, enabled: true });
