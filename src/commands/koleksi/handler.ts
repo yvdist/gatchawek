@@ -33,6 +33,8 @@ import {
 import { groups, pools } from "../../db/schema.js";
 import { getShowcaseCard } from "../../db/queries/pamer.js";
 import { pickHype } from "../../domain/pamer.js";
+import { buildWaShareText, buildWaShareUrl } from "../../domain/share.js";
+import { buildWaShareRow } from "../../ui/waShare.js";
 import {
   buildKoleksiCardEmbed,
   buildKoleksiEmbed,
@@ -369,6 +371,19 @@ export function handleKoleksiPamerClick(
           });
           return;
         }
+        const imageUrl = cardImageUrl(env.PUBLIC_BASE_URL, card.imageFile);
+        const shareUrl = buildWaShareUrl(
+          buildWaShareText({
+            memberName: card.memberName,
+            photoLabel: card.photoLabel,
+            groupName: card.groupName,
+            photoNo: card.photoNo,
+            photoTotal: card.photoTotal,
+            serial: card.serial,
+            rarity: card.rarity,
+            imageUrl,
+          }),
+        );
         await postFollowup(appId, token, env.DISCORD_BOT_TOKEN, {
           embeds: [
             buildPamerEmbed({
@@ -387,9 +402,10 @@ export function handleKoleksiPamerClick(
               quantity: card.quantity,
               caption: null,
               hype: pickHype(card.rarity, cryptoRandom()),
-              imageUrl: cardImageUrl(env.PUBLIC_BASE_URL, card.imageFile),
+              imageUrl,
             }),
           ],
+          components: [buildWaShareRow(shareUrl)],
         });
       } catch {
         try {
