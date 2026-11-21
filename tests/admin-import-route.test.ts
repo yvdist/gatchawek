@@ -680,6 +680,51 @@ describe("admin /admin/import routes", () => {
     expect(res2.headers.get("location")).toBe("/admin/cards/render-kid-01");
   });
 
+  it("auto-requests a re-render when Kelola saves a remote card", async () => {
+    const db = createDb(env);
+    await db.insert(members).values({ id: "auto-kid", poolId: "ahli-ngebul", groupId: "default", name: "Auto Kid", nameLower: "auto kid", fullName: null, photoTotal: 1, sortOrder: 5, enabled: true });
+    await db.insert(cards).values({ id: "auto-kid-01", poolId: "ahli-ngebul", groupId: "default", memberId: "auto-kid", serial: 950, photoNo: 1, rarity: "rare", photoLabel: null, imageFile: "https://cdn.example/auto.jpg", sourcePageUrl: null, enabled: true, holoEnabled: false });
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.append("memberName", "Auto Kid");
+      fd.append("photoLabel", "");
+      fd.append("rarity", "rare");
+      fd.append("poolId", "ahli-ngebul");
+      fd.append("groupId", "default");
+      const res = await app.request(`/admin/cards/auto-kid-01/update`, { method: "POST", headers: { Cookie: authCookie }, body: fd }, env);
+      expect(res.status).toBe(302);
+      const loc = res.headers.get("location") ?? "";
+      expect(loc).toContain("ok=1");
+      expect(decodeURIComponent(loc)).toContain("Render ulang otomatis diminta");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const updated = await getAdminCard(createDb(env), "auto-kid-01");
+      expect(updated?.renderPending).toBe(true);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("skips auto-render when the Kelola card is already static", async () => {
+    const fetchMock = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const fd = new FormData();
+      fd.append("memberName", "Static Kid");
+      fd.append("photoLabel", "");
+      fd.append("rarity", "rare");
+      fd.append("poolId", "ahli-ngebul");
+      fd.append("groupId", "default");
+      const res = await app.request(`/admin/cards/static-kid-01/update`, { method: "POST", headers: { Cookie: authCookie }, body: fd }, env);
+      expect(res.status).toBe(302);
+      expect(fetchMock).not.toHaveBeenCalled();
+      expect(decodeURIComponent(res.headers.get("location") ?? "")).toContain("Perubahan kartu disimpan.");
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("rejects render requests without a selection", async () => {
     const res = await app.request(
       "/admin/cards/render-remote",
