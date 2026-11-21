@@ -7,7 +7,8 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "register": "tsx scripts/register-commands.ts",
-    "typecheck": "tsc -p tsconfig.worker.json --noEmit && tsc -p tsconfig.node.json --noEmit",
+    "typecheck": "pnpm run typecheck:bot && pnpm -r --filter \"./packages/**\" --filter \"./games/**\" run typecheck",
+    "typecheck:bot": "tsc -p tsconfig.worker.json --noEmit && tsc -p tsconfig.node.json --noEmit",
     "test": "vitest run",
     "lint": "eslint .",
     "validate": "tsx scripts/validate-manifest.ts",
@@ -23,7 +24,9 @@
     "approve": "tsx scripts/approve.ts",
     "reset:progress": "tsx scripts/reset-progress.ts --yes",
     "reset:progress:remote": "tsx scripts/reset-progress.ts --remote --yes",
-    "note:pdf": "tsx scripts/build-note-pdf.ts"
+    "note:pdf": "tsx scripts/build-note-pdf.ts",
+    "validate-content": "pnpm --filter adu-batang run validate-content",
+    "check": "pnpm run typecheck && pnpm run lint && pnpm run test && pnpm run validate-content"
   },
   "keywords": [],
   "author": "",

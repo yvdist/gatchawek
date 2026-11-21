@@ -1,3 +1,7 @@
+packages:
+  - games/adu-batang
+  - packages/*
+
 allowBuilds:
   esbuild: true
   workerd: true

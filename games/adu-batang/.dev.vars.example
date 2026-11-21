@@ -1,0 +1,3 @@
+# Salin ke `.dev.vars` di folder ini (gitignored). Semua opsional untuk dev lokal.
+# DSN Sentry Worker game (unset = SDK tidak mengirim apa pun).
+SENTRY_DSN=

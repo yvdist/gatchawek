@@ -1,7 +1,20 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
-    "types": ["node", "@cloudflare/workers-types"]
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "types": ["node", "@cloudflare/workers-types", "vite/client"]
   },
-  "include": ["src", "scripts", "shared", "tests", "drizzle.config.ts"]
+  "include": [
+    "src",
+    "scripts",
+    "shared",
+    "tests",
+    "drizzle.config.ts",
+    "games/adu-batang/src",
+    "games/adu-batang/scripts",
+    "games/adu-batang/tests",
+    "games/adu-batang/vite.config.ts",
+    "packages/*/src"
+  ]
 }

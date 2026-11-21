@@ -1,7 +1,8 @@
 import { defineConfig } from "drizzle-kit";
 
 export default defineConfig({
-  schema: "./src/db/schema.ts",
+  // One database, one migration folder: legacy bot schema + additive game schema.
+  schema: ["./src/db/schema.ts", "./src/db/schema-game.ts"],
   out: "./migrations",
   dialect: "sqlite",
   driver: "d1-http",

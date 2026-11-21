@@ -1,0 +1,78 @@
+{
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "adu-batang",
+  "main": "src/server/index.ts",
+  "compatibility_date": "2026-11-21",
+  // Non-inheritable keys (assets, durable_objects, migrations, d1_databases,
+  // r2_buckets) are repeated per env on purpose: staging must never touch prod.
+  "assets": {
+    "not_found_handling": "single-page-application"
+  },
+  "observability": {
+    "enabled": true
+  },
+  "durable_objects": {
+    "bindings": [
+      { "name": "GAME_ROOM", "class_name": "GameRoom" },
+      { "name": "MATCHMAKER", "class_name": "Matchmaker" }
+    ]
+  },
+  "migrations": [
+    {
+      // Workers Free only allows SQLite-backed Durable Objects.
+      "tag": "v1",
+      "new_sqlite_classes": ["GameRoom", "Matchmaker"]
+    }
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "gatchawek",
+      "database_id": "f9acc0cf-45ff-44b3-8736-dc790370bb0a",
+      "migrations_dir": "../migrations"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "CARDS",
+      "bucket_name": "gatchawek-cards"
+    }
+  ],
+  "env": {
+    "staging": {
+      "name": "adu-batang-staging",
+      "assets": {
+        "not_found_handling": "single-page-application"
+      },
+      "observability": {
+        "enabled": true
+      },
+      "durable_objects": {
+        "bindings": [
+          { "name": "GAME_ROOM", "class_name": "GameRoom" },
+          { "name": "MATCHMAKER", "class_name": "Matchmaker" }
+        ]
+      },
+      "migrations": [
+        {
+          "tag": "v1",
+          "new_sqlite_classes": ["GameRoom", "Matchmaker"]
+        }
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "gatchawek-staging",
+          "database_id": "f2c7a563-6b23-47dc-9758-c63f844d5d6c",
+          "migrations_dir": "../migrations"
+        }
+      ],
+      "r2_buckets": [
+        {
+          "binding": "CARDS",
+          "bucket_name": "gatchawek-cards-staging"
+        }
+      ]
+    }
+  }
+}
