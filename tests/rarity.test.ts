@@ -23,7 +23,7 @@ function lcg(seed: number): () => number {
 const FULL: readonly RarityKey[] = RARITY_KEYS;
 
 describe("pickRarity distribution", () => {
-  it("exposes 6-star Secret metadata and 60/15/12/8/4/1 weights", () => {
+  it("exposes 6-star Secret metadata and 10k-scaled tier weights", () => {
     expect(RARITY_KEYS).toContain("holo");
     expect(RARITY_KEYS).toContain("secret");
     expect(RARITY_STARS.holo).toBe("★★★★★");
@@ -31,12 +31,12 @@ describe("pickRarity distribution", () => {
     expect(RARITY_STARS.secret).toBe("★★★★★★");
     expect(RARITY_LABEL.secret).toBe("Secret");
     expect(RARITY_WEIGHTS).toEqual({
-      common: 60,
-      rare: 15,
-      super_rare: 12,
-      ultra_rare: 8,
-      holo: 4,
-      secret: 1,
+      common: 6270,
+      rare: 1570,
+      super_rare: 1250,
+      ultra_rare: 875,
+      holo: 25,
+      secret: 10,
     });
   });
 
@@ -62,6 +62,26 @@ describe("pickRarity distribution", () => {
       const actual = counts[key] / N;
       expect(Math.abs(actual - expected)).toBeLessThan(0.01);
     }
+  });
+
+  it("keeps Holo+Secret under 0.5% over 100k rolls", () => {
+    const rand = lcg(12345);
+    const counts: Record<RarityKey, number> = {
+      common: 0,
+      rare: 0,
+      super_rare: 0,
+      ultra_rare: 0,
+      holo: 0,
+      secret: 0,
+    };
+    const N = 100_000;
+    for (let i = 0; i < N; i += 1) {
+      const r = pickRarity(rand(), FULL);
+      expect(r).not.toBeNull();
+      counts[r as RarityKey] += 1;
+    }
+    expect((counts.holo + counts.secret) / N).toBeLessThan(0.005);
+    expect((counts.holo + counts.secret) / N).toBeGreaterThan(0.001);
   });
 
   it("renormalizes without ultra_rare and never picks it", () => {

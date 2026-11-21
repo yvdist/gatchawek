@@ -10,6 +10,7 @@ import {
   type PoolManifest,
   type RarityKey,
 } from "../../shared/manifest.schema.js";
+import { RARITY_WEIGHTS } from "../../src/domain/rarity.js";
 
 export interface LoadedGroup {
   file: string;
@@ -133,9 +134,22 @@ export async function loadManifests(root?: string): Promise<LoadedManifests> {
   return { pools, poolIds, groups };
 }
 
-const EXPECTED_DIST: Record<RarityKey, number> = { common: 60, rare: 15, super_rare: 12, ultra_rare: 8, holo: 4, secret: 1 };
+const WEIGHT_TOTAL = RARITY_KEYS.reduce(
+  (sum, k) => sum + RARITY_WEIGHTS[k],
+  0,
+);
 
-/** Rarity mixes far from 60/15/12/8/4/1 are warnings, never errors. */
+/** Derived from the gacha tier weights: single source of truth for odds. */
+const EXPECTED_DIST: Record<RarityKey, number> = {
+  common: (RARITY_WEIGHTS.common / WEIGHT_TOTAL) * 100,
+  rare: (RARITY_WEIGHTS.rare / WEIGHT_TOTAL) * 100,
+  super_rare: (RARITY_WEIGHTS.super_rare / WEIGHT_TOTAL) * 100,
+  ultra_rare: (RARITY_WEIGHTS.ultra_rare / WEIGHT_TOTAL) * 100,
+  holo: (RARITY_WEIGHTS.holo / WEIGHT_TOTAL) * 100,
+  secret: (RARITY_WEIGHTS.secret / WEIGHT_TOTAL) * 100,
+};
+
+/** Rarity mixes far from the tier weights are warnings, never errors. */
 export function rarityWarnings(loaded: LoadedManifests): string[] {
   const warnings: string[] = [];
   for (const { file, manifest } of loaded.groups) {
@@ -164,7 +178,7 @@ export function rarityWarnings(loaded: LoadedManifests): string[] {
     );
     if (far) {
       warnings.push(
-        `warning: ${file} rarity distribution far from 60/15/12/8/4/1 (${dist})`,
+        `warning: ${file} rarity distribution far from the gacha tier weights (${dist})`,
       );
     }
   }
