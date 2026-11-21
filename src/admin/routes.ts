@@ -181,6 +181,7 @@ async function dispatchRender(
           Accept: "application/vnd.github+json",
           Authorization: `Bearer ${pat}`,
           "Content-Type": "application/json",
+          "User-Agent": "gatchawek-admin-panel",
         },
         body: JSON.stringify({ ref: "main", inputs: { ids: ids.join(",") } }),
       },
