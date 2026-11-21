@@ -30,6 +30,10 @@ import {
   handleListAutocomplete,
   handleListPage,
 } from "./commands/list/handler.js";
+import {
+  handleUnwishAutocomplete,
+  handleWishAutocomplete,
+} from "./commands/wish/handler.js";
 import { handleScheduled } from "./scheduled.js";
 import type { Env } from "./env.js";
 import { registerAdminRoutes } from "./admin/routes.js";
@@ -190,6 +194,12 @@ app.post("/interactions", async (c) => {
           c.env,
         ),
       );
+    }
+    if (autocomplete.data.name === "wish") {
+      return c.json(await handleWishAutocomplete(autocomplete, c.env));
+    }
+    if (autocomplete.data.name === "unwish") {
+      return c.json(await handleUnwishAutocomplete(autocomplete, c.env));
     }
     return c.json(ephemeralResponse("Autocomplete tidak tersedia."));
   }
