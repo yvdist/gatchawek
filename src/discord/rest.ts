@@ -57,6 +57,43 @@ export async function postFollowup(
   }
 }
 
+export async function postFollowupFile(
+  appId: string,
+  token: string,
+  botToken: string,
+  file: {
+    readonly filename: string;
+    readonly contentType: string;
+    readonly bytes: Uint8Array;
+  },
+  body: RESTPostAPIWebhookWithTokenJSONBody = {},
+): Promise<void> {
+  const payload = {
+    ...mentionless(body),
+    attachments: [{ id: 0, filename: file.filename }],
+  };
+  const form = new FormData();
+  form.append("payload_json", JSON.stringify(payload));
+  const copy = new Uint8Array(file.bytes.byteLength);
+  copy.set(file.bytes);
+  form.append(
+    "files[0]",
+    new Blob([copy], { type: file.contentType }),
+    file.filename,
+  );
+  const res = await fetch(`${webhookBase(appId, token)}?wait=true`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bot ${botToken}`,
+    },
+    body: form,
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "");
+    throw new Error(`followup file failed: ${res.status} ${text}`.trim());
+  }
+}
+
 export async function patchOriginal(
   appId: string,
   token: string,

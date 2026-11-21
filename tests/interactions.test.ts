@@ -111,7 +111,7 @@ describe("POST /interactions signature verification", () => {
       application_id: "2",
       token: "token",
       version: 1,
-      data: { id: "3", name: "kartu", type: 1 },
+      data: { id: "3", name: "unknown-cmd", type: 1 },
     });
     const res = await app.request("/interactions", {
       method: "POST",

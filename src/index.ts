@@ -49,7 +49,12 @@ const app = new Hono<{ Bindings: Env }>();
 
 // Error tracking (Better Stack via Sentry SDK). DSN from Worker secret;
 // unset locally = SDK no-ops. Must be first middleware.
-app.use(sentry(app, (env) => ({ dsn: env.SENTRY_DSN })));
+app.use(
+  sentry(app, (env) => {
+    const dsn = (env as Env | undefined)?.SENTRY_DSN;
+    return dsn !== undefined ? { dsn } : {};
+  }),
+);
 
 app.get("/health", (c) => c.json({ status: "ok" }, 200));
 /** Card frames from R2 (persistent; Worker assets can't hold runtime files). */
