@@ -10,6 +10,7 @@ import {
   type AdminCardRow,
   type AdminCounts,
   type AdminPoolOption,
+  type AdminPoolGroupOption,
   type AdminQueueStatus,
 } from "../db/queries/admin.js";
 import type { QueueRow } from "../db/queries/inject.js";
@@ -348,7 +349,7 @@ export function cardDetailPage(args: {
   const manageGroups = args.poolGroups.filter((g) => g.poolId === c.poolId);
   const manageGroupOptions = manageGroups.map(
     (g) =>
-      `<option value="${escapeHtml(g.groupId)}"${g.groupId === args.card.groupId ? " selected" : ""}>${escapeHtml(g.groupName)}</option>`,
+      `<option value="${escapeHtml(g.groupId)}"${g.groupId === c.groupId ? " selected" : ""}>${escapeHtml(g.groupName)}</option>`,
   ).join("");
   const manageRarityOptions = RARITY_KEYS.map(
     (r) =>
