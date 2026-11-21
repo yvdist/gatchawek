@@ -1,8 +1,9 @@
 #!/usr/bin/env tsx
-// Temporary backfill: posts curated summaries of PRs #53-#62 to #bot-changelog
-// (oldest first). Run once via the "Backfill changelog" workflow, then delete
+// Temporary backfill: fetches the last 10 merged PRs via gh and posts
+// curated English summaries to #bot-changelog (oldest first).
+// Run once via the "Backfill changelog (temporary)" workflow, then delete
 // this script + that workflow.
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 
 interface PRCommit {
   headline: string;
@@ -27,7 +28,23 @@ if (!webhook) {
 }
 const repo = process.env.GITHUB_REPOSITORY ?? "";
 
-const prs = JSON.parse(readFileSync(process.argv[2] ?? "", "utf8")) as PRItem[];
+const gh = (args: string[]): string => execFileSync("gh", args, { encoding: "utf8" });
+const numbers = JSON.parse(gh(["pr", "list", "--state", "merged", "--limit", "10", "--json", "number"])) as Array<{
+  number: number;
+}>;
+
+const prs: PRItem[] = [];
+for (const { number } of numbers.reverse()) {
+  const raw = JSON.parse(
+    gh(["pr", "view", String(number), "--json", "title,mergedAt,commits"]),
+  ) as { title: string; mergedAt: string; commits: Array<{ messageHeadline: string; oid: string }> };
+  prs.push({
+    number,
+    title: raw.title,
+    mergedAt: raw.mergedAt,
+    commits: raw.commits.map((c) => ({ headline: c.messageHeadline, sha: c.oid })),
+  });
+}
 
 const escText = (s: string): string => s.replace(/\\/g, "\\\\").replace(/"/g, '\\"').replace(/\n/g, "\\n");
 
@@ -92,10 +109,15 @@ for (const pr of prs) {
   const { title, desc, highlights } = summary;
   const commitLines = pr.commits
     .slice(0, 5)
-    .map((c) => `\`${escText(c.sha.slice(0, 7))}\` ${escText(c.headline.slice(0, 200))} ([view commit](https://github.com/${repo}/commit/${c.sha}))`)
+    .map(
+      (c) =>
+        `\`${escText(c.sha.slice(0, 7))}\` ${escText(c.headline.slice(0, 200))} ([view commit](https://github.com/${repo}/commit/${c.sha}))`,
+    )
     .join("\n");
 
-  const fields: Array<{ name: string; value: string; inline: boolean }> = [{ name: "📌 Summary", value: desc || title, inline: false }];
+  const fields: Array<{ name: string; value: string; inline: boolean }> = [
+    { name: "📌 Summary", value: desc || title, inline: false },
+  ];
   if (highlights.length > 0) {
     fields.push({ name: "✨ Highlights", value: highlights.map((p) => `• ${p}`).join("\n"), inline: false });
   }
